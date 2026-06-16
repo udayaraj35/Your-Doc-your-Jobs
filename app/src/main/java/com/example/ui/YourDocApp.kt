@@ -1,0 +1,14373 @@
+package com.example.ui
+
+import androidx.compose.ui.text.font.FontStyle
+
+import android.widget.Toast
+import androidx.compose.ui.window.Dialog
+import android.content.Context
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.withStyle
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.animation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.items
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.asImageBitmap
+import com.example.data.*
+import kotlinx.coroutines.launch
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.shadow
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun YourDocApp(
+    viewModel: ResumeViewModel,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val resumes by viewModel.hiveResumes.collectAsStateWithLifecycle()
+    val currentResumeId by viewModel.currentResumeId.collectAsStateWithLifecycle()
+    
+    val workExperiences by viewModel.workExperiencesState.collectAsStateWithLifecycle()
+    val educations by viewModel.educationsState.collectAsStateWithLifecycle()
+    val skills by viewModel.skillsState.collectAsStateWithLifecycle()
+    val certifications by viewModel.certificationsState.collectAsStateWithLifecycle()
+    val projects by viewModel.projectsState.collectAsStateWithLifecycle()
+    val awards by viewModel.awardsState.collectAsStateWithLifecycle()
+    val hobbies by viewModel.hobbiesState.collectAsStateWithLifecycle()
+    val aboutMe by viewModel.aboutMeState.collectAsStateWithLifecycle()
+    
+    // Persistent profile variables using SharedPreferences
+    val profilePrefs = remember { context.getSharedPreferences("YourDocProfilePrefs", android.content.Context.MODE_PRIVATE) }
+    var adminName by remember { mutableStateOf(profilePrefs.getString("admin_name", "Udaya Raj Khanal") ?: "Udaya Raj Khanal") }
+    var adminEmail by remember { mutableStateOf(profilePrefs.getString("admin_email", "udayarajkhanal21@gmail.com") ?: "udayarajkhanal21@gmail.com") }
+    var adminCompany by remember { mutableStateOf(profilePrefs.getString("admin_company", "Udaya Smart Office") ?: "Udaya Smart Office") }
+    var adminPhone by remember { mutableStateOf(profilePrefs.getString("admin_phone", "+9779864353535") ?: "+9779864353535") }
+    var adminRole by remember { mutableStateOf(profilePrefs.getString("admin_role", "System Administrator") ?: "System Administrator") }
+    var adminAddress by remember { mutableStateOf(profilePrefs.getString("admin_address", "Kathmandu, Nepal") ?: "Kathmandu, Nepal") }
+    var adminExtraDetails by remember { mutableStateOf(profilePrefs.getString("admin_extra_details", "Managing 45+ Regional Base Centers | NFRS Audit Supervisor") ?: "Managing 45+ Regional Base Centers | NFRS Audit Supervisor") }
+
+    var companyName by remember { mutableStateOf(profilePrefs.getString("company_name", "Udaya Smart Corp") ?: "Udaya Smart Corp") }
+    var companyEmail by remember { mutableStateOf(profilePrefs.getString("company_email", "info@udayasmart.com") ?: "info@udayasmart.com") }
+    var companyPhone by remember { mutableStateOf(profilePrefs.getString("company_phone", "+9779864222222") ?: "+9779864222222") }
+    var companyRegNo by remember { mutableStateOf(profilePrefs.getString("company_reg_no", "REG-9988-NEP") ?: "REG-9988-NEP") }
+    var companyEmployees by remember { mutableStateOf(profilePrefs.getString("company_employees", "120 Global Engineers") ?: "120 Global Engineers") }
+    var companyLocation by remember { mutableStateOf(profilePrefs.getString("company_location", "Kathmandu, Nepal") ?: "Kathmandu, Nepal") }
+    var companyCapital by remember { mutableStateOf(profilePrefs.getString("company_capital", "NPR 45,00,00,000") ?: "NPR 45,00,00,000") }
+    var companyStatus by remember { mutableStateOf(profilePrefs.getString("company_status", "Premium Verified") ?: "Premium Verified") }
+
+    var showEditAdminDialog by remember { mutableStateOf(false) }
+    var showEditCompanyDialog by remember { mutableStateOf(false) }
+    var showEditCandidateDialog by remember { mutableStateOf(false) }
+    var showAdminDiagnosticsDialog by remember { mutableStateOf(false) }
+    
+    // Initializing state with "splash" for the 3-second cinematic brand immersion
+    var screenState by remember { mutableStateOf("splash") }
+    var showDeveloperInfoDialog by remember { mutableStateOf(false) }
+    var showSupportDialog by remember { mutableStateOf(false) }
+    var secretAdminClickCount by remember { mutableStateOf(0) }
+    var showAdminDialog by remember { mutableStateOf(false) }
+    var showSecretAdminTip by remember { mutableStateOf(false) }
+    var logoTapCount by remember { mutableStateOf(0) }
+    var isAdminLoggedIn by remember { mutableStateOf(false) }
+    var loggedInEmail by remember { mutableStateOf("") }
+    var loggedInRole by remember { mutableStateOf("Guest") }
+    var rootHomeTab by remember { mutableStateOf("home") }
+    
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = screenState == "home",
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.width(320.dp).fillMaxHeight()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Top Photo / Profile Header (1. Pahila Photo)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(88.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = when (loggedInRole) {
+                                            "Admin" -> listOf(Color(0xFF7C3AED), Color(0xFFFCD34D))
+                                            "Company" -> listOf(Color(0xFF059669), Color(0xFF34D399))
+                                            else -> listOf(Color(0xFF005AC1), Color(0xFF00FFCC))
+                                        }
+                                    )
+                                )
+                                .padding(3.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(Color.White),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (loggedInRole != "Guest") {
+                                    Icon(
+                                        imageVector = when (loggedInRole) {
+                                            "Admin" -> Icons.Default.Shield
+                                            "Company" -> Icons.Default.Business
+                                            else -> Icons.Default.Person
+                                        },
+                                        contentDescription = "User Avatar",
+                                        tint = when (loggedInRole) {
+                                            "Admin" -> Color(0xFF7C3AED)
+                                            "Company" -> Color(0xFF059669)
+                                            else -> Color(0xFF0284C7)
+                                        },
+                                        modifier = Modifier.size(42.dp)
+                                    )
+                                } else {
+                                    androidx.compose.foundation.Image(
+                                        painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.yourdoc_logo),
+                                        contentDescription = "Logo",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(androidx.compose.foundation.shape.CircleShape)
+                                    )
+                                }
+                            }
+                        }
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "YOURDOC",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 18.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "Elite AI CV Suite",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    // Helper inline composables inside content block
+                    val DrawerInfoRow = @Composable { icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = "$label:",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                                maxLines = 1
+                            )
+                            Text(
+                                text = value,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+
+                    // Elegant Drawer Section Composable with Single Line layout rule ("ra linr haru sakay sama yautai line ma hos")
+                    val DrawerSection = @Composable { title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, content: @Composable () -> Unit ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                .padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Text(
+                                    text = title,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                            content()
+                        }
+                    }
+
+                    // 2. User ko sabai jankari Card
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = when (loggedInRole) {
+                                "Admin" -> Color(0xFFFAF5FF)
+                                "Company" -> Color(0xFFECFDF5)
+                                else -> Color(0xFFF0F9FF)
+                            }
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (loggedInRole == "Admin") {
+                                    showAdminDiagnosticsDialog = true
+                                }
+                            }
+                            .border(
+                                width = 1.2.dp,
+                                color = when (loggedInRole) {
+                                    "Admin" -> Color(0xFFD8B4FE)
+                                    "Company" -> Color(0xFFA7F3D0)
+                                    else -> Color(0xFFBAE6FD)
+                                },
+                                shape = RoundedCornerShape(16.dp)
+                            ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            when (loggedInRole) {
+                                                "Admin" -> Color(0xFF7C3AED)
+                                                "Company" -> Color(0xFF059669)
+                                                else -> Color(0xFF0284C7)
+                                            }
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = when (loggedInRole) {
+                                            "Admin" -> Icons.Default.Shield
+                                            "Company" -> Icons.Default.Business
+                                            else -> Icons.Default.Person
+                                        },
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = when (loggedInRole) {
+                                            "Admin" -> "SECURED SYSTEM ROOT"
+                                            "Company" -> "EMPLOYER PORTAL"
+                                            else -> "ACTIVE USER SESSION"
+                                        },
+                                        fontSize = 8.5.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = when (loggedInRole) {
+                                            "Admin" -> Color(0xFF7C3AED)
+                                            "Company" -> Color(0xFF059669)
+                                            else -> Color(0xFF0284C7)
+                                        }
+                                    )
+                                    val displayProfileName = when (loggedInRole) {
+                                        "Admin" -> adminName
+                                        "Company" -> companyName
+                                        else -> {
+                                            val cpResult = viewModel.userProfileState.value
+                                            cpResult?.fullName?.ifBlank { "Guest User" } ?: "Guest User"
+                                        }
+                                    }
+                                    Text(
+                                        text = displayProfileName,
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                            if (loggedInRole == "Admin") {
+                                DrawerInfoRow(Icons.Default.Person, "Name", adminName)
+                                DrawerInfoRow(Icons.Default.Email, "Email", adminEmail)
+                                DrawerInfoRow(Icons.Default.Business, "Office", adminCompany)
+                                DrawerInfoRow(Icons.Default.Phone, "Phone", adminPhone)
+                                DrawerInfoRow(Icons.Default.Shield, "Role", adminRole)
+                                DrawerInfoRow(Icons.Default.Home, "Base", adminAddress)
+                                DrawerInfoRow(Icons.Default.Settings, "Infras", adminExtraDetails)
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Button(
+                                        onClick = { showEditAdminDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.weight(1f).height(28.dp),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("UPDATE ADMIN ⚙️", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                    Button(
+                                        onClick = { showAdminDiagnosticsDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4B5563)),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.weight(1f).height(28.dp),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("SEE DETAILS 📊", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                }
+                            } else if (loggedInRole == "Company") {
+                                DrawerInfoRow(Icons.Default.Business, "Company Name", companyName)
+                                DrawerInfoRow(Icons.Default.Email, "Corp Email", companyEmail)
+                                DrawerInfoRow(Icons.Default.Phone, "Telephone", companyPhone)
+                                DrawerInfoRow(Icons.Default.Home, "Location", companyLocation)
+                                DrawerInfoRow(Icons.Default.Person, "Employees", companyEmployees)
+                                DrawerInfoRow(Icons.Default.Lock, "Reg Number", companyRegNo)
+                                DrawerInfoRow(Icons.Default.Favorite, "Registered Cap", companyCapital)
+                                DrawerInfoRow(Icons.Default.Shield, "Privilege Status", companyStatus)
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                Button(
+                                    onClick = { showEditCompanyDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth().height(28.dp),
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("✏️ UPDATE COMPANY PROFILE", fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                            } else {
+                                // Candidate profile or Guest
+                                val cProfile = viewModel.userProfileState.value ?: UserProfile()
+                                DrawerInfoRow(Icons.Default.Person, "Full Name", cProfile.fullName.ifBlank { "Not set" })
+                                DrawerInfoRow(Icons.Default.Email, "Email ID", cProfile.email.ifBlank { if (loggedInEmail.isNotBlank()) loggedInEmail else "Guest Account" })
+                                DrawerInfoRow(Icons.Default.Phone, "Mobile", cProfile.phone.ifBlank { "Not set" })
+                                DrawerInfoRow(Icons.Default.Business, "Target Role", cProfile.preferredJobTitle.ifBlank { "Not set" })
+                                DrawerInfoRow(Icons.Default.Home, "City/Country", (if (cProfile.city.isBlank() && cProfile.country.isBlank()) "Not set" else "${cProfile.city}, ${cProfile.country}"))
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                if (loggedInRole != "Guest") {
+                                    Button(
+                                        onClick = { showEditCandidateDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("✏️ UPDATE PROFILE", fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                }
+                            }
+
+                            // 3. LOG OUT button immediately below the User info ("ani logo/logout taysko tala")
+                            if (loggedInRole != "Guest") {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), modifier = Modifier.padding(vertical = 4.dp))
+                                Button(
+                                    onClick = {
+                                        loggedInEmail = ""
+                                        loggedInRole = "Guest"
+                                        isAdminLoggedIn = false
+                                        rootHomeTab = "home"
+                                        Toast.makeText(context, "Session logged out safely.", Toast.LENGTH_SHORT).show()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth().height(30.dp),
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Icon(Icons.Default.Lock, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                                        Text("LOG OUT SAFELY 🪵", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                    }
+                                }
+                            } else {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), modifier = Modifier.padding(vertical = 4.dp))
+                                Button(
+                                    onClick = { showAdminDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth().height(30.dp).testTag("open_unified_login_btn"),
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Icon(Icons.Default.Lock, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                                        Text("CHOOSE PORTAL & SIGN IN 🔑", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 4. ABOUT ME Section ("taysko tala about me")
+                    DrawerSection("ABOUT ME", Icons.Default.Person) {
+                        val summaryText = aboutMe.summary.ifBlank { aboutMe.careerObjective.ifBlank { "No bio summary compiled yet." } }
+                        Text(
+                            text = summaryText,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // 5. WORK EXP Section ("ani taysko tala work exp")
+                    DrawerSection("WORK EXPERIENCES", Icons.Default.Business) {
+                        if (workExperiences.isEmpty()) {
+                            Text("No professional roles listed yet.", fontSize = 10.sp, color = Color.Gray, maxLines = 1)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                workExperiences.take(5).forEach { exp ->
+                                    val rowText = "${exp.jobPosition} at ${exp.companyName} (${exp.startDate} - ${if(exp.isCurrentlyWorking) "Present" else exp.endDate})"
+                                    Text(
+                                        text = "• $rowText",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // 6. EDUCATION Section ("ra taysko tala eduction")
+                    DrawerSection("ACADEMIC EDUCATION", Icons.Default.Settings) {
+                        if (educations.isEmpty()) {
+                            Text("No educational qualifications added yet.", fontSize = 10.sp, color = Color.Gray, maxLines = 1)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                educations.take(5).forEach { edu ->
+                                    val studyField = if(edu.fieldOfStudy.isNotBlank()) " in ${edu.fieldOfStudy}" else ""
+                                    val rowText = "${edu.degree}$studyField at ${edu.schoolName} (${edu.endDate})"
+                                    Text(
+                                        text = "🎓 $rowText",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // 7. NEW SECTIONS Below Them ("ra naya kura taysko tal")
+                    // Skills & Toolsets
+                    DrawerSection("SKILLS & TOOLSETS", Icons.Default.Star) {
+                        if (skills.isEmpty()) {
+                            Text("No technical skills registered yet.", fontSize = 10.sp, color = Color.Gray, maxLines = 1)
+                        } else {
+                            val skillsJoined = skills.joinToString(", ") { it.name }
+                            Text(
+                                text = "⚡ $skillsJoined",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    // Portfolio Projects
+                    DrawerSection("PORTFOLIO PROJECTS", Icons.Default.Home) {
+                        if (projects.isEmpty()) {
+                            Text("No system projects linked yet.", fontSize = 10.sp, color = Color.Gray, maxLines = 1)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                projects.take(4).forEach { proj ->
+                                    Text(
+                                        text = "📂 ${proj.name} (${proj.technologies.ifBlank { "System" }})",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Certifications
+                    DrawerSection("CERTIFICATIONS", Icons.Default.Shield) {
+                        if (certifications.isEmpty()) {
+                            Text("No active validations yet.", fontSize = 10.sp, color = Color.Gray, maxLines = 1)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                certifications.take(4).forEach { cert ->
+                                    Text(
+                                        text = "✓ ${cert.title} (${cert.issuer})",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Honors & Awards
+                    DrawerSection("HONORS & AWARDS", Icons.Default.Favorite) {
+                        if (awards.isEmpty()) {
+                            Text("No recognitions registered.", fontSize = 10.sp, color = Color.Gray, maxLines = 1)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                awards.take(4).forEach { award ->
+                                    Text(
+                                        text = "🏆 ${award.title} (${award.issuer})",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Support Team button
+                    Button(
+                        onClick = { showSupportDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFD32F2F)
+                        )
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "SUPPORT & DONATION 💖",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    if (isAdminLoggedIn) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Button(
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                rootHomeTab = "admin_dashboard"
+                            },
+                            modifier = Modifier.fillMaxWidth().testTag("drawer_admin_dashboard_btn"),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF0F172A)
+                            )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Shield,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFEF08A),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "🔑 GO TO ADMIN CENTER",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Services and Features ("yo app ko subida")
+                    Text(
+                        text = "EXCLUSIVE APP UTILITIES",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 1.sp
+                    )
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val subidaList = listOf(
+                            Triple(Icons.Default.Star, "HD & 4K Layouts", "Aesthetic color accents and professional template formats."),
+                            Triple(Icons.Default.AutoAwesome, "1-Click Easy Builder", "Fill details once and instantly compile professional formats."),
+                            Triple(Icons.Default.Download, "Seamless PDF Export", "Zero margin errors with direct download-to-device feature."),
+                            Triple(Icons.Default.Lock, "100% Offline Vault", "Full local data safety. Your sensitive data stays on your device.")
+                        )
+
+                        subidaList.forEach { (icon, title, desc) ->
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = title,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = desc,
+                                        fontSize = 10.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                        lineHeight = 12.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    // App Build Version info (updates automatically based on device/app values)
+                    val appVersionName = try {
+                        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.3.2"
+                    } catch (e: Exception) {
+                        "1.3.2"
+                    }
+                    val appVersionCode = try {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode.toString()
+                        } else {
+                            context.packageManager.getPackageInfo(context.packageName, 0).versionCode.toString()
+                        }
+                    } catch (e: Exception) {
+                        "24"
+                    }
+                    val systemAndroidVersion = "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
+
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                secretAdminClickCount++
+                                if (secretAdminClickCount >= 5) {
+                                    showAdminDialog = true
+                                    secretAdminClickCount = 0
+                                } else {
+                                    val left = 5 - secretAdminClickCount
+                                    Toast.makeText(context, "Tap $left more times to unlock suite.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "App Version:",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "v$appVersionName (Build $appVersionCode)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Android OS Runtime:",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = systemAndroidVersion,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Close Drawer Button
+                    Button(
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Close Drawer", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    ) {
+        Scaffold(
+        topBar = {
+            if (screenState != "splash") {
+                TopAppBar(
+                    title = {
+                        val isDark = false
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Sleek Elite Modern Monogram Brand Container
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(Color.Transparent)
+                                    .clickable {
+                                        scope.launch {
+                                            drawerState.open()
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                androidx.compose.foundation.Image(
+                                    painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.yourdoc_logo),
+                                    contentDescription = "YourDoc Logo Mini",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "YOURDOC",
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = (-0.5).sp,
+                                color = if (isDark) Color.White else Color(0xFF001D3D),
+                                fontSize = 18.sp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF005AC1).copy(alpha = 0.12f))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    "ELITE AI",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF005AC1)
+                                )
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        if (screenState != "home") {
+                            IconButton(onClick = { screenState = "home" }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                    contentDescription = "Back Home"
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        if (screenState == "home") {
+                            IconButton(onClick = { screenState = "cover_letter_gen" }) {
+                                Icon(imageVector = Icons.Default.MailOutline, contentDescription = "Cover Letter Generator")
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(if (screenState == "splash") PaddingValues(0.dp) else paddingValues)
+        ) {
+            when (screenState) {
+                "splash" -> YourDocSplashScreen(
+                    onAnimationFinished = {
+                        screenState = "home"
+                    }
+                )
+                 "home" -> HomeScreen(
+                    resumes = resumes,
+                    onEditResume = { id ->
+                        viewModel.loadResume(id)
+                        screenState = "edit"
+                    },
+                    onDeleteResume = { id ->
+                        viewModel.deleteResume(id)
+                        Toast.makeText(context, "Resume draft deleted.", Toast.LENGTH_SHORT).show()
+                    },
+                    onDuplicateResume = { id ->
+                        viewModel.duplicateResume(id)
+                        Toast.makeText(context, "Resume duplicated successfully.", Toast.LENGTH_SHORT).show()
+                    },
+                    onOpenCoverLetter = { screenState = "cover_letter_gen" },
+                    onOpenAtsCenter = {
+                        viewModel.createNewResumeDraft()
+                        screenState = "edit"
+                    },
+                    onOpenTemplates = {
+                        screenState = "templates"
+                    },
+                    onSelectTemplate = { templateId ->
+                        val template = CvTemplate.PREDEFINED_TEMPLATES.find { it.id == templateId }
+                        if (template != null) {
+                            viewModel.createNewResumeDraftWithTemplate(
+                                templateId = template.id,
+                                templateName = template.name,
+                                primaryColorHex = template.primaryColorHex,
+                                headerColorHex = template.headerColorHex
+                            )
+                            screenState = "edit"
+                            Toast.makeText(context, "${template.name} Selected", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onOpenDocumentMerger = {
+                        screenState = "document_manager"
+                    },
+                    onOpenPdfToJpg = {
+                        screenState = "pdf_to_jpg"
+                    },
+                    onOpenJpgToPdf = {
+                        screenState = "jpg_to_pdf"
+                    },
+                    onGeneratePreset = { cvType, job, country, city, bloodGroup ->
+                        viewModel.createPresetDraft(cvType, job, country, city, bloodGroup)
+                        screenState = "edit"
+                        Toast.makeText(context, "Instant Preset CV Created!", Toast.LENGTH_SHORT).show()
+                    },
+                    viewModel = viewModel,
+                    isAdminLoggedIn = isAdminLoggedIn,
+                    onLogOutAdmin = { 
+                        isAdminLoggedIn = false
+                        rootHomeTab = "home"
+                    },
+                    initialHomeTab = rootHomeTab,
+                    onHomeTabChanged = { rootHomeTab = it },
+                    loggedInRole = loggedInRole,
+                    loggedInEmail = loggedInEmail,
+                    onTriggerSignInPortal = { showAdminDialog = true },
+                    onSignOut = {
+                        loggedInEmail = ""
+                        loggedInRole = "Guest"
+                        isAdminLoggedIn = false
+                        rootHomeTab = "home"
+                    }
+                )
+                "templates" -> TemplatesScreen(
+                    viewModel = viewModel,
+                    onSelect = { template ->
+                        viewModel.createNewResumeDraftWithTemplate(
+                            templateId = template.id,
+                            templateName = template.name,
+                            primaryColorHex = template.primaryColorHex,
+                            headerColorHex = template.headerColorHex
+                        )
+                        screenState = "edit"
+                        Toast.makeText(context, "${template.name} Draft Created!", Toast.LENGTH_SHORT).show()
+                    },
+                    onBack = {
+                        screenState = "home"
+                    }
+                )
+                "edit" -> EditResumeScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { screenState = "home" }
+                )
+                "cover_letter_gen" -> CoverLetterGeneratorScreen(
+                    viewModel = viewModel,
+                    onBack = { screenState = "home" }
+                )
+                "document_merger" -> DocumentMergerScreen(
+                    viewModel = viewModel,
+                    onBack = { screenState = "home" }
+                )
+                "document_manager" -> DocumentManagerScreen(
+                    viewModel = viewModel,
+                    onBack = { screenState = "home" }
+                )
+                "pdf_to_jpg" -> PdfToJpgScreen(
+                    resumes = resumes,
+                    onBack = { screenState = "home" }
+                )
+                "jpg_to_pdf" -> JpgToPdfScreen(
+                    onBack = { screenState = "home" }
+                )
+            }
+        }
+    }
+    }
+
+    if (showEditAdminDialog) {
+        var tempName by remember { mutableStateOf(adminName) }
+        var tempEmail by remember { mutableStateOf(adminEmail) }
+        var tempCompany by remember { mutableStateOf(adminCompany) }
+        var tempPhone by remember { mutableStateOf(adminPhone) }
+        var tempRole by remember { mutableStateOf(adminRole) }
+        var tempAddress by remember { mutableStateOf(adminAddress) }
+        var tempExtra by remember { mutableStateOf(adminExtraDetails) }
+
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showEditAdminDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(16.dp).border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "⚙️ EDIT SYS-ADMIN PROFILE",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    OutlinedTextField(
+                        value = tempName,
+                        onValueChange = { tempName = it },
+                        label = { Text("Admin Full Name", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempEmail,
+                        onValueChange = { tempEmail = it },
+                        label = { Text("Admin Corporate Email", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompany,
+                        onValueChange = { tempCompany = it },
+                        label = { Text("Admin Office/Company", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempPhone,
+                        onValueChange = { tempPhone = it },
+                        label = { Text("Admin Phone Number", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempRole,
+                        onValueChange = { tempRole = it },
+                        label = { Text("Designated System Role", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempAddress,
+                        onValueChange = { tempAddress = it },
+                        label = { Text("Office Base", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempExtra,
+                        onValueChange = { tempExtra = it },
+                        label = { Text("Managed Infrastructures", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showEditAdminDialog = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("CLOSE", fontSize = 11.sp)
+                        }
+                        Button(
+                            onClick = {
+                                adminName = tempName
+                                adminEmail = tempEmail
+                                adminCompany = tempCompany
+                                adminPhone = tempPhone
+                                adminRole = tempRole
+                                adminAddress = tempAddress
+                                adminExtraDetails = tempExtra
+                                profilePrefs.edit().apply {
+                                    putString("admin_name", tempName)
+                                    putString("admin_email", tempEmail)
+                                    putString("admin_company", tempCompany)
+                                    putString("admin_phone", tempPhone)
+                                    putString("admin_role", tempRole)
+                                    putString("admin_address", tempAddress)
+                                    putString("admin_extra_details", tempExtra)
+                                    apply()
+                                }
+                                showEditAdminDialog = false
+                                Toast.makeText(context, "Admin Profile Synced Successfully!", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1.3f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("SAVE CHANGES", fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showEditCompanyDialog) {
+        var tempCompName by remember { mutableStateOf(companyName) }
+        var tempCompEmail by remember { mutableStateOf(companyEmail) }
+        var tempCompPhone by remember { mutableStateOf(companyPhone) }
+        var tempCompRegNo by remember { mutableStateOf(companyRegNo) }
+        var tempCompEmployees by remember { mutableStateOf(companyEmployees) }
+        var tempCompLoc by remember { mutableStateOf(companyLocation) }
+        var tempCompCap by remember { mutableStateOf(companyCapital) }
+        var tempCompStatus by remember { mutableStateOf(companyStatus) }
+
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showEditCompanyDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(16.dp).border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "💼 UPDATE COMPANY PROFILE",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    OutlinedTextField(
+                        value = tempCompName,
+                        onValueChange = { tempCompName = it },
+                        label = { Text("Company Name", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompEmail,
+                        onValueChange = { tempCompEmail = it },
+                        label = { Text("Corporate Email Address", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompPhone,
+                        onValueChange = { tempCompPhone = it },
+                        label = { Text("Company Helpline / Contact", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompRegNo,
+                        onValueChange = { tempCompRegNo = it },
+                        label = { Text("Registration Identifier", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompEmployees,
+                        onValueChange = { tempCompEmployees = it },
+                        label = { Text("Total Active Workforce", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompLoc,
+                        onValueChange = { tempCompLoc = it },
+                        label = { Text("Headquarters Address", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompCap,
+                        onValueChange = { tempCompCap = it },
+                        label = { Text("Registered Capital Reserves", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCompStatus,
+                        onValueChange = { tempCompStatus = it },
+                        label = { Text("License Verification Privilege", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showEditCompanyDialog = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("CLOSE", fontSize = 11.sp)
+                        }
+                        Button(
+                            onClick = {
+                                companyName = tempCompName
+                                companyEmail = tempCompEmail
+                                companyPhone = tempCompPhone
+                                companyRegNo = tempCompRegNo
+                                companyEmployees = tempCompEmployees
+                                companyLocation = tempCompLoc
+                                companyCapital = tempCompCap
+                                companyStatus = tempCompStatus
+                                profilePrefs.edit().apply {
+                                    putString("company_name", tempCompName)
+                                    putString("company_email", tempCompEmail)
+                                    putString("company_phone", tempCompPhone)
+                                    putString("company_reg_no", tempCompRegNo)
+                                    putString("company_employees", tempCompEmployees)
+                                    putString("company_location", tempCompLoc)
+                                    putString("company_capital", tempCompCap)
+                                    putString("company_status", tempCompStatus)
+                                    apply()
+                                }
+                                showEditCompanyDialog = false
+                                Toast.makeText(context, "Company Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1.3f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("SAVE CHANGES", fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showEditCandidateDialog) {
+        val currentProfile = viewModel.userProfileState.value ?: UserProfile()
+        var tempCandName by remember { mutableStateOf(currentProfile.fullName.ifBlank { "Not Configured" }) }
+        var tempCandEmail by remember { mutableStateOf(currentProfile.email.ifBlank { loggedInEmail }) }
+        var tempCandPhone by remember { mutableStateOf(currentProfile.phone.ifBlank { "Not Configured" }) }
+        var tempCandTitle by remember { mutableStateOf(currentProfile.preferredJobTitle.ifBlank { "Not Configured" }) }
+        var tempCandCity by remember { mutableStateOf(currentProfile.city.ifBlank { "Not Configured" }) }
+        var tempCandCountry by remember { mutableStateOf(currentProfile.country.ifBlank { "Not Configured" }) }
+        var tempCandEdu by remember { mutableStateOf(currentProfile.education.ifBlank { "Not Configured" }) }
+        var tempCandExp by remember { mutableStateOf(currentProfile.experience.ifBlank { "Not Configured" }) }
+        var tempCandSkills by remember { mutableStateOf(currentProfile.skills.ifBlank { "Not Configured" }) }
+        var tempCandLanguages by remember { mutableStateOf(currentProfile.languages.ifBlank { "Not Configured" }) }
+
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showEditCandidateDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(16.dp).border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "👤 UPDATE CANDIDATE PROFILE",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    OutlinedTextField(
+                        value = tempCandName,
+                        onValueChange = { tempCandName = it },
+                        label = { Text("Candidate Full Name", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandEmail,
+                        onValueChange = { tempCandEmail = it },
+                        label = { Text("Preferred Email Contact", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandPhone,
+                        onValueChange = { tempCandPhone = it },
+                        label = { Text("Helpline Contact Phone", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandTitle,
+                        onValueChange = { tempCandTitle = it },
+                        label = { Text("Preferred Job Position / Target", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandCity,
+                        onValueChange = { tempCandCity = it },
+                        label = { Text("Designated City", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandCountry,
+                        onValueChange = { tempCandCountry = it },
+                        label = { Text("Designated Country", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandEdu,
+                        onValueChange = { tempCandEdu = it },
+                        label = { Text("Academic Levels Summary", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandExp,
+                        onValueChange = { tempCandExp = it },
+                        label = { Text("Professional Experience Levels", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandSkills,
+                        onValueChange = { tempCandSkills = it },
+                        label = { Text("Technical Skills (Single line summary)", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempCandLanguages,
+                        onValueChange = { tempCandLanguages = it },
+                        label = { Text("Fluent Languages (Single line summary)", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showEditCandidateDialog = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("CLOSE", fontSize = 11.sp)
+                        }
+                        Button(
+                            onClick = {
+                                val updatedProfile = currentProfile.copy(
+                                    fullName = tempCandName,
+                                    email = tempCandEmail,
+                                    phone = tempCandPhone,
+                                    preferredJobTitle = tempCandTitle,
+                                    city = tempCandCity,
+                                    country = tempCandCountry,
+                                    education = tempCandEdu,
+                                    experience = tempCandExp,
+                                    skills = tempCandSkills,
+                                    languages = tempCandLanguages,
+                                    lastUpdated = System.currentTimeMillis()
+                                )
+                                viewModel.saveUserProfile(updatedProfile)
+                                showEditCandidateDialog = false
+                                Toast.makeText(context, "Candidate profile has been successfully modernized! ✓", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1.3f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("SAVE CHANGES", fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showAdminDiagnosticsDialog) {
+        val jobsList by viewModel.jobsState.collectAsStateWithLifecycle()
+        val flaggedJobIds by viewModel.flaggedJobIds.collectAsStateWithLifecycle()
+        val verifiedCompanies by viewModel.verifiedCompanyNames.collectAsStateWithLifecycle()
+        val userReports by viewModel.userReports.collectAsStateWithLifecycle()
+        val accountsList by viewModel.appAccounts.collectAsStateWithLifecycle()
+        
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showAdminDiagnosticsDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                modifier = Modifier.fillMaxWidth().padding(12.dp).border(1.5.dp, Color(0xFFFEF08A), RoundedCornerShape(24.dp)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🛡️ EXECUTIVE ADMIN CONSOLE",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFFFEF08A)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFF10B981).copy(alpha = 0.2f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text("SECURE ✓", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color(0xFF10B981))
+                        }
+                    }
+                    
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
+                    
+                    // Comprehensive Personal Profile
+                    Text("ADMINISTRATOR PERSONA", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                            .padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row {
+                            Text("👤 Name: ", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                            Text(adminName, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                        Row {
+                            Text("📧 Email: ", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                            Text(adminEmail, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                        Row {
+                            Text("📞 Hotline: ", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                            Text(adminPhone, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                        Row {
+                            Text("🏢 Company: ", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                            Text(adminCompany, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                        Row {
+                            Text("🏷️ Position: ", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                            Text(adminRole, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                        Row {
+                            Text("📍 Location: ", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                            Text(adminAddress, fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        }
+                        Row {
+                            Text("⚡ Details: ", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                            Text(adminExtraDetails, fontSize = 10.5.sp, color = Color.LightGray)
+                        }
+                    }
+                    
+                    // Simulated Live Statistics
+                    Text("LIVE PLATFORM DIAGNOSTICS", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White.copy(alpha = 0.03f), RoundedCornerShape(12.dp))
+                            .padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Active Job Listings count", fontSize = 10.sp, color = Color.LightGray)
+                            Text("${jobsList.size} Jobs", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF08A))
+                        }
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Total Registered Accounts", fontSize = 10.sp, color = Color.LightGray)
+                            Text("${accountsList.size} Accounts", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF08A))
+                        }
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Verified Partner Companies", fontSize = 10.sp, color = Color.LightGray)
+                            Text("${verifiedCompanies.size} Corporate", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF08A))
+                        }
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Reported User Disputes", fontSize = 10.sp, color = Color.LightGray)
+                            Text("${userReports.size} Incidents", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                        }
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Database Sync Status", fontSize = 10.sp, color = Color.LightGray)
+                            Text("99.98% Latency ~ 4ms", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                        }
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Server CPU Capacity", fontSize = 10.sp, color = Color.LightGray)
+                            Text("14% load / 2.8 GHz", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                        }
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text("Platform Sandbox Engine", fontSize = 10.sp, color = Color.LightGray)
+                            Text("READY / STABLE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF22D3EE))
+                        }
+                    }
+                    
+                    Button(
+                        onClick = { showAdminDiagnosticsDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("CLOSE MONITOR", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    if (showSupportDialog) {
+        SupportDialog(onDismiss = { showSupportDialog = false })
+    }
+
+    if (showAdminDialog) {
+        var authPortalTab by remember { mutableStateOf("candidate") } // "candidate" or "company"
+        var inputEmail by remember { mutableStateOf("") }
+        var inputPassword by remember { mutableStateOf("") }
+        var authErrorMsg by remember { mutableStateOf("") }
+        var isPasswordVisible by remember { mutableStateOf(false) }
+
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showAdminDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .shadow(16.dp, RoundedCornerShape(24.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
+            ) {
+                Column(
+                    modifier = Modifier.padding(22.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Elegant Circular/Squircle Logo Display with Glowing Accents
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color(0xFF0F172A))
+                            .border(
+                                width = 2.dp,
+                                brush = Brush.linearGradient(
+                                    colors = listOf(Color(0xFF2563EB), Color(0xFF00FFCC))
+                                ),
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                            .padding(2.dp)
+                            .clickable {
+                                logoTapCount++
+                                if (logoTapCount >= 5) {
+                                    showSecretAdminTip = !showSecretAdminTip
+                                    logoTapCount = 0
+                                    Toast.makeText(context, "🤫 Confidential Access Mode Toggled!", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.yourdoc_logo),
+                            contentDescription = "YOURDOC YOURJOB App Logo",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(18.dp)),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "YOURDOC YOURJOB",
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF0F172A),
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "Smart Resume & Premium Career Portal",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2563EB)
+                        )
+                        Text(
+                            text = "सजिलो सिभी, राम्रो जागिर",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0D9488)
+                        )
+                    }
+
+                    // Segmented Portal Selector (Login Options underneath Logo in Unique, tactile design)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF1F5F9), RoundedCornerShape(16.dp))
+                            .border(0.5.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                            .padding(4.dp)
+                    ) {
+                        // Candidate Portal option
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (authPortalTab == "candidate") Color.White else Color.Transparent)
+                                .border(
+                                    width = if (authPortalTab == "candidate") 1.dp else 0.dp,
+                                    color = if (authPortalTab == "candidate") Color(0xFF2563EB).copy(alpha = 0.15f) else Color.Transparent,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable { authPortalTab = "candidate"; authErrorMsg = "" }
+                                .padding(vertical = 12.dp)
+                                .testTag("option_candidate_login"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = if (authPortalTab == "candidate") Color(0xFF2563EB) else Color.Gray,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Text(
+                                    text = "Candidate Portal",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (authPortalTab == "candidate") Color(0xFF1E293B) else Color.Gray
+                                )
+                            }
+                        }
+
+                        // Company Portal option
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (authPortalTab == "company") Color.White else Color.Transparent)
+                                .border(
+                                    width = if (authPortalTab == "company") 1.dp else 0.dp,
+                                    color = if (authPortalTab == "company") Color(0xFF10B981).copy(alpha = 0.15f) else Color.Transparent,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable { authPortalTab = "company"; authErrorMsg = "" }
+                                .padding(vertical = 12.dp)
+                                .testTag("option_company_login"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(
+                                    imageVector = Icons.Default.Business,
+                                    contentDescription = null,
+                                    tint = if (authPortalTab == "company") Color(0xFF10B981) else Color.Gray,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Text(
+                                    text = "Company Portal",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (authPortalTab == "company") Color(0xFF1E293B) else Color.Gray
+                                )
+                            }
+                        }
+                    }
+
+                    // Input Fields Area
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = inputEmail,
+                            onValueChange = { inputEmail = it; authErrorMsg = "" },
+                            label = { Text("Email Address", fontSize = 11.sp) },
+                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().testTag("auth_email_input")
+                        )
+
+                        OutlinedTextField(
+                            value = inputPassword,
+                            onValueChange = { inputPassword = it; authErrorMsg = "" },
+                            label = { Text("Session Password", fontSize = 11.sp) },
+                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                            trailingIcon = {
+                                val visibilityIcon = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                                    Icon(visibilityIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+                                }
+                            },
+                            visualTransformation = if (isPasswordVisible) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().testTag("auth_password_input")
+                        )
+                    }
+
+                    // Error text area
+                    if (authErrorMsg.isNotEmpty()) {
+                        Text(
+                            text = authErrorMsg,
+                            color = Color(0xFFEF4444),
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Start)
+                        )
+                    }
+
+                    // Security Credentials Note (Confidential - only visible if activated via secret logo taps)
+                    if (showSecretAdminTip) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFFFFFBEB), RoundedCornerShape(10.dp))
+                                .border(1.dp, Color(0xFFFBBF24), RoundedCornerShape(10.dp))
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = "💡 ADMIN TIP: Logging in with administrative emails (udayarajkhanal21@gmail.com / udayarajkhanal25@gmail.com / info7stargo@gmail.com) with password Udayaraj35@ from either option will instantly activate full System Administrative privileges.",
+                                fontSize = 9.sp,
+                                color = Color(0xFFB45309),
+                                lineHeight = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Actions Area (Cancel vs Login)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { 
+                                showAdminDialog = false
+                                inputEmail = ""
+                                inputPassword = ""
+                                authErrorMsg = ""
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("CANCEL", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                val emailClean = inputEmail.trim().lowercase()
+                                val passClean = inputPassword.trim()
+
+                                if (emailClean.isBlank()) {
+                                    authErrorMsg = "Please write a valid session email address."
+                                    return@Button
+                                }
+                                if (passClean.isBlank()) {
+                                    authErrorMsg = "Please write your system access password."
+                                    return@Button
+                                }
+
+                                // 1) ADMIN EMAIL VALIDATIONS (both emails work from both tabs, with same password)
+                                val isAdminEmail = emailClean == "udayarajkhanal21@gmail.com" || emailClean == "udayarajkhanal25@gmail.com" || emailClean == "info7stargo@gmail.com"
+                                val isCorrectAdminPass = passClean == "Udayaraj35@"
+
+                                if (isAdminEmail) {
+                                    if (isCorrectAdminPass) {
+                                        isAdminLoggedIn = true
+                                        loggedInEmail = emailClean
+                                        loggedInRole = "Admin"
+                                        rootHomeTab = "admin_dashboard"
+                                        showAdminDialog = false
+                                        Toast.makeText(context, "🔑 Administrative Access Unlocked successfully!", Toast.LENGTH_LONG).show()
+                                    } else {
+                                        authErrorMsg = "Security Alert: Incorrect password signature for administrator email."
+                                    }
+                                } else {
+                                    // 2) USER / COMPANY VALIDATION
+                                    val currentAccounts = viewModel.appAccounts.value
+                                    val existingAccount = currentAccounts.firstOrNull { it.email.lowercase() == emailClean }
+
+                                    if (existingAccount != null && existingAccount.status == "Deactivated") {
+                                        authErrorMsg = "❌ Access Terminated: Your account has been deactivated for security purposes."
+                                    } else {
+                                        // Complete dynamic registration on the fly or load existing!
+                                        val role = if (authPortalTab == "candidate") "Candidate" else "Company"
+                                        val nameStr = emailClean.substringBefore("@").capitalize() + (if (role == "Company") " Corp" else "")
+                                        viewModel.addNewAccount(name = nameStr, email = emailClean, role = role)
+
+                                        isAdminLoggedIn = false
+                                        loggedInEmail = emailClean
+                                        loggedInRole = role
+                                        showAdminDialog = false
+                                        Toast.makeText(context, "✓ Access Secured! Signed in onto Nepalese Portal: $emailClean", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1.3f).testTag("auth_login_button"),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("AUTHENTICATE", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TemplateShowcaseCard(
+    templateId: String,
+    name: String,
+    desc: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconBgColor: Color,
+    index: Int,
+    onSelectTemplate: (String) -> Unit,
+    context: android.content.Context,
+    textMuted: Color
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay((index * 120).toLong())
+        visible = true
+    }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else if (isHovered) 1.04f else 1.0f,
+        animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
+        label = "TemplatePulse"
+    )
+
+    val shadowElevation by animateDpAsState(
+        targetValue = if (isPressed) 2.dp else if (isHovered) 8.dp else 4.dp,
+        label = "TemplateElevation"
+    )
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(400 * (index + 1).coerceAtMost(3))) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(400)),
+        exit = fadeOut()
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = shadowElevation),
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    clip = true
+                }
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    onClick = {
+                        onSelectTemplate(templateId)
+                        Toast.makeText(context, "$name Selection Applied", Toast.LENGTH_SHORT).show()
+                    }
+                )
+                .border(
+                    width = if (isHovered) 1.5.dp else 1.dp,
+                    color = if (isHovered) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(iconBgColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(name, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = Color.Black)
+                    Text(desc, fontSize = 10.sp, color = textMuted, lineHeight = 12.sp)
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.ArrowForward,
+                    contentDescription = null,
+                    tint = Color.Gray.copy(alpha = 0.5f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+// ============================================
+// 1. HOME SCREEN - REDESIGNED TABBED DASHBOARD & SAVED LISTS
+// ============================================
+@Composable
+fun HomeScreen(
+    resumes: List<Resume>,
+    onEditResume: (Int) -> Unit,
+    onDeleteResume: (Int) -> Unit,
+    onDuplicateResume: (Int) -> Unit,
+    onOpenCoverLetter: () -> Unit,
+    onOpenAtsCenter: () -> Unit,
+    onOpenTemplates: () -> Unit,
+    onSelectTemplate: (String) -> Unit,
+    onOpenDocumentMerger: () -> Unit,
+    onOpenResult: () -> Unit = {}, // placeholder
+    onOpenPdfToJpg: () -> Unit,
+    onOpenJpgToPdf: () -> Unit,
+    onGeneratePreset: (cvType: String, jobPosition: String, country: String, city: String, bloodGroup: String) -> Unit,
+    viewModel: ResumeViewModel? = null,
+    isAdminLoggedIn: Boolean = false,
+    onLogOutAdmin: () -> Unit = {},
+    initialHomeTab: String = "home",
+    onHomeTabChanged: (String) -> Unit = {},
+    loggedInRole: String = "Guest",
+    loggedInEmail: String = "",
+    onTriggerSignInPortal: () -> Unit = {},
+    onSignOut: () -> Unit = {}
+) {
+    val isDark = false
+    val context = LocalContext.current
+    val localScope = rememberCoroutineScope()
+    val jobsList by (if (viewModel != null) viewModel.jobsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    
+    val jobsSubTab by remember { mutableStateOf("browse") }
+    val userProfile by (if (viewModel != null) viewModel.userProfileState.collectAsStateWithLifecycle() else remember { mutableStateOf(null) })
+    val jobApplications by (if (viewModel != null) viewModel.jobApplicationsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+
+    // Collect all active resume draft states for interactive dashboard live real-time preview
+    val personalInfo by (if (viewModel != null) viewModel.personalInfoState.collectAsStateWithLifecycle() else remember { mutableStateOf(PersonalInfo()) })
+    val passportInfo by (if (viewModel != null) viewModel.passportInfoState.collectAsStateWithLifecycle() else remember { mutableStateOf(PassportInfo()) })
+    val workExperiences by (if (viewModel != null) viewModel.workExperiencesState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val educations by (if (viewModel != null) viewModel.educationsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val skills by (if (viewModel != null) viewModel.skillsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val languages by (if (viewModel != null) viewModel.languagesState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val aboutMe by (if (viewModel != null) viewModel.aboutMeState.collectAsStateWithLifecycle() else remember { mutableStateOf(AboutMe()) })
+    val declaration by (if (viewModel != null) viewModel.declarationState.collectAsStateWithLifecycle() else remember { mutableStateOf(Declaration()) })
+    val customization by (if (viewModel != null) viewModel.customizationState.collectAsStateWithLifecycle() else remember { mutableStateOf(Customization()) })
+    val certifications by (if (viewModel != null) viewModel.certificationsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val projects by (if (viewModel != null) viewModel.projectsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val references by (if (viewModel != null) viewModel.referencesState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val awards by (if (viewModel != null) viewModel.awardsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val hobbies by (if (viewModel != null) viewModel.hobbiesState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val socialLinks by (if (viewModel != null) viewModel.socialLinksState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+    val customSectionsData by (if (viewModel != null) viewModel.customSectionDataState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyMap()) })
+    val verifiedCompanyNames by (if (viewModel != null) viewModel.verifiedCompanyNames.collectAsStateWithLifecycle() else remember { mutableStateOf(emptySet()) })
+
+    var previewCVType by remember { mutableStateOf("europass") }
+    
+    // States for custom automated presets
+    var selectedPresetType by remember { mutableStateOf<String?>(null) }
+    var presetJobTitle by remember { mutableStateOf("Software Engineer") }
+    var presetCountry by remember { mutableStateOf("Nepal") }
+    var presetCity by remember { mutableStateOf("Kathmandu") }
+    var presetBloodGroup by remember { mutableStateOf("O+") }
+    
+    var isCountryDropdownExpanded by remember { mutableStateOf(false) }
+    var isCityDropdownExpanded by remember { mutableStateOf(false) }
+    var isBloodDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Tab state representing different document workspaces
+    // Options: "home" (Dashboard + Showcases + Saved), "europass" (Europass templates & drafts),
+    // "normal" (Normal CV templates & drafts), "ats" (ATS templates & drafts), "cover_letter" (Cover letter generator launcher)
+    var currentHomeTab by remember(initialHomeTab, loggedInRole) {
+        mutableStateOf(if (loggedInRole == "Admin") "admin_dashboard" else initialHomeTab)
+    }
+    var toolsTabSelected by remember { mutableStateOf("utilities") }
+    var docCategorySelected by remember { mutableStateOf("europass") }
+    var activeUtilityToolPlayground by remember { mutableStateOf<String?>(null) }
+
+    // User/Employer dialog displays
+    var showLocalSupportDialog by remember { mutableStateOf(false) }
+    var showPostJobDialog by remember { mutableStateOf(false) }
+
+    // Smart Career Advisor Chat Widget
+    var careerAdvisorQuery by remember { mutableStateOf("") }
+    var careerAdvisorReplies by remember { mutableStateOf(listOf(
+        "Advisor AI" to "Hello! I am your AI Career Coach. Ask me how to optimize your resume, suggest vocational skills, understand international visa support, or explain CV formatting requirements!"
+    )) }
+    var isAdvisorGenerating by remember { mutableStateOf(false) }
+
+    // Global Jobs Filtering & State
+    var searchKeyword by remember { mutableStateOf("") }
+    var searchCountry by remember { mutableStateOf("All") }
+    var searchCity by remember { mutableStateOf("") }
+    var filterVisaSupport by remember { mutableStateOf(false) }
+    var filterAccommodation by remember { mutableStateOf(false) }
+    var filterExperience by remember { mutableStateOf("All") }
+
+    // Toggle states for panels
+    var showNotificationsPanel by remember { mutableStateOf(false) }
+    var isEmployerMode by remember(loggedInRole) { mutableStateOf(loggedInRole == "Company") } // Horizontal tabs for Portal: false = Candidate, true = Employer
+
+    // Dynamic Company Profile Editing
+    var companyNameInput by remember { mutableStateOf("My Global Corp Ltd") }
+    var companyTypeInput by remember { mutableStateOf("Tech Startup") }
+    var companyIndustryInput by remember { mutableStateOf("Software development") }
+    var companyCountryInput by remember { mutableStateOf("Nepal") }
+    var companyCityInput by remember { mutableStateOf("Kathmandu") }
+    var companyAddressInput by remember { mutableStateOf("Mid-Town Lalitpur, Kathmandu") }
+    var companyWebsiteInput by remember { mutableStateOf("https://yourdoc.com") }
+    var companyHrInput by remember { mutableStateOf("Udaya Raj Khanal") }
+    var companyPhoneInput by remember { mutableStateOf("+977-9800000000") }
+    var companyEmailInput by remember { mutableStateOf("hr@yourdoc.com") }
+    var companyAboutInput by remember { mutableStateOf("YourDoc is a growing international career tech platform specializing in digital document generation, modern resumes, and intelligent career paths.") }
+
+    // Direct Job Application Selection
+    var jobToApplyFor by remember { mutableStateOf<JobListing?>(null) }
+    var selectedResumeIdForApply by remember { mutableStateOf(0) }
+    var customCoverLetterForApply by remember { mutableStateOf("") }
+    var isGeneratingApplyContent by remember { mutableStateOf(false) }
+
+    // Dynamic background layout gradient
+    val mainBgGradient = Brush.verticalGradient(
+        colors = listOf(Color(0xFFF8FAFC), Color(0xFFEDF2F7), Color(0xFFE2E8F0))
+    )
+    
+    val textColorHero = Color(0xFF0F172A)
+    val textMuted = Color(0xFF64748B)
+
+    // Infinite transitions for elegant live showcase animations of different CV standards
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "cv_mock_animation")
+    
+    // ATS scanning beam animation (sweeps from 0f to 1f)
+    val atsScannerOffset by infiniteTransition.animateFloat(
+        initialValue = 0.05f,
+        targetValue = 0.95f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 2000, easing = androidx.compose.animation.core.LinearEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "ats_scanner_beam"
+    )
+
+    // Europass star elements pulse scale (pulses from 0.85f to 1.15f)
+    val europassStarPulse by infiniteTransition.animateFloat(
+        initialValue = 0.85f,
+        targetValue = 1.15f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 1500, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "europass_star"
+    )
+
+    // Normal CV milestone nodes outline expander (pulses from 2dp to 11dp)
+    val normalTimelineFloat by infiniteTransition.animateFloat(
+        initialValue = 2f,
+        targetValue = 11f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(durationMillis = 1800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "normal_timeline"
+    )
+    val normalTimelinePulse = normalTimelineFloat.dp
+
+    Scaffold(
+        bottomBar = {
+            // Premium custom glassmorphic floating bottom navigation docket
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .background(Color.Transparent)
+            ) {
+                Card(
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.96f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFF005AC1).copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(22.dp)
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Options: Home, CV / Resume, Jobs Feed, Doc Manage, AI Tools
+                        listOf(
+                            Triple("home", Icons.Default.Home, "Home"),
+                            Triple("cv_preview", Icons.Default.Description, "CV / Resume"),
+                            Triple("jobs", Icons.Default.Work, "Jobs Feed"),
+                            Triple("documents", Icons.Default.Folder, "Doc Manage"),
+                            Triple("all_tools", Icons.Default.Extension, "AI Tools")
+                        ).forEach { (tabId, icon, label) ->
+                            val isSelected = currentHomeTab == tabId
+                            val accentColor = when (tabId) {
+                                "cv_preview" -> Color(0xFF005AC1)
+                                "jobs" -> Color(0xFF10B981)
+                                "documents" -> Color(0xFFE28743)
+                                "all_tools" -> Color(0xFF8B5CF6)
+                                else -> Color(0xFF005AC1)
+                            }
+                            
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { 
+                                        currentHomeTab = tabId 
+                                        onHomeTabChanged(tabId)
+                                    }
+                                    .padding(horizontal = 4.dp, vertical = 6.dp)
+                                    .testTag("nav_tab_$tabId")
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (isSelected) accentColor.copy(alpha = 0.12f) else Color.Transparent)
+                                        .padding(horizontal = 14.dp, vertical = 4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = label,
+                                        tint = if (isSelected) accentColor else Color.Gray.copy(alpha = 0.8f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Text(
+                                    text = label,
+                                    fontSize = 9.sp,
+                                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                    color = if (isSelected) Color.Black else Color.Gray,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(mainBgGradient)
+                .padding(innerPadding)
+        ) {
+            // Flowing background light spot canvas
+            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                val w = this.size.width
+                val h = this.size.height
+                drawCircle(
+                    color = Color(0xFFD3E4FF).copy(alpha = 0.35f),
+                    radius = w * 0.5f,
+                    center = androidx.compose.ui.geometry.Offset(w * 0.8f, h * 0.2f)
+                )
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 18.dp),
+                contentPadding = PaddingValues(top = 12.dp, bottom = 40.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Determine layout corresponding to selected tab
+                when (currentHomeTab) {
+                    "home" -> {
+                        // ============================================
+                        // HOME DASHBOARD TAB - REDESIGNED INTUITIVE INTERNATIONAL PORTAL
+                        // ============================================
+                        // 1. TOP EXECUTIVE WELCOME HEADER
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B)),
+                                            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                            end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
+                                        )
+                                    )
+                                    .border(
+                                        width = 1.5.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFF00FFCC), Color(0xFF005AC1))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .padding(22.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(46.dp)
+                                                .clip(RoundedCornerShape(14.dp))
+                                                .background(Brush.linearGradient(listOf(Color(0xFF005AC1), Color(0xFF00FFCC)))),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("YD YJ", color = Color.White, fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text("YOURDOC YOURJOB Resume Studio", fontWeight = FontWeight.Black, fontSize = 20.sp, color = Color.White, letterSpacing = 0.5.sp)
+                                            Text("AI RESUME BUILDER • PREMIUM CAREER ECOSYSTEM", fontSize = 8.sp, color = Color(0xFF00FFCC), fontWeight = FontWeight.Black, letterSpacing = 1.2.sp)
+                                        }
+                                    }
+                                    
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(
+                                            text = "Compile elite European standard curriculum structures, draft interactive cover letters, and unlock automated global recruitment matching.",
+                                            fontSize = 12.5.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color.LightGray,
+                                            lineHeight = 16.sp
+                                        )
+                                    }
+
+                                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f), thickness = 1.dp)
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "ACTIVE PORTFOLIO OWNER",
+                                                fontSize = 8.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = Color(0xFF00FFCC),
+                                                letterSpacing = 1.sp
+                                            )
+                                            val profileName = userProfile?.fullName?.ifBlank { "Guest Workspace" } ?: "Guest Workspace"
+                                            Text(
+                                                text = if (loggedInRole != "Guest") loggedInEmail else profileName,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color.White.copy(alpha = 0.08f))
+                                                .clickable { 
+                                                    currentHomeTab = "account"
+                                                }
+                                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(if (loggedInRole != "Guest") "GO TO PORTAL ⚡" else "LOGIN / SIGN UP 🔑", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF00FFCC))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                                                 // 2. QUICK DOCUMENT UTILITIES CAROUSEL
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text(
+                                    text = "🛠️ HIGH-VALUE DOCUMENT UTILITIES",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF001D3D),
+                                    letterSpacing = 1.sp
+                                )
+                                
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    // Utility 1: Portfolio Vault merger
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .width(220.dp)
+                                                .clickable { onOpenDocumentMerger() }
+                                                .border(1.dp, Color(0xFF005AC1).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Icon(imageVector = Icons.Default.Folder, contentDescription = null, tint = Color(0xFF005AC1), modifier = Modifier.size(24.dp))
+                                                Text("Portfolio Vault & Merger", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF001D3D))
+                                                Text("Merge CV drafts, certificates and police clearance reports into a bundle.", fontSize = 9.5.sp, color = Color.Gray, lineHeight = 12.sp)
+                                            }
+                                        }
+                                    }
+
+                                    // Utility 2: PDF to JPG
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .width(220.dp)
+                                                .clickable { onOpenPdfToJpg() }
+                                                .border(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Icon(imageVector = Icons.Default.Collections, contentDescription = null, tint = Color(0xFF8B5CF6), modifier = Modifier.size(24.dp))
+                                                Text("PDF to JPG Converter", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF1E1B4B))
+                                                Text("Convert saved PDF templates into high clarity JPG visual mockups.", fontSize = 9.5.sp, color = Color.Gray, lineHeight = 12.sp)
+                                            }
+                                        }
+                                    }
+
+                                    // Utility 3: JPG to PDF
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .width(220.dp)
+                                                .clickable { onOpenJpgToPdf() }
+                                                .border(1.dp, Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Icon(imageVector = Icons.Default.PictureAsPdf, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(24.dp))
+                                                Text("JPG to PDF Booklet", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF064E3B))
+                                                Text("Compile gallery credentials photos, images into clear PDF attachments.", fontSize = 9.5.sp, color = Color.Gray, lineHeight = 12.sp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. SMART NOTIFICATION ALARM CENTER (WHEN OPENED)
+                        item {
+                            AnimatedVisibility(
+                                visible = showNotificationsPanel,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(1.5.dp, Color(0xFF06B6D4).copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF9FAFB))
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(imageVector = Icons.Default.Alarm, contentDescription = null, tint = Color(0xFF0891B2), modifier = Modifier.size(18.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("SMART CAREER ALERTS & NOTIFICATIONS", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFF164E63))
+                                            }
+                                            if (viewModel != null) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(6.dp))
+                                                        .background(Color(0xFF0891B2).copy(alpha = 0.1f))
+                                                        .clickable { 
+                                                            viewModel.markAllAsRead()
+                                                            Toast.makeText(context, "All notifications checked!", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                ) {
+                                                    Text("Clear All Unread", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0891B2))
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        val currentNotificationsList by (if (viewModel != null) viewModel.notificationsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+
+                                        if (currentNotificationsList.isEmpty()) {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text("No notifications received yet.", fontSize = 11.sp, color = Color.Gray, fontStyle = FontStyle.Italic)
+                                            }
+                                        } else {
+                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                currentNotificationsList.forEach { alarm ->
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clip(RoundedCornerShape(10.dp))
+                                                            .background(if (alarm.isRead) Color(0xFFF1F5F9) else Color(0xFFE0F7FA))
+                                                            .border(
+                                                                width = 1.dp,
+                                                                color = if (alarm.isRead) Color.Transparent else Color(0xFF0891B2).copy(alpha = 0.2f),
+                                                                shape = RoundedCornerShape(10.dp)
+                                                            )
+                                                            .padding(10.dp)
+                                                    ) {
+                                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                            val bulletIcon = when (alarm.type) {
+                                                                "matching" -> "🎯"
+                                                                "invitation" -> "📅"
+                                                                else -> "🚀"
+                                                            }
+                                                            Text(bulletIcon, fontSize = 16.sp)
+                                                            Column(modifier = Modifier.weight(1f)) {
+                                                                Row(
+                                                                    modifier = Modifier.fillMaxWidth(),
+                                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                                    verticalAlignment = Alignment.CenterVertically
+                                                                ) {
+                                                                    Text(alarm.title, fontWeight = FontWeight.Bold, fontSize = 11.5.sp, color = Color(0xFF0F172A), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                                    if (viewModel != null) {
+                                                                        Icon(
+                                                                            imageVector = Icons.Default.Close,
+                                                                            contentDescription = "Delete Alert",
+                                                                            tint = Color.Gray,
+                                                                            modifier = Modifier
+                                                                                .size(14.dp)
+                                                                                .clickable { viewModel.deleteNotification(alarm.id) }
+                                                                        )
+                                                                    }
+                                                                }
+                                                                Text(alarm.body, fontSize = 10.5.sp, color = Color(0xFF334155), lineHeight = 14.sp, modifier = Modifier.padding(top = 2.dp))
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 4. RECOMMENDED INTERACTIVE VACANCIES SUMMARY
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "💼 ACTIVE CAREER OPPORTUNITIES FEED",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color(0xFF001D3D),
+                                        letterSpacing = 1.sp
+                                    )
+                                    Text(
+                                        text = "See All Opportunities ➜",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF005AC1),
+                                        modifier = Modifier.clickable {
+                                            currentHomeTab = "jobs"
+                                        }
+                                    )
+                                }
+
+                                val jobsList by (if (viewModel != null) viewModel.jobsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+
+                                if (jobsList.isEmpty()) {
+                                    Card(
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                                    ) {
+                                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                            Text("No direct job vacancies posted yet. Check back soon!", fontSize = 11.sp, color = Color.Gray, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                                        }
+                                    }
+                                } else {
+                                    jobsList.take(2).forEach { job ->
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { currentHomeTab = "jobs" }
+                                                .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(14.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .background(Color(0xFFFEF08A)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text("💼", fontSize = 16.sp)
+                                                }
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        Text(job.title, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = Color(0xFF0F172A), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                        if (viewModel != null && viewModel.isCompanyVerified(job.company)) {
+                                                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(10.dp))
+                                                        }
+                                                    }
+                                                    Text("${job.company} • ${job.city}", fontSize = 10.sp, color = Color.Gray)
+                                                }
+                                                Text(job.salary, fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFF854D0E))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 5. CHANNELS FOR PORTFOLIO DOCUMENT CATEGORIES
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text(
+                                    text = "🗂️ QUICK PORTFOLIO CATEGORY LABS",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF001D3D),
+                                    letterSpacing = 1.sp
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    listOf(
+                                        Triple("europass", "Standard Europass 🇪🇺", Color(0xFF0A2540)),
+                                        Triple("normal", "Corporate Split 🏢", Color(0xFF475569)),
+                                        Triple("ats", "ATS Optimized 🤖", Color(0xFF0F172A))
+                                    ).forEach { (catId, label, color) ->
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable {
+                                                    docCategorySelected = catId
+                                                    currentHomeTab = "documents"
+                                                }
+                                                .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .clip(CircleShape)
+                                                        .background(color.copy(alpha = 0.1f)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(imageVector = Icons.Default.Folder, contentDescription = null, tint = color, modifier = Modifier.size(12.dp))
+                                                }
+                                                Text(label, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 5. INTERACTIVE VOCATIONAL AI CAREER COACH WORKSPACE
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.5.dp, Color(0xFF8B5CF6).copy(alpha = 0.25f), RoundedCornerShape(20.dp))
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .background(
+                                            Brush.verticalGradient(
+                                                colors = listOf(Color(0xFFFAFBFD), Color.White)
+                                            )
+                                        )
+                                        .padding(16.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF8B5CF6).copy(alpha = 0.1f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFF8B5CF6), modifier = Modifier.size(16.dp))
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column {
+                                            Text("6. VOCATIONAL ADVISOR CAREER AI", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFF7C3AED), letterSpacing = 1.sp)
+                                            Text("Direct access to Gemini career optimizations", fontSize = 10.sp, color = textMuted)
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // Chat Replies viewport
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 100.dp, max = 220.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color(0xFFF9FAFB))
+                                            .border(1.dp, Color(0xFFF3F4F6), RoundedCornerShape(10.dp))
+                                            .padding(10.dp)
+                                            .verticalScroll(rememberScrollState())
+                                    ) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            careerAdvisorReplies.forEach { (sender, msg) ->
+                                                val isAI = sender == "Advisor AI"
+                                                Column(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalAlignment = if (isAI) Alignment.Start else Alignment.End
+                                                ) {
+                                                    Text(sender, fontSize = 8.sp, fontWeight = FontWeight.ExtraBold, color = if (isAI) Color(0xFF7C3AED) else Color(0xFF1F2937))
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .padding(top = 2.dp)
+                                                            .clip(
+                                                                RoundedCornerShape(
+                                                                    topStart = 10.dp,
+                                                                    topEnd = 10.dp,
+                                                                    bottomStart = if (isAI) 2.dp else 10.dp,
+                                                                    bottomEnd = if (isAI) 10.dp else 2.dp
+                                                                )
+                                                            )
+                                                            .background(if (isAI) Color(0xFFF3E8FF) else Color(0xFFE2E8F0))
+                                                            .padding(10.dp)
+                                                    ) {
+                                                        Text(msg, fontSize = 11.sp, color = Color(0xFF374151), lineHeight = 14.sp)
+                                                    }
+                                                }
+                                            }
+                                            if (isAdvisorGenerating) {
+                                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                                                    CircularProgressIndicator(modifier = Modifier.size(12.dp), color = Color(0xFF8B5CF6), strokeWidth = 1.5.dp)
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text("Consulting Gemini models...", fontSize = 9.sp, color = Color.Gray, fontStyle = FontStyle.Italic)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Input row
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = careerAdvisorQuery,
+                                            onValueChange = { careerAdvisorQuery = it },
+                                            placeholder = { Text("Ask Coach e.g. Suggest skills for dynamic UI...", fontSize = 11.sp) },
+                                            modifier = Modifier.weight(1f).height(46.dp),
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = Color(0xFF8B5CF6),
+                                                unfocusedBorderColor = Color(0xFFE5E7EB)
+                                            ),
+                                            singleLine = true,
+                                            textStyle = TextStyle(fontSize = 11.5.sp)
+                                        )
+
+                                        Button(
+                                            onClick = {
+                                                if (careerAdvisorQuery.isBlank()) return@Button
+                                                val q = careerAdvisorQuery
+                                                careerAdvisorQuery = ""
+                                                val currentList = careerAdvisorReplies.toMutableList()
+                                                currentList.add("Candidate User" to q)
+                                                careerAdvisorReplies = currentList
+                                                
+                                                isAdvisorGenerating = true
+                                                localScope.launch {
+                                                    try {
+                                                        val resultText = com.example.data.GeminiClient.generateContent(
+                                                            prompt = "You are an elite expert vocational coach and resume optimization advisor. Solve the following query from our Candidate. Give highly concise, structured career or CV optimization tips (maximum 4 bullet points, no corporate fluff): $q"
+                                                        ).getOrNull()
+                                                        
+                                                        val finalReply = if (!resultText.isNullOrBlank()) {
+                                                            resultText
+                                                        } else {
+                                                            // Intuitive offline smart feedback heuristics
+                                                            val lowercaseQ = q.lowercase()
+                                                            when {
+                                                                lowercaseQ.contains("skill") -> "🎯 **Top Skill Suggestions**:\n• Master 'Jetpack Compose' for modern declaratives UI\n• Complete 'Room SQLite' offline data storage design\n• Adopt 'Kotlin Coroutines' for performant flows\n• Learn Figma design systems alignment."
+                                                                lowercaseQ.contains("visa") -> "✈️ **International Visa Sponsorship Channels**:\n• Apply specifically to companies tagged 'Visa Support Offered'\n• Prepare detailed work references to satisfy global HR audits\n• Tailor profiles with linear ATS specifications to pass offshore screens."
+                                                                lowercaseQ.contains("optimize") || lowercaseQ.contains("resume") -> "🚀 **Resume Formatting Checklist**:\n• Switch layout drafts to ATS Compact for structural machine scanning\n• Bulletize responsibilities with strong achievement metrics (e.g. 'Optimized speed by 35%')\n• Ensure skills perfectly match specifications."
+                                                                else -> "💡 **AI Advisor Recommendation**:\nEnhance your career outline by adding precise certifications. Fill out your User Profile under Advanced settings to auto-personalize matching recommendations."
+                                                            }
+                                                        }
+                                                        
+                                                        val updatedReplies = careerAdvisorReplies.toMutableList()
+                                                        updatedReplies.add("Advisor AI" to finalReply)
+                                                        careerAdvisorReplies = updatedReplies
+                                                    } catch (e: Exception) {
+                                                        val updatedReplies = careerAdvisorReplies.toMutableList()
+                                                        updatedReplies.add("Advisor AI" to "Connectivity timeout. Heuristic Tip: Ensure your Workspace Gemini credentials are active inside Settings.")
+                                                        careerAdvisorReplies = updatedReplies
+                                                    } finally {
+                                                        isAdvisorGenerating = false
+                                                    }
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B5CF6)),
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier.height(46.dp),
+                                            enabled = !isAdvisorGenerating && careerAdvisorQuery.isNotBlank()
+                                        ) {
+                                            Text("Ask 🪄", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 6. GLOBAL CAREER PORTAL & INTUITIVE RECRUITMENT MATCHING
+                        item {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "GLOBAL CAREER RECRUITMENT PORTAL",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.2.sp,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                    Text(
+                                        text = "AI Job Matching, Recommended Positions & Direct Apply",
+                                        fontSize = 10.sp,
+                                        color = textMuted
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFFE11D48).copy(alpha = 0.08f))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text("Global Active Feed", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE11D48))
+                                }
+                            }
+                        }
+
+                        // Horizontal Workspace Tabs: Candidate Vacancy board vs Company Employer dashboard (Only visible to Guests to explore)
+                        if (loggedInRole == "Guest") {
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                val tColorCandidate = if (!isEmployerMode) Color.White else Color(0xFF475569)
+                                val bgColorCandidate = if (!isEmployerMode) Color(0xFF0F172A) else Color(0xFFF1F5F9)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(bgColorCandidate)
+                                        .clickable { isEmployerMode = false }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("🌐 Candidate Vacancies Board", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = tColorCandidate)
+                                }
+
+                                val tColorEmployer = if (isEmployerMode) Color.White else Color(0xFF475569)
+                                val bgColorEmployer = if (isEmployerMode) Color(0xFF0F172A) else Color(0xFFF1F5F9)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(bgColorEmployer)
+                                        .clickable { isEmployerMode = true }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("🏢 Company Hiring Portal", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = tColorEmployer)
+                                }
+                            }
+                        }
+                        } // End of Guest-only Tab Switcher conditional
+
+                        if (!isEmployerMode) {
+                            // ============================================
+                            // A. CANDIDATE DISCOVERY WORKSPACE
+                            // ============================================
+                            item {
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                    modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Text("🔍 SMART ADVANCED SEARCH FILTERS", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                        
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        
+                                        // Keywords
+                                        OutlinedTextField(
+                                            value = searchKeyword,
+                                            onValueChange = { searchKeyword = it },
+                                            placeholder = { Text("Search by tech skill or position title (e.g. Kotlin)...", fontSize = 11.sp) },
+                                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                                            shape = RoundedCornerShape(8.dp),
+                                            singleLine = true,
+                                            textStyle = TextStyle(fontSize = 11.sp),
+                                            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                            // Country Selection
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(34.dp)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(Color.White)
+                                                        .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                                        .clickable { 
+                                                            searchCountry = if (searchCountry == "All") "Nepal" else if (searchCountry == "Nepal") "United Kingdom" else "All"
+                                                        }
+                                                        .padding(horizontal = 8.dp),
+                                                    contentAlignment = Alignment.CenterStart
+                                                ) {
+                                                    Text("Country: $searchCountry 🇺🇳", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                                }
+                                            }
+
+                                            // Experience selections
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(34.dp)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(Color.White)
+                                                        .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                                        .clickable { 
+                                                            filterExperience = if (filterExperience == "All") "No experience" else if (filterExperience == "No experience") "1-2 years" else if (filterExperience == "1-2 years") "3+ years" else "All"
+                                                        }
+                                                        .padding(horizontal = 8.dp),
+                                                    contentAlignment = Alignment.CenterStart
+                                                ) {
+                                                    Text("Exp: $filterExperience", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { filterVisaSupport = !filterVisaSupport }) {
+                                                Checkbox(checked = filterVisaSupport, onCheckedChange = { filterVisaSupport = it }, modifier = Modifier.scale(0.8f))
+                                                Text("Visa Support ✈️", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                            }
+
+                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { filterAccommodation = !filterAccommodation }) {
+                                                Checkbox(checked = filterAccommodation, onCheckedChange = { filterAccommodation = it }, modifier = Modifier.scale(0.8f))
+                                                Text("Accommodation 🏠", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                            }
+                                        }
+                                        
+                                        if (searchKeyword.isNotBlank() || searchCountry != "All" || filterVisaSupport || filterAccommodation) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(top = 10.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(Color.Gray.copy(alpha = 0.15f))
+                                                    .clickable {
+                                                        searchKeyword = ""
+                                                        searchCountry = "All"
+                                                        filterVisaSupport = false
+                                                        filterAccommodation = false
+                                                        filterExperience = "All"
+                                                    }
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                    .align(Alignment.End)
+                                            ) {
+                                                Text("Reset Filters ❌", fontSize = 8.5.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Filtered active job listing render elements
+                            val filteredJobs = jobsList.filter { job ->
+                                val isFlagged = viewModel != null && viewModel.isJobFlagged(job.id)
+                                if (isFlagged) {
+                                    false
+                                } else {
+                                    val matchKeyword = searchKeyword.isBlank() || 
+                                        job.title.lowercase().contains(searchKeyword.lowercase()) ||
+                                        job.skillsRequired.lowercase().contains(searchKeyword.lowercase()) ||
+                                        job.company.lowercase().contains(searchKeyword.lowercase())
+                                    
+                                    val matchCountry = searchCountry == "All" || job.country.lowercase() == searchCountry.lowercase()
+                                    val matchVisa = !filterVisaSupport || job.visaSupport
+                                    val matchAccommd = !filterAccommodation || job.accommodation
+                                    val matchExp = filterExperience == "All" || job.experienceRequired.contains(filterExperience)
+
+                                    matchKeyword && matchCountry && matchVisa && matchAccommd && matchExp
+                                }
+                            }
+
+                            if (filteredJobs.isEmpty()) {
+                                item {
+                                    Card(
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth().padding(24.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text("No global vacancies match your filter parameters.", fontSize = 12.sp, color = Color.Gray, fontStyle = FontStyle.Italic)
+                                            Text("Try checking 'Country: All' or resetting keywords.", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(top = 4.dp))
+                                        }
+                                    }
+                                }
+                            } else {
+                                items(filteredJobs) { job ->
+                                    var isExpanded by remember { mutableStateOf(false) }
+                                    
+                                    // CALCULATED AI SUITABILITY MATCHING ALGORITHM
+                                    // Match candidate skills collected in active resume draft to job skills required
+                                    val userSkillsSet = skills.map { it.name.lowercase().trim() }.toSet()
+                                    val jobSkills = job.skillsRequired.split(",").map { it.lowercase().trim() }.filter { it.isNotBlank() }
+                                    
+                                    val matchedSkillsList = jobSkills.filter { it in userSkillsSet }
+                                    val missingSkillsList = jobSkills.filter { it !in userSkillsSet }
+                                    
+                                    val matchPercent = if (jobSkills.isEmpty()) {
+                                        75
+                                    } else {
+                                        val calculated = (matchedSkillsList.size.toFloat() / jobSkills.size.toFloat()) * 100f
+                                        // Bound between 35% and 100% to reflect baseline structural qualifications match
+                                        (35f + (calculated * 0.65f)).toInt()
+                                    }
+
+                                    Card(
+                                        shape = RoundedCornerShape(18.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(
+                                                width = if (matchPercent >= 80) 1.5.dp else 1.dp,
+                                                color = if (matchPercent >= 80) Color(0xFF10B981).copy(alpha = 0.5f) else Color(0xFFE2E8F0),
+                                                shape = RoundedCornerShape(18.dp)
+                                            )
+                                    ) {
+                                        Column(modifier = Modifier.padding(16.dp)) {
+                                            // Top Row: Logo, Title, Company Name
+                                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(44.dp)
+                                                        .clip(RoundedCornerShape(10.dp))
+                                                        .background(Color(0xFFF1F5F9)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(job.companyLogo.ifBlank { "🏢" }, fontSize = 22.sp)
+                                                }
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Text(job.title, fontWeight = FontWeight.Black, fontSize = 14.sp, color = Color(0xFF0F172A), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                        if (job.visaSupport) {
+                                                            Box(
+                                                                modifier = Modifier.padding(start = 6.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFFD1FAE5)).padding(horizontal = 4.dp, vertical = 1.dp)
+                                                            ) {
+                                                                Text("VISA ✈️", color = Color(0xFF065F46), fontSize = 7.5.sp, fontWeight = FontWeight.Bold)
+                                                            }
+                                                        }
+                                                    }
+                                                    Text(job.company, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334155))
+                                                    Text("${job.city}, ${job.country} • Posted ${job.postedDate}", fontSize = 10.sp, color = textMuted)
+                                                }
+                                            }
+
+                                            Divider(color = Color(0xFFF1F5F9), thickness = 1.dp, modifier = Modifier.padding(vertical = 10.dp))
+
+                                            // Middle Row: Metadata Chips (Salary, Shift, Duration)
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFFFF1F2)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                                                    Text("💰 ${job.currency} ${job.salary}", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE11D48))
+                                                }
+                                                Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFEFF6FF)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                                                    Text("⏱️ ${job.shiftType}", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2563EB))
+                                                }
+                                                Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFF5F5F4)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                                                    Text("📁 ${job.contractDuration}", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF44403C))
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+
+                                            // SUITABILITY PROGRESS BAR
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                                Text("AI SUITABILITY RATING:", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color(0xFF475569))
+                                                val scoreColor = if (matchPercent >= 80) Color(0xFF10B981) else if (matchPercent >= 55) Color(0xFFF59E0B) else Color.Gray
+                                                Text("$matchPercent% Match rating", fontSize = 10.sp, fontWeight = FontWeight.Black, color = scoreColor)
+                                            }
+                                            val progressVal = matchPercent.toFloat() / 100f
+                                            val progressColor = if (matchPercent >= 80) Color(0xFF10B981) else if (matchPercent >= 55) Color(0xFFF59E0B) else Color.Gray
+                                            LinearProgressIndicator(
+                                                progress = progressVal,
+                                                color = progressColor,
+                                                trackColor = Color(0xFFF1F5F9),
+                                                modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).padding(top = 2.dp)
+                                            )
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            if (isExpanded) {
+                                                Column(modifier = Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    // Qualifications outline comparison
+                                                    Box(
+                                                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color(0xFFF8FAFC)).padding(8.dp)
+                                                    ) {
+                                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                            Text("✔️ Matched Profile Skills:", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                                            if (matchedSkillsList.isEmpty()) {
+                                                                Text("None yet. Add matching skills to see matched qualifiers.", fontSize = 9.sp, color = Color.Gray, fontStyle = FontStyle.Italic)
+                                                            } else {
+                                                                Text(matchedSkillsList.joinToString(", "), fontSize = 9.5.sp, color = Color(0xFF065F46))
+                                                            }
+
+                                                            Spacer(modifier = Modifier.height(2.dp))
+
+                                                            Text("⚠️ Missing Skills Checklist:", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                                                            if (missingSkillsList.isEmpty()) {
+                                                                Text("None! You are highly aligned with the required skill profile.", fontSize = 9.sp, color = Color(0xFF047857), fontWeight = FontWeight.Bold)
+                                                            } else {
+                                                                Text("Missing in your CV: ${missingSkillsList.joinToString(", ")}", fontSize = 9.5.sp, color = Color(0xFF92400E))
+                                                                Text("AI Tip: Tap 'Edit Template' on home, insert these skills to immediately raise matching index!", fontSize = 8.5.sp, fontStyle = FontStyle.Italic, color = Color.Gray)
+                                                            }
+                                                        }
+                                                    }
+
+                                                    // Extra recruitment details
+                                                    Text("Description:", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                                    Text(job.description, fontSize = 11.sp, color = Color(0xFF334155), lineHeight = 15.sp)
+
+                                                    if (job.responsibilities.isNotBlank()) {
+                                                        Text("Responsibilities:", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                                        Text(job.responsibilities, fontSize = 11.sp, color = Color(0xFF334155), lineHeight = 15.sp)
+                                                    }
+
+                                                    if (job.benefits.isNotBlank()) {
+                                                        Text("Benefits:", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                                        Text(job.benefits, fontSize = 11.sp, color = Color(0xFF334155), lineHeight = 15.sp)
+                                                    }
+
+                                                    Text("Corporate Profile & Hiring HR Info:", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                                    Box(
+                                                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color(0xFFEFF6FF)).padding(8.dp)
+                                                    ) {
+                                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                            Text("Corporate Structure: ${job.companyType} (${job.companyIndustry})", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
+                                                            Text("HR Relocation Lead: ${job.companyHrContact}", fontSize = 9.5.sp, color = Color(0xFF1E3A8A))
+                                                            Text("Phone: ${job.companyPhone} • Email: ${job.companyEmail}", fontSize = 9.5.sp, color = Color(0xFF1E3A8A))
+                                                            Text("Official URL: ${job.companyWebsite}", fontSize = 9.5.sp, color = Color(0xFF1E3A8A), fontStyle = FontStyle.Italic)
+                                                            if (job.companyAbout.isNotBlank()) {
+                                                                Text("About Company: ${job.companyAbout}", fontSize = 9.sp, color = Color(0xFF3B82F6), lineHeight = 13.sp)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+
+                                            // Action Buttons: Expand & 1-Click Smart Apply
+                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                                Button(
+                                                    onClick = { isExpanded = !isExpanded },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9)),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    modifier = Modifier.weight(0.8f).height(32.dp),
+                                                    contentPadding = PaddingValues(0.dp)
+                                                ) {
+                                                    Text(if (isExpanded) "Hide Info ↕️" else "Expand Info ↕️", fontSize = 10.sp, color = Color(0xFF475569), fontWeight = FontWeight.Bold)
+                                                }
+
+                                                // Check if user already applied to this jobId
+                                                val hasApplied = jobApplications.any { it.jobId == job.id }
+
+                                                Button(
+                                                    onClick = { 
+                                                        if (!hasApplied) {
+                                                            selectedResumeIdForApply = resumes.firstOrNull()?.id ?: 0
+                                                            customCoverLetterForApply = ""
+                                                            jobToApplyFor = job
+                                                        }
+                                                    },
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        containerColor = if (hasApplied) Color(0xFF10B981) else Color(0xFF0F172A)
+                                                    ),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    modifier = Modifier.weight(1.2f).height(32.dp),
+                                                    contentPadding = PaddingValues(0.dp)
+                                                ) {
+                                                    val appLabel = if (hasApplied) "Applied Successfully ✔️" else "1-Click Smart Apply 🚀"
+                                                    Text(appLabel, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // ============================================
+                            // B. COMPANY EMPLOYER WORKSPACE
+                            // ============================================
+                            
+                             // Employer Company Info Workspace
+                             item {
+                                 val isVerified = verifiedCompanyNames.contains(companyNameInput)
+                                 Card(
+                                     shape = RoundedCornerShape(16.dp),
+                                     colors = CardDefaults.cardColors(containerColor = Color.White),
+                                     modifier = Modifier.fillMaxWidth().border(1.dp, if (isVerified) Color(0xFF10B981).copy(alpha = 0.5f) else Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
+                                 ) {
+                                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                         Row(
+                                             modifier = Modifier.fillMaxWidth(),
+                                             horizontalArrangement = Arrangement.SpaceBetween,
+                                             verticalAlignment = Alignment.CenterVertically
+                                         ) {
+                                             Text("🏢 MY CORPORATE PROFILE CREDENTIALS", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, color = Color(0xFF0F172A))
+                                             Box(
+                                                 modifier = Modifier
+                                                     .clip(RoundedCornerShape(6.dp))
+                                                     .background(
+                                                         if (isVerified) Color(0xFF10B981).copy(alpha = 0.12f) else Color(0xFFF59E0B).copy(alpha = 0.12f)
+                                                     )
+                                                     .padding(horizontal = 6.dp, vertical = 2.dp)
+                                             ) {
+                                                 Text(
+                                                     text = if (isVerified) "VERIFIED PARTNER 🏆" else "PENDING COMPLIANCE ⚠️",
+                                                     fontSize = 8.sp,
+                                                     fontWeight = FontWeight.Bold,
+                                                     color = if (isVerified) Color(0xFF047857) else Color(0xFFD97706)
+                                                 )
+                                             }
+                                         }
+                                         Text("Ensure your recruitment credential details are up to date. Candidate cover letters and live vacanies are matched using these parameters.", fontSize = 10.sp, color = Color.Gray, lineHeight = 13.5.sp)
+                                         
+                                         OutlinedTextField(
+                                             value = companyNameInput,
+                                             onValueChange = { companyNameInput = it },
+                                             label = { Text("Company Name", fontSize = 10.sp) },
+                                             modifier = Modifier.fillMaxWidth().height(46.dp),
+                                             textStyle = TextStyle(fontSize = 11.sp),
+                                             singleLine = true
+                                         )
+
+                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                             OutlinedTextField(
+                                                 value = companyTypeInput,
+                                                 onValueChange = { companyTypeInput = it },
+                                                 label = { Text("Company Type (e.g. Startup)", fontSize = 10.sp) },
+                                                 modifier = Modifier.weight(1f).height(46.dp),
+                                                 textStyle = TextStyle(fontSize = 11.sp),
+                                                 singleLine = true
+                                             )
+                                             OutlinedTextField(
+                                                 value = companyIndustryInput,
+                                                 onValueChange = { companyIndustryInput = it },
+                                                 label = { Text("Industry", fontSize = 10.sp) },
+                                                 modifier = Modifier.weight(1f).height(46.dp),
+                                                 textStyle = TextStyle(fontSize = 11.sp),
+                                                 singleLine = true
+                                             )
+                                         }
+
+                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                             OutlinedTextField(
+                                                 value = companyCountryInput,
+                                                 onValueChange = { companyCountryInput = it },
+                                                 label = { Text("Country", fontSize = 10.sp) },
+                                                 modifier = Modifier.weight(1f).height(46.dp),
+                                                 textStyle = TextStyle(fontSize = 11.sp),
+                                                 singleLine = true
+                                             )
+                                             OutlinedTextField(
+                                                 value = companyCityInput,
+                                                 onValueChange = { companyCityInput = it },
+                                                 label = { Text("City", fontSize = 10.sp) },
+                                                 modifier = Modifier.weight(1f).height(46.dp),
+                                                 textStyle = TextStyle(fontSize = 11.sp),
+                                                 singleLine = true
+                                             )
+                                         }
+
+                                         OutlinedTextField(
+                                             value = companyHrInput,
+                                             onValueChange = { companyHrInput = it },
+                                             label = { Text("Hiring Manager HR Lead", fontSize = 10.sp) },
+                                             modifier = Modifier.fillMaxWidth().height(46.dp),
+                                             textStyle = TextStyle(fontSize = 11.sp),
+                                             singleLine = true
+                                         )
+
+                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                             OutlinedTextField(
+                                                 value = companyPhoneInput,
+                                                 onValueChange = { companyPhoneInput = it },
+                                                 label = { Text("HR contact phone number", fontSize = 10.sp) },
+                                                 modifier = Modifier.weight(1f).height(46.dp),
+                                                 textStyle = TextStyle(fontSize = 11.sp),
+                                                 singleLine = true
+                                             )
+                                             OutlinedTextField(
+                                                 value = companyEmailInput,
+                                                 onValueChange = { companyEmailInput = it },
+                                                 label = { Text("HR Official Email", fontSize = 10.sp) },
+                                                 modifier = Modifier.weight(1f).height(46.dp),
+                                                 textStyle = TextStyle(fontSize = 11.sp),
+                                                 singleLine = true
+                                             )
+                                         }
+
+                                         OutlinedTextField(
+                                             value = companyWebsiteInput,
+                                             onValueChange = { companyWebsiteInput = it },
+                                             label = { Text("Corporate Website address", fontSize = 10.sp) },
+                                             modifier = Modifier.fillMaxWidth().height(46.dp),
+                                             textStyle = TextStyle(fontSize = 11.sp),
+                                             singleLine = true
+                                         )
+
+                                         Button(
+                                             onClick = {
+                                                 if (viewModel != null) {
+                                                     viewModel.updateCompanySettings(
+                                                         companyName = companyNameInput,
+                                                         type = companyTypeInput,
+                                                         industry = companyIndustryInput,
+                                                         country = companyCountryInput,
+                                                         city = companyCityInput,
+                                                         address = companyAddressInput,
+                                                         website = companyWebsiteInput,
+                                                         hrLead = companyHrInput,
+                                                         phone = companyPhoneInput,
+                                                         email = companyEmailInput,
+                                                         about = companyAboutInput
+                                                     )
+                                                 }
+                                                 Toast.makeText(context, "✅ Corporate credentials updated & synced across listings!", Toast.LENGTH_LONG).show()
+                                             },
+                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                                             shape = RoundedCornerShape(8.dp),
+                                             modifier = Modifier.fillMaxWidth().height(36.dp)
+                                         ) {
+                                             Text("Save Corporate settings", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                         }
+                                     }
+                                 }
+                             }
+
+                             // Regulatory Licencing and Verification Upload Widget
+                             item {
+                                 var showSubmitDocDialog by remember { mutableStateOf(false) }
+                                 val submittedDocs by (if (viewModel != null) viewModel.companyRegistrationDocs.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
+                                 val myDoc = submittedDocs.find { it.companyName.equals(companyNameInput, ignoreCase = true) }
+
+                                 Card(
+                                     shape = RoundedCornerShape(16.dp),
+                                     colors = CardDefaults.cardColors(containerColor = Color.White),
+                                     modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
+                                 ) {
+                                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                         Text("📄 REGULATORY VERIFICATION CENTER", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, color = Color(0xFF0F172A))
+                                         Text("To protect candidate safety and unlock advanced placement pipelines, upload your corporate registration license for administrative audit.", fontSize = 10.sp, color = Color.Gray, lineHeight = 13.5.sp)
+
+                                         if (myDoc != null) {
+                                             Box(
+                                                 modifier = Modifier
+                                                     .fillMaxWidth()
+                                                     .clip(RoundedCornerShape(10.dp))
+                                                     .background(
+                                                         when (myDoc.documentStatus) {
+                                                             "Approved" -> Color(0xFFD1FAE5)
+                                                             "Rejected" -> Color(0xFFFEE2E2)
+                                                             else -> Color(0xFFFEF3C7)
+                                                         }
+                                                     )
+                                                     .padding(10.dp)
+                                             ) {
+                                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                                         Text("File: ${myDoc.fileTitle}", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.DarkGray)
+                                                         Text(
+                                                             text = myDoc.documentStatus.uppercase(), 
+                                                             fontSize = 9.sp, 
+                                                             fontWeight = FontWeight.Black, 
+                                                             color = when (myDoc.documentStatus) {
+                                                                 "Approved" -> Color(0xFF047857)
+                                                                 "Rejected" -> Color(0xFFB91C1C)
+                                                                 else -> Color(0xFFD97706)
+                                                             }
+                                                         )
+                                                     }
+                                                     Text("Reg No: ${myDoc.registrationNumber} • Size: ${myDoc.employeeCount}", fontSize = 9.sp, color = Color.Gray)
+                                                     Text("Audit Preview: ${myDoc.fileContentPreview}", fontSize = 9.sp, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                 }
+                                             }
+                                         } else {
+                                             Box(
+                                                 modifier = Modifier
+                                                     .fillMaxWidth()
+                                                     .clip(RoundedCornerShape(10.dp))
+                                                     .background(Color(0xFFF8FAFC))
+                                                     .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                                                     .padding(12.dp),
+                                                 contentAlignment = Alignment.Center
+                                             ) {
+                                                 Text("⚠️ No business registration files submitted yet.", fontSize = 10.5.sp, color = Color.Gray)
+                                             }
+                                         }
+
+                                         Button(
+                                             onClick = { showSubmitDocDialog = true },
+                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                                             shape = RoundedCornerShape(8.dp),
+                                             modifier = Modifier.fillMaxWidth().height(34.dp)
+                                         ) {
+                                             Text(if (myDoc != null) "Re-upload Verification Document" else "Submit Trade License File", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                         }
+                                     }
+                                 }
+
+                                 if (showSubmitDocDialog) {
+                                     var docType by remember { mutableStateOf("Certificate of Incorporation") }
+                                     var regNo by remember { mutableStateOf("") }
+                                     var fileTitleInput by remember { mutableStateOf("CORP_LICENSE.pdf") }
+                                     var employeeSize by remember { mutableStateOf("10 - 50 employees") }
+                                     var regCapital by remember { mutableStateOf("$50,000 USD") }
+                                     var customAuditText by remember { mutableStateOf("") }
+
+                                     androidx.compose.ui.window.Dialog(onDismissRequest = { showSubmitDocDialog = false }) {
+                                         Card(
+                                             shape = RoundedCornerShape(20.dp),
+                                             colors = CardDefaults.cardColors(containerColor = Color.White),
+                                             modifier = Modifier.fillMaxWidth().padding(16.dp)
+                                         ) {
+                                             Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                 Text("📄 SUBMIT LICENSING LICENSE", fontWeight = FontWeight.Black, fontSize = 14.sp, color = Color(0xFF0F172A))
+                                                 Text("Submit official corporate credentials. Admin reviewers can grant Elite Verification within minutes.", fontSize = 10.5.sp, color = Color.Gray)
+
+                                                 OutlinedTextField(
+                                                     value = docType,
+                                                     onValueChange = { docType = it },
+                                                     label = { Text("Document Type (e.g. DMCC License)", fontSize = 10.sp) },
+                                                     modifier = Modifier.fillMaxWidth().height(52.dp),
+                                                     textStyle = TextStyle(fontSize = 11.sp)
+                                                 )
+                                                 OutlinedTextField(
+                                                     value = regNo,
+                                                     onValueChange = { regNo = it },
+                                                     label = { Text("Registration Number", fontSize = 10.sp) },
+                                                     modifier = Modifier.fillMaxWidth().height(52.dp),
+                                                     textStyle = TextStyle(fontSize = 11.sp)
+                                                 )
+                                                 OutlinedTextField(
+                                                     value = fileTitleInput,
+                                                     onValueChange = { fileTitleInput = it },
+                                                     label = { Text("Simulator File Name", fontSize = 10.sp) },
+                                                     modifier = Modifier.fillMaxWidth().height(52.dp),
+                                                     textStyle = TextStyle(fontSize = 11.sp)
+                                                 )
+                                                 OutlinedTextField(
+                                                     value = regCapital,
+                                                     onValueChange = { regCapital = it },
+                                                     label = { Text("Registered Capital", fontSize = 10.sp) },
+                                                     modifier = Modifier.fillMaxWidth().height(52.dp),
+                                                     textStyle = TextStyle(fontSize = 11.sp)
+                                                 )
+                                                 OutlinedTextField(
+                                                     value = employeeSize,
+                                                     onValueChange = { employeeSize = it },
+                                                     label = { Text("Total Employee count", fontSize = 10.sp) },
+                                                     modifier = Modifier.fillMaxWidth().height(52.dp),
+                                                     textStyle = TextStyle(fontSize = 11.sp)
+                                                 )
+                                                 OutlinedTextField(
+                                                     value = customAuditText,
+                                                     onValueChange = { customAuditText = it },
+                                                     label = { Text("Document text snippet (preview for verification)", fontSize = 10.sp) },
+                                                     modifier = Modifier.fillMaxWidth().height(75.dp),
+                                                     textStyle = TextStyle(fontSize = 11.sp),
+                                                     maxLines = 3
+                                                 )
+
+                                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                                                     OutlinedButton(
+                                                         onClick = { showSubmitDocDialog = false },
+                                                         shape = RoundedCornerShape(8.dp),
+                                                         modifier = Modifier.weight(1f).height(36.dp)
+                                                     ) {
+                                                         Text("Cancel", fontSize = 11.sp, color = Color.Gray)
+                                                     }
+                                                     Button(
+                                                         onClick = {
+                                                             if (regNo.isBlank() || customAuditText.isBlank()) {
+                                                                 Toast.makeText(context, "Please complete all verification fields.", Toast.LENGTH_SHORT).show()
+                                                             } else {
+                                                                 if (viewModel != null) {
+                                                                     viewModel.submitCompanyDocument(
+                                                                         com.example.data.CompanyRegistrationDocument(
+                                                                             id = "doc_${java.lang.System.currentTimeMillis()}",
+                                                                             companyName = companyNameInput,
+                                                                             documentType = docType,
+                                                                             registrationNumber = regNo,
+                                                                             fileTitle = fileTitleInput,
+                                                                             fileContentPreview = customAuditText,
+                                                                             submissionDate = "June 15, 2026",
+                                                                             documentStatus = "Pending",
+                                                                             location = "$companyCityInput, $companyCountryInput",
+                                                                             employeeCount = employeeSize,
+                                                                             capitalRegistered = regCapital
+                                                                         )
+                                                                     )
+                                                                 }
+                                                                 Toast.makeText(context, "License document uploaded successfully for review! ✅", Toast.LENGTH_LONG).show()
+                                                                 showSubmitDocDialog = false
+                                                             }
+                                                         },
+                                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                         shape = RoundedCornerShape(8.dp),
+                                                         modifier = Modifier.weight(1f).height(36.dp)
+                                                     ) {
+                                                         Text("Upload File", fontSize = 11.sp, color = Color.White)
+                                                     }
+                                                 }
+                                             }
+                                         }
+                                     }
+                                 }
+                             }
+
+                            // Post job vacancy triggering panel
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("🏢 ACTIVE VACANCIES SAVED IN PORTAL", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color(0xFF2563EB).copy(alpha = 0.1f))
+                                            .clickable { showPostJobDialog = true }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Text("+ Post Live vacancy 🏢", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF2563EB))
+                                    }
+                                }
+                            }
+
+                            // Applicants management section
+                            item {
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF1F2)),
+                                    modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFFECDD3), RoundedCornerShape(16.dp))
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Text("🏆 ACTIVE RECRUITMENT APPLICANTS LOGS", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, color = Color(0xFF881337))
+                                        Text("Review direct candidate applications and update shortlist states in real-time.", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(top = 2.dp, bottom = 12.dp))
+
+                                        if (jobApplications.isEmpty()) {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text("Waiting for candidates to apply...", fontSize = 11.sp, color = Color.Gray, fontStyle = FontStyle.Italic)
+                                            }
+                                        } else {
+                                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                jobApplications.forEach { app ->
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clip(RoundedCornerShape(10.dp))
+                                                            .background(Color.White)
+                                                            .border(1.dp, Color(0xFFF3F4F6), RoundedCornerShape(10.dp))
+                                                            .padding(12.dp)
+                                                    ) {
+                                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                                                Text("Candidate: ${app.applicantName}", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color(0xFF111827))
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .clip(RoundedCornerShape(6.dp))
+                                                                        .background(
+                                                                            when {
+                                                                                app.status.contains("Short") -> Color(0xFFFEF3C7)
+                                                                                app.status.contains("Invite") -> Color(0xFFD1FAE5)
+                                                                                app.status.contains("Reject") -> Color(0xFFFEE2E2)
+                                                                                else -> Color(0xFFE0F2FE)
+                                                                            }
+                                                                        )
+                                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                                ) {
+                                                                    Text(
+                                                                        text = app.status,
+                                                                        fontSize = 8.5.sp,
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        color = when {
+                                                                            app.status.contains("Short") -> Color(0xFFD97706)
+                                                                            app.status.contains("Invite") -> Color(0xFF047857)
+                                                                            app.status.contains("Reject") -> Color(0xFFB91C1C)
+                                                                            else -> Color(0xFF0369A1)
+                                                                        }
+                                                                    )
+                                                                }
+                                                            }
+                                                            Text("Applied For: ${app.jobTitle} (${app.companyName})", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                                            Text("Email: ${app.applicantEmail} • Phone: ${app.applicantPhone}", fontSize = 10.sp, color = Color.Gray)
+                                                            Text("Applied Date: ${app.appliedDate}", fontSize = 9.sp, color = Color.Gray)
+
+                                                            if (app.coverLetterText.isNotBlank()) {
+                                                                Text("AI Custom Cover Letter text:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray, modifier = Modifier.padding(top = 4.dp))
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .fillMaxWidth()
+                                                                        .clip(RoundedCornerShape(8.dp))
+                                                                        .background(Color(0xFFF9FAFB))
+                                                                        .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(8.dp))
+                                                                        .padding(8.dp)
+                                                                ) {
+                                                                    Text(app.coverLetterText, fontSize = 10.sp, color = Color.DarkGray, lineHeight = 13.sp)
+                                                                }
+                                                            }
+
+                                                            Spacer(modifier = Modifier.height(6.dp))
+
+                                                            // Employer actions
+                                                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                                if (viewModel != null) {
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .clip(RoundedCornerShape(6.dp))
+                                                                            .background(Color(0xFFFEF3C7))
+                                                                            .clickable {
+                                                                                viewModel.updateApplicationStatus(app.id, "Shortlisted", "Fabulous skills, highly suitability matches.")
+                                                                                Toast.makeText(context, "Candidate Shortlisted!", Toast.LENGTH_SHORT).show()
+                                                                            }
+                                                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                                    ) {
+                                                                        Text("Shortlist ⭐️", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                                                                    }
+
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .clip(RoundedCornerShape(6.dp))
+                                                                            .background(Color(0xFFD1FAE5))
+                                                                            .clickable {
+                                                                                viewModel.updateApplicationStatus(app.id, "Interview Invited", "Monday 10 AM, Canary Offices Section.")
+                                                                                Toast.makeText(context, "Interview Invitation Issued!", Toast.LENGTH_SHORT).show()
+                                                                            }
+                                                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                                    ) {
+                                                                        Text("Invite 📅", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                                                    }
+
+                                                                    Spacer(modifier = Modifier.weight(1f))
+
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .clip(RoundedCornerShape(6.dp))
+                                                                            .background(Color(0xFFFEE2E2))
+                                                                            .clickable {
+                                                                                viewModel.updateApplicationStatus(app.id, "Rejected", "Qualifications profile did not pass parameters filters.")
+                                                                                Toast.makeText(context, "Application Declined.", Toast.LENGTH_SHORT).show()
+                                                                            }
+                                                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                                    ) {
+                                                                        Text("Decline ❌", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB91C1C))
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 7. ACTIVE SAVED DIGITAL PORTFOLIOS CAPTURING USER DATA DRAFTS
+                        item {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🔑 YOUR SAVED DIGITAL DRAFT DOCUMENTS CHRONOLOGY",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp,
+                                    color = Color(0xFF001D3D)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFF005AC1).copy(alpha = 0.08f))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text("${resumes.size} Drafts saved", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF005AC1))
+                                }
+                            }
+                        }
+
+                        item {
+                            RenderResumesGrid(
+                                filteredResumes = resumes,
+                                isDark = isDark,
+                                textColorHero = textColorHero,
+                                textMuted = textMuted,
+                                onEditResume = onEditResume,
+                                onDuplicateResume = onDuplicateResume,
+                                onDeleteResume = onDeleteResume
+                            )
+                        }
+                    }
+
+                    "europass" -> {
+                        // ============================================
+                        // EUROPASS CV DEDICATED ARCHITECTURE
+                        // ============================================
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFF0A2540))
+                                    .padding(18.dp)
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFFFFCC00).copy(alpha = 0.2f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(imageVector = Icons.Default.Public, contentDescription = null, tint = Color(0xFFFFCC00), modifier = Modifier.size(14.dp))
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("EUROPASS SPACE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFCC00))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Draft EU-Standardized CVs", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Official standardized layout for recruiting agencies and companies throughout Europe. Features rigid side-bar elements and dynamic timeline structures.",
+                                        fontSize = 11.sp,
+                                        color = Color.LightGray.copy(alpha = 0.8f),
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            Text(
+                                text = "SELECT A PRESET BLUEPRINT TO CREATE",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF001D3D)
+                            )
+                        }
+
+                        // Curated Europass templates grid
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                listOf(
+                                    Triple("europass_blue", "Europass Standard Blue", "Navy timeline dividers representing classical reliability."),
+                                    Triple("europass_modern", "Europass Emerald Green", "Sleek modern emerald variation symbolizing growth and clarity."),
+                                    Triple("europass_dark", "Europass Dark Midnight", "High-contrast twilight layout representing creative prestige."),
+                                    Triple("europass_ruby", "Europass Ruby Royal", "Deep burgundy/wine tone scheme highlighting luxury design and executive leaders."),
+                                    Triple("europass_cyber", "Europass Cyber Violet", "An energetic high-tech violet layout tailored for software architects and developers."),
+                                    Triple("europass_amber", "Europass Golden Amber", "Warm yellow-gold with dark contrast paneling suited perfectly for hospitality leads."),
+                                    Triple("europass_platinum", "Europass Platinum Executive", "Ultra-premium platinum layout with steel-blue timelines designed for forensic auditors."),
+                                    Triple("europass_forest", "Europass Forest Green", "Deep natural green forest template designed specifically for site site supervisors."),
+                                    Triple("europass_royal", "Europass Royal Indigo", "Majestic indigo template styled with gold-star emblems representing telecom leads."),
+                                    Triple("europass_coral", "Europass Sunset Coral", "Modern and vibrant coral-red accents paired with rich dark layout segments."),
+                                    Triple("europass_charcoal", "Europass Charcoal Minimal", "Slate-charcoal layout with minimal visual lines emphasizing absolute text readability."),
+                                    Triple("europass_chocolate", "Europass Bronze Deluxe", "Espresso and bronze executive theme mapping culinary and hotel leads."),
+                                    Triple("europass_sky", "Europass Sky Blue", "Energetic and crisp sky blue header layout, fresh and ideal for creative mentors.")
+                                ).forEachIndexed { idx, (templateId, name, desc) ->
+                                    TemplateShowcaseCard(
+                                        templateId = templateId,
+                                        name = name,
+                                        desc = desc,
+                                        icon = Icons.Default.Public,
+                                        iconBgColor = Color(0xFF0A2540),
+                                        index = idx,
+                                        onSelectTemplate = onSelectTemplate,
+                                        context = context,
+                                        textMuted = textMuted
+                                    )
+                                }
+                            }
+                        }
+
+                        // Filter and show ONLY Europass drafts
+                        item {
+                            Text(
+                                text = "YOUR SAVED EUROPASS PORTFOLIOS",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.2.sp,
+                                color = Color(0xFF001D3D),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+
+                        val europassDrafts = resumes.filter {
+                            val cust = try {
+                                com.example.data.JsonParser.fromJson<com.example.data.Customization>(it.customization)
+                            } catch(e: Exception) { null }
+                            val tempId = cust?.templateId ?: "europass_blue"
+                            tempId.contains("europass")
+                        }
+
+                        item {
+                            RenderResumesGrid(
+                                filteredResumes = europassDrafts,
+                                isDark = isDark,
+                                textColorHero = textColorHero,
+                                textMuted = textMuted,
+                                onEditResume = onEditResume,
+                                onDuplicateResume = onDuplicateResume,
+                                onDeleteResume = onDeleteResume
+                            )
+                        }
+                    }
+
+                    "normal" -> {
+                        // ============================================
+                        // NORMAL CV DEDICATED ARCHITECTURE
+                        // ============================================
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFF475569))
+                                    .padding(18.dp)
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(Color.White.copy(alpha = 0.2f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("NORMAL PORTFOLIOS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Modern & Sided CV Layouts", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Custom corporate dual-column split designs, chronological timelines, luxury gold schemes, and creative indigo styles optimized for corporate job boards.",
+                                        fontSize = 11.sp,
+                                        color = Color.LightGray,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            Text(
+                                text = "SELECT HIGH IMPACT NORMAL FORMAT",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF001D3D)
+                            )
+                        }
+
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                listOf(
+                                    Triple("corporate_blue", "Corporate Split Blue", "Double column timeline partition with elegant royal blue theme."),
+                                    Triple("elegant_black", "Elegant Noir Monochrome", "Symmetrical luxury corporate charcoal layout for high-end executives."),
+                                    Triple("modern_minimalist", "Modern Minimalist Slate", "Clean readable structure featuring light slate highlights."),
+                                    Triple("luxury_dark", "Luxury Gold & Cocoa", "Bold executive style featuring cocoa background and gold accents."),
+                                    Triple("creative_royal", "Creative Royal Indigo", "Expressive split layout with lavender gradient headers.")
+                                ).forEachIndexed { idx, (templateId, name, desc) ->
+                                    TemplateShowcaseCard(
+                                        templateId = templateId,
+                                        name = name,
+                                        desc = desc,
+                                        icon = Icons.Default.Description,
+                                        iconBgColor = Color(0xFF475569),
+                                        index = idx,
+                                        onSelectTemplate = onSelectTemplate,
+                                        context = context,
+                                        textMuted = textMuted
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            Text(
+                                text = "YOUR SAVED NORMAL CORPORATE CVs",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.2.sp,
+                                color = Color(0xFF001D3D),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+
+                        val normalDrafts = resumes.filter {
+                            val cust = try {
+                                com.example.data.JsonParser.fromJson<com.example.data.Customization>(it.customization)
+                            } catch(e: Exception) { null }
+                            val tempId = cust?.templateId ?: "corporate_blue"
+                            !tempId.contains("europass") && !tempId.contains("ats")
+                        }
+
+                        item {
+                            RenderResumesGrid(
+                                filteredResumes = normalDrafts,
+                                isDark = isDark,
+                                textColorHero = textColorHero,
+                                textMuted = textMuted,
+                                onEditResume = onEditResume,
+                                onDuplicateResume = onDuplicateResume,
+                                onDeleteResume = onDeleteResume
+                            )
+                        }
+                    }
+
+                    "ats" -> {
+                        // ============================================
+                        // ATS CV DEDICATED ARCHITECTURE
+                        // ============================================
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFF1E293B))
+                                    .padding(18.dp)
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF00FFCC).copy(alpha = 0.25f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(imageVector = Icons.Default.Done, contentDescription = null, tint = Color(0xFF00FFCC), modifier = Modifier.size(14.dp))
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("ATS OPTIMIZATION", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00FFCC))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("ATS-Friendly Parsable Layouts", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Single-column linear structures designed exclusively to easily bypass Automated Applicant Tracking indexing systems to boost ranking position score.",
+                                        fontSize = 11.sp,
+                                        color = Color.LightGray,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            Text(
+                                text = "SELECT STANDARD ATS COMPLIANT TEMPLATE",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF001D3D)
+                            )
+                        }
+
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                listOf(
+                                    Triple("ats_white", "ATS Compliant Pure White", "Ultra-clean linear template optimized for robotic screening parser scanners."),
+                                    Triple("ats_charcoal", "ATS Slate Charcoal", "Sleek spatial structure focused on simple typography paired and bold tags.")
+                                ).forEachIndexed { idx, (templateId, name, desc) ->
+                                    TemplateShowcaseCard(
+                                        templateId = templateId,
+                                        name = name,
+                                        desc = desc,
+                                        icon = Icons.Default.Done,
+                                        iconBgColor = Color(0xFF1E293B),
+                                        index = idx,
+                                        onSelectTemplate = onSelectTemplate,
+                                        context = context,
+                                        textMuted = textMuted
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            Text(
+                                text = "YOUR SAVED ATS PORTFOLIO REPOSITORIES",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.2.sp,
+                                color = Color(0xFF001D3D),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+
+                        val atsDrafts = resumes.filter {
+                            val cust = try {
+                                com.example.data.JsonParser.fromJson<com.example.data.Customization>(it.customization)
+                            } catch(e: Exception) { null }
+                            val tempId = cust?.templateId ?: ""
+                            tempId.contains("ats")
+                        }
+
+                        item {
+                            RenderResumesGrid(
+                                filteredResumes = atsDrafts,
+                                isDark = isDark,
+                                textColorHero = textColorHero,
+                                textMuted = textMuted,
+                                onEditResume = onEditResume,
+                                onDuplicateResume = onDuplicateResume,
+                                onDeleteResume = onDeleteResume
+                            )
+                        }
+                    }
+
+                    "cover_letter" -> {
+                        // ============================================
+                        // COVER LETTER DEDICATED WORKSPACE
+                        // ============================================
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFF0A5C36))
+                                    .padding(18.dp)
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF34D399).copy(alpha = 0.25f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = Color(0xFF34D399), modifier = Modifier.size(14.dp))
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("APPLICATION DOCUMENTS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF34D399))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Elite Cover Letter Space", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Generate targeted custom application cover letters configured with professional layouts and standard text patterns.",
+                                        fontSize = 11.sp,
+                                        color = Color.LightGray,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF0A5C36).copy(alpha = 0.08f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Email, contentDescription = null, tint = Color(0xFF0A5C36), modifier = Modifier.size(26.dp))
+                                    }
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("Configure Targeted Cover Letter", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
+                                        Text(
+                                            text = "Align goals, credentials, and positions directly with corporate vacancy standards.",
+                                            fontSize = 11.sp,
+                                            color = textMuted,
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                            lineHeight = 14.sp
+                                        )
+                                    }
+                                    Button(
+                                        onClick = onOpenCoverLetter,
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0A5C36)),
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                                    ) {
+                                        Text("LAUNCH COVER LETTER BUILDER", fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, color = Color.White)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    "admin_dashboard" -> {
+                        item {
+                            if (viewModel != null) {
+                                AdminDashboardScreen(
+                                    viewModel = viewModel,
+                                    onBackToHome = { currentHomeTab = "home" }
+                                )
+                            } else {
+                                Text("Error: Administrative context not loaded.", modifier = Modifier.padding(16.dp))
+                            }
+                        }
+                    }
+
+                    "account" -> {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+                                        )
+                                    )
+                                    .padding(20.dp)
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF10B981))
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("SECURE IDENTITY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Authentication & Profiler", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Access unified authentication doors, manage cloud states, and establish system administration rights.",
+                                        fontSize = 11.sp,
+                                        color = Color.LightGray,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(56.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF0F172A).copy(alpha = 0.08f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(28.dp))
+                                    }
+
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        if (loggedInRole != "Guest") {
+                                            Text("Active Session Verified ✓", fontWeight = FontWeight.Black, fontSize = 15.sp, color = Color(0xFF10B981))
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text("Role: ${loggedInRole.uppercase()}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.Gray)
+                                            Text("Identity: $loggedInEmail", fontSize = 12.sp, color = Color.Gray)
+                                        } else {
+                                            Text("No Session Active", fontWeight = FontWeight.Black, fontSize = 15.sp, color = Color.Black)
+                                            Text(
+                                                text = "Sign in to access corporate workspace feeds, synchronizations, and administrative commands.",
+                                                fontSize = 11.sp,
+                                                color = Color.Gray,
+                                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                                lineHeight = 14.sp
+                                            )
+                                        }
+                                    }
+
+                                    if (loggedInRole != "Guest") {
+                                        Button(
+                                            onClick = {
+                                                onSignOut()
+                                                android.widget.Toast.makeText(context, "Logged out successfully Security Guarded Lock Active ✓", android.widget.Toast.LENGTH_SHORT).show()
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.fillMaxWidth().height(44.dp)
+                                        ) {
+                                            Text("SECURE SIGN OUT", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, color = Color.White)
+                                        }
+                                    } else {
+                                        Button(
+                                            onClick = { onTriggerSignInPortal() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.fillMaxWidth().height(44.dp)
+                                        ) {
+                                            Text("CHOOSE PORTAL & SIGN IN", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, color = Color.White)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    "all_tools" -> {
+                        item {
+                            // Beautiful header for All Tools
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF2E1065), Color(0xFF4C1D95))
+                                        )
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFFA78BFA), Color(0xFF8B5CF6))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .padding(20.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color.White.copy(alpha = 0.15f))
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "INTELLIGENT WORKSPACE",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color(0xFFF5F3FF),
+                                            letterSpacing = 1.sp
+                                        )
+                                    }
+                                    Text(
+                                        text = "YOURDOC YOURJOB Utilities Hub",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "Explore elite executive-grade AI utilities, document managers, and live career opportunities designed by Udaya Raj Khanal.",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFDDD6FE)
+                                    )
+                                }
+                            }
+                        }
+
+                        // SUB-TAB SELECTION BUTTONS (AI Utilities vs Careers & Jobs Feed)
+                        item {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Card(
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.LightGray.copy(alpha = 0.15f)),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    // Utilities tab button
+                                    Button(
+                                        onClick = { toolsTabSelected = "utilities" },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (toolsTabSelected == "utilities") Color(0xFF8B5CF6) else Color.Transparent,
+                                            contentColor = if (toolsTabSelected == "utilities") Color.White else Color.DarkGray
+                                        ),
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f).height(38.dp),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Extension, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("AI Utilities", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    // Careers Feed tab button
+                                    Button(
+                                        onClick = { toolsTabSelected = "jobs" },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (toolsTabSelected == "jobs") Color(0xFF8B5CF6) else Color.Transparent,
+                                            contentColor = if (toolsTabSelected == "jobs") Color.White else Color.DarkGray
+                                        ),
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f).height(38.dp),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Work, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Careers Feed", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+
+                        if (toolsTabSelected == "utilities") {
+                            // Section Header: EXCLUSIVE CAROUSEL SLIDER ROADMAP
+                            item {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = "EXCLUSIVE CAREER & DOCUMENT UTILITIES (SLIDE TO EXPLORE)",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF8B5CF6),
+                                    letterSpacing = 1.sp
+                                )
+                            }
+
+                            // Horizontal Scrolling Sliding Carousels!
+                            item {
+                                androidx.compose.foundation.lazy.LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                                    modifier = Modifier.fillMaxWidth().testTag("utilities_carousel")
+                                ) {
+                                    // Card 1: Portfolio Vault & Open Manager
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(20.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .width(280.dp)
+                                                .clickable { onOpenDocumentMerger() }
+                                                .border(1.5.dp, Color(0xFF8B5CF6).copy(alpha = 0.15f), RoundedCornerShape(20.dp)),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(16.dp).height(190.dp),
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(36.dp)
+                                                                .clip(RoundedCornerShape(8.dp))
+                                                                .background(Color(0xFF8B5CF6).copy(alpha = 0.1f)),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.FolderSpecial,
+                                                                contentDescription = "Vault Icon",
+                                                                tint = Color(0xFF8B5CF6),
+                                                                modifier = Modifier.size(18.dp)
+                                                            )
+                                                        }
+                                                        Text(
+                                                            text = "Portfolio Vault",
+                                                            fontWeight = FontWeight.Black,
+                                                            fontSize = 13.5.sp,
+                                                            color = Color(0xFF1E1B4B)
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = "Manage credentials, bundle certificates, or compile your CVs quietly under one layout.",
+                                                        fontSize = 11.sp,
+                                                        color = textMuted,
+                                                        lineHeight = 14.sp
+                                                    )
+                                                }
+                                                Button(
+                                                    onClick = onOpenDocumentMerger,
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B5CF6)),
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                                                    contentPadding = PaddingValues(0.dp)
+                                                ) {
+                                                    Text("Open Vault Manager", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    // Card 2: PDF to JPG High-Res Converter
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(20.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .width(280.dp)
+                                                .clickable { onOpenPdfToJpg() }
+                                                .border(1.5.dp, Color(0xFF0F172A).copy(alpha = 0.15f), RoundedCornerShape(20.dp)),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(16.dp).height(190.dp),
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(36.dp)
+                                                                .clip(RoundedCornerShape(8.dp))
+                                                                .background(Color(0xFF0F172A).copy(alpha = 0.1f)),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.Collections,
+                                                                contentDescription = "PDF to JPG",
+                                                                tint = Color(0xFF0F172A),
+                                                                modifier = Modifier.size(18.dp)
+                                                            )
+                                                        }
+                                                        Text(
+                                                            text = "PDF to JPG",
+                                                            fontWeight = FontWeight.Black,
+                                                            fontSize = 13.5.sp,
+                                                            color = Color(0xFF0F172A)
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = "Convert saved portfolio resumes or device PDF files into high-clarity shared JPG images.",
+                                                        fontSize = 11.sp,
+                                                        color = textMuted,
+                                                        lineHeight = 14.sp
+                                                    )
+                                                }
+                                                Button(
+                                                    onClick = onOpenPdfToJpg,
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                                                    contentPadding = PaddingValues(0.dp)
+                                                ) {
+                                                    Text("Launch Converter", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    // Card 3: JPG to PDF Booklet Builder
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(20.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier
+                                                .width(280.dp)
+                                                .clickable { onOpenJpgToPdf() }
+                                                .border(1.5.dp, Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(20.dp)),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(16.dp).height(190.dp),
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(36.dp)
+                                                                .clip(RoundedCornerShape(8.dp))
+                                                                .background(Color(0xFF10B981).copy(alpha = 0.1f)),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.PictureAsPdf,
+                                                                contentDescription = "JPG to PDF",
+                                                                tint = Color(0xFF10B981),
+                                                                modifier = Modifier.size(18.dp)
+                                                            )
+                                                        }
+                                                        Text(
+                                                            text = "JPG to PDF",
+                                                            fontWeight = FontWeight.Black,
+                                                            fontSize = 13.5.sp,
+                                                            color = Color(0xFF065F46)
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = "Bundle gallery snaps, credentials certificates and receipts into a unified A4 PDF booklet.",
+                                                        fontSize = 11.sp,
+                                                        color = textMuted,
+                                                        lineHeight = 14.sp
+                                                    )
+                                                }
+                                                Button(
+                                                    onClick = onOpenJpgToPdf,
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                                                    contentPadding = PaddingValues(0.dp)
+                                                ) {
+                                                    Text("Launch Booklet Builder", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (activeUtilityToolPlayground != null) {
+                                item {
+                                    RenderActiveToolPlayground(
+                                        toolId = activeUtilityToolPlayground!!,
+                                        resumes = resumes,
+                                        onBack = { activeUtilityToolPlayground = null },
+                                        context = context
+                                    )
+                                }
+                            } else {
+                                item {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = "EXCLUSIVE CAREER & COGNITIVE POWER-TOOLS (CLICK TO RUN)",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        letterSpacing = 1.2.sp
+                                    )
+                                }
+
+                                val upcomingToolsList = listOf(
+                                    Triple("AI Resume Tailor & Optimizer", "Auto-summarize profiles and automatically craft personalized career bullet points mapped perfectly against target jobs.", "resume_tailer"),
+                                    Triple("LinkedIn Profile Improver", "Import, sequence, and translate your experience summaries into high-impact copy optimized for Recruiter search algorithms.", "linkedin"),
+                                    Triple("Executive Career Roadmaps", "A visual pipeline generator illustrating career progressions and milestones in a gorgeous presentation format.", "roadmap"),
+                                    Triple("Automated Portfolio Builder", "Compile your professional drafts into a responsive workspace website with 1-click publishing.", "portfolio_publish"),
+                                    Triple("Salary & Equity Estimator", "An intelligent forecaster analyzing location, skills, and industry benchmarks to suggest negotiable ranges.", "salary"),
+                                    Triple("Smart Interview Mocking", "Generates personalized Q&A scenarios compiled directly from your document drafts for interview practice.", "interview_mock")
+                                )
+
+                                upcomingToolsList.forEach { (toolName, description, toolId) ->
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = Color.White
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { activeUtilityToolPlayground = toolId },
+                                            border = androidx.compose.foundation.BorderStroke(
+                                                width = 1.dp,
+                                                color = Color(0xFFD8B4FE)
+                                            ),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(16.dp),
+                                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(8.dp)
+                                                                .clip(CircleShape)
+                                                                .background(Color(0xFF8B5CF6))
+                                                        )
+                                                        Text(
+                                                            text = toolName,
+                                                            fontWeight = FontWeight.ExtraBold,
+                                                            fontSize = 13.sp,
+                                                            color = Color.Black
+                                                        )
+                                                    }
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(Color(0xFFF5F3FF))
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "RUN POWER-TOOL ⚡",
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Black,
+                                                            color = Color(0xFF7C3AED)
+                                                        )
+                                                    }
+                                                }
+                                                Text(
+                                                    text = description,
+                                                    fontSize = 11.sp,
+                                                    color = Color.DarkGray
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (toolsTabSelected == "jobs") {
+                            item {
+                                // Beautiful Header Banner
+                                Card(
+                                    shape = RoundedCornerShape(24.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color.Transparent
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+                                            ),
+                                            shape = RoundedCornerShape(24.dp)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(Color(0xFFE28743), Color(0xFFEAB308))
+                                            ),
+                                            shape = RoundedCornerShape(24.dp)
+                                        )
+                                        .padding(20.dp)
+                                ) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(Color.White.copy(alpha = 0.15f))
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(
+                                                    text = "CAREERS & OPPORTUNITIES",
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Black,
+                                                    color = Color(0xFFFEF08A),
+                                                    letterSpacing = 1.sp
+                                                )
+                                            }
+
+                                            if (isAdminLoggedIn) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(Color(0xFF10B981))
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "🔑 ADMIN STATUS ACTIVE",
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Text(
+                                            text = "Live Careers & Vacancies Feed",
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White
+                                        )
+                                        Text(
+                                            text = "Browse direct active vacancy notices, review role competencies, and compile matching legal document portfolios instantly with 1-click auto fill.",
+                                            fontSize = 11.5.sp,
+                                            color = Color(0xFFCBD5E1),
+                                            lineHeight = 15.sp
+                                        )
+
+                                        if (isAdminLoggedIn) {
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                var showAddJobDialog by remember { mutableStateOf(false) }
+
+                                                Button(
+                                                    onClick = { showAddJobDialog = true },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                    shape = RoundedCornerShape(10.dp)
+                                                ) {
+                                                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text("POST NEW VACANCY", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                }
+
+                                                OutlinedButton(
+                                                    onClick = {
+                                                        onLogOutAdmin()
+                                                        Toast.makeText(context, "Logged out of admin session.", Toast.LENGTH_SHORT).show()
+                                                    },
+                                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                                    shape = RoundedCornerShape(10.dp)
+                                                ) {
+                                                    Icon(imageVector = Icons.Default.LockOpen, contentDescription = null, modifier = Modifier.size(14.dp))
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text("LOCK SESSION", fontSize = 11.sp)
+                                                }
+
+                                                if (showAddJobDialog && viewModel != null) {
+                                                    var jTitle by remember { mutableStateOf("") }
+                                                    var jCompany by remember { mutableStateOf("") }
+                                                    var jLoc by remember { mutableStateOf("") }
+                                                    var jDesc by remember { mutableStateOf("") }
+                                                    var jSalary by remember { mutableStateOf("") }
+                                                    var jReq by remember { mutableStateOf("") }
+                                                    var jEmail by remember { mutableStateOf("") }
+
+                                                    androidx.compose.ui.window.Dialog(onDismissRequest = { showAddJobDialog = false }) {
+                                                        Card(
+                                                            shape = RoundedCornerShape(18.dp),
+                                                            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                                                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                                        ) {
+                                                            Column(
+                                                                modifier = Modifier.padding(18.dp),
+                                                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                                            ) {
+                                                                Text("Post New Job Opportunity", fontSize = 16.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                                                                
+                                                                OutlinedTextField(value = jTitle, onValueChange = { jTitle = it }, label = { Text("Job Position Title (e.g. Lead Developer)", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                                OutlinedTextField(value = jCompany, onValueChange = { jCompany = it }, label = { Text("Company / Institution Name", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                                OutlinedTextField(value = jLoc, onValueChange = { jLoc = it }, label = { Text("Office Location (e.g. Kathmandu, Nepal)", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                                OutlinedTextField(value = jDesc, onValueChange = { jDesc = it }, label = { Text("Role Description Overview", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                                                                OutlinedTextField(value = jSalary, onValueChange = { jSalary = it }, label = { Text("Salary / Monthly Equity Structure", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                                OutlinedTextField(value = jReq, onValueChange = { jReq = it }, label = { Text("Requirements & Skills (comma separated)", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                                                                OutlinedTextField(value = jEmail, onValueChange = { jEmail = it }, label = { Text("Careers Application Contact Email", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+
+                                                                Row(
+                                                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                                ) {
+                                                                    OutlinedButton(onClick = { showAddJobDialog = false }, modifier = Modifier.weight(1f)) {
+                                                                        Text("CANCEL", fontSize = 11.sp)
+                                                                    }
+                                                                    Button(
+                                                                        onClick = {
+                                                                            if (jTitle.isNotBlank() && jCompany.isNotBlank()) {
+                                                                                val today = java.text.SimpleDateFormat("MMMM dd, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                                                                                viewModel.addJob(
+                                                                                    JobListing(
+                                                                                        title = jTitle,
+                                                                                        company = jCompany,
+                                                                                        country = jLoc,
+                                                                                        description = jDesc,
+                                                                                        salary = jSalary,
+                                                                                        skillsRequired = jReq,
+                                                                                        postedDate = today,
+                                                                                        contactEmail = jEmail
+                                                                                    )
+                                                                                )
+                                                                                showAddJobDialog = false
+                                                                                Toast.makeText(context, "🎉 Vacancy posted and persistent saved successfully!", Toast.LENGTH_LONG).show()
+                                                                            } else {
+                                                                                Toast.makeText(context, "Title and Company must not be empty.", Toast.LENGTH_SHORT).show()
+                                                                            }
+                                                                        },
+                                                                        modifier = Modifier.weight(1.5f),
+                                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                                                                    ) {
+                                                                        Text("PUBLISH POST", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (jobsList.isEmpty()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Icon(imageVector = Icons.Default.WorkOutline, contentDescription = null, modifier = Modifier.size(48.dp), tint = Color.Gray)
+                                            Text("No opportunities found right now.", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                                        }
+                                    }
+                                }
+                            } else {
+                                jobsList.forEach { job ->
+                                    item {
+                                        var isJobExpanded by remember { mutableStateOf(false) }
+
+                                        Card(
+                                            shape = RoundedCornerShape(18.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.LightGray.copy(alpha = 0.5f)),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { isJobExpanded = !isJobExpanded }
+                                        ) {
+                                            Column(modifier = Modifier.padding(16.dp)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.Top
+                                                ) {
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(
+                                                            text = job.title,
+                                                            fontSize = 14.sp,
+                                                            fontWeight = FontWeight.Black,
+                                                            color = Color(0xFF0F172A)
+                                                        )
+                                                        Row(
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = job.company,
+                                                                fontSize = 11.sp,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = Color(0xFFE28743)
+                                                            )
+                                                            if (viewModel != null && viewModel.isCompanyVerified(job.company)) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.CheckCircle,
+                                                                    contentDescription = "Verified Company",
+                                                                    tint = Color(0xFF10B981),
+                                                                    modifier = Modifier.size(11.dp)
+                                                                )
+                                                                Text(
+                                                                    text = "Verified Profile",
+                                                                    fontSize = 8.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = Color(0xFF047857)
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(Color(0xFFFEF08A))
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "💸 ${job.salary}",
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Black,
+                                                            color = Color(0xFF854D0E)
+                                                        )
+                                                    }
+                                                }
+
+                                                Spacer(modifier = Modifier.height(8.dp))
+
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                                                        Text(text = if (job.country.isNotBlank()) "${job.city}, ${job.country}" else job.city, fontSize = 9.5.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+                                                    }
+                                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(10.dp), tint = Color.Gray)
+                                                        Text(text = "Posted: ${job.postedDate}", fontSize = 9.5.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+                                                    }
+                                                }
+
+                                                androidx.compose.animation.AnimatedVisibility(visible = isJobExpanded) {
+                                                    Column(
+                                                        modifier = Modifier.padding(top = 10.dp),
+                                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
+                                                        Text(text = "Role Description:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                                        Text(text = job.description, fontSize = 10.5.sp, color = Color.DarkGray, lineHeight = 13.5.sp)
+                                                        Text(text = "Key Requirements & Skills:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                                        Text(text = job.skillsRequired, fontSize = 10.5.sp, color = Color.DarkGray, lineHeight = 13.5.sp)
+                                                        Text(text = "Apply Inbox: ${job.contactEmail}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE28743))
+                                                        
+                                                        Row(
+                                                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Button(
+                                                                onClick = {
+                                                                    // Redirect to Cover letter space with prebuilt prompt context!
+                                                                    currentHomeTab = "cover_letter"
+                                                                    Toast.makeText(context, "Filled ${job.title} details into AI Letter Space! ✨", Toast.LENGTH_LONG).show()
+                                                                },
+                                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE28743)),
+                                                                shape = RoundedCornerShape(10.dp)
+                                                            ) {
+                                                                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp))
+                                                                Spacer(modifier = Modifier.width(6.dp))
+                                                                Text("Quick-Apply via Cover Letter", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                                                            }
+
+                                                            if (isAdminLoggedIn && viewModel != null) {
+                                                                IconButton(
+                                                                    onClick = {
+                                                                        viewModel.deleteJob(job.id)
+                                                                        Toast.makeText(context, "Opportunity post removed.", Toast.LENGTH_SHORT).show()
+                                                                    }
+                                                                ) {
+                                                                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Opportunity", tint = Color.Red)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (!isJobExpanded) {
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(text = "Click to view full details & apply...", fontSize = 9.sp, color = Color.Gray, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Stateful configuration fields for custom quick auto-fill presets (Available on Home dashboard)
+                if (currentHomeTab == "home") {
+                    val countriesList = listOf(
+                        "Nepal", "United Kingdom", "Canada", "Australia", "United States", 
+                        "United Arab Emirates", "Japan", "South Korea", "Germany", "India"
+                    )
+
+                    val nepaliDistricts = listOf(
+                        "Kathmandu", "Lalitpur", "Bhaktapur", "Kaski (Pokhara)", "Chitwan", 
+                        "Rupandehi (Butwal)", "Morang (Biratnagar)", "Sunsari (Dharan)", 
+                        "Parsa (Birgunj)", "Jhapa", "Kailali (Dhangadhi)", "Banke (Nepalgunj)", 
+                        "Dang", "Makwanpur (Hetauda)", "Gorkha", "Syangja", "Tanahun", 
+                        "Kavrepalanchok", "Nuwakot", "Dolakha", "Ilam", "Palpa", "Surkhet"
+                    )
+
+                    val worldCities = mapOf(
+                        "United Kingdom" to listOf("London", "Manchester", "Birmingham", "Edinburgh", "Leeds"),
+                        "Canada" to listOf("Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"),
+                        "Australia" to listOf("Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"),
+                        "United States" to listOf("New York", "San Francisco", "Chicago", "Los Angeles", "Seattle"),
+                        "United Arab Emirates" to listOf("Dubai", "Abu Dhabi", "Sharjah", "Ajman"),
+                        "Japan" to listOf("Tokyo", "Osaka", "Kyoto", "Yokohama", "Nagoya"),
+                        "South Korea" to listOf("Seoul", "Busan", "Incheon", "Daegu"),
+                        "Germany" to listOf("Berlin", "Munich", "Frankfurt", "Hamburg", "Düsseldorf"),
+                        "India" to listOf("Delhi", "Mumbai", "Bangalore", "Hyderabad", "Chennai", "Pune")
+                    )
+
+                    if (selectedPresetType != null) {
+                        val presetType = selectedPresetType!!
+                        item {
+                            Dialog(onDismissRequest = { selectedPresetType = null }) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("preset_creator_dialog"),
+                                    shape = RoundedCornerShape(24.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    ),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(20.dp),
+                                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column {
+                                                Text(
+                                                    text = "Setup Quick Auto-Fill",
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Black,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                                Text(
+                                                    text = "Configure targets to auto-populate CV data.",
+                                                    fontSize = 11.sp,
+                                                    color = Color.Gray
+                                                )
+                                            }
+                                            IconButton(
+                                                onClick = { selectedPresetType = null },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.Gray, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                        
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                        
+                                        Text(
+                                            text = "Target Job Position (लक्षित कार्य पद)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        
+                                        val jobPositionsChips = listOf(
+                                            "Software Engineer", "Project Manager", "Accountant", 
+                                            "Civil Engineer", "Medical Officer", "Graphic Designer"
+                                        )
+                                        
+                                        OutlinedTextField(
+                                            value = presetJobTitle,
+                                            onValueChange = { presetJobTitle = it },
+                                            modifier = Modifier.fillMaxWidth().testTag("preset_job_input"),
+                                            placeholder = { Text("E.g. Senior Software Engineer", fontSize = 12.sp) },
+                                            textStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        
+                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            jobPositionsChips.take(3).forEach { pos ->
+                                                val isSelected = presetJobTitle.lowercase() == pos.lowercase()
+                                                Card(
+                                                    onClick = { presetJobTitle = pos },
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    colors = CardDefaults.cardColors(
+                                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                ) {
+                                                    Text(
+                                                        text = pos,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        
+                                        Text(
+                                            text = "Target Country (लक्षित देश)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        
+                                        Box(modifier = Modifier.fillMaxWidth()) {
+                                            OutlinedCard(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp)
+                                                    .clickable { isCountryDropdownExpanded = true }
+                                                    .testTag("preset_country_trigger"),
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(horizontal = 14.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = presetCountry,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                                                }
+                                            }
+                                            
+                                            DropdownMenu(
+                                                expanded = isCountryDropdownExpanded,
+                                                onDismissRequest = { isCountryDropdownExpanded = false },
+                                                modifier = Modifier.fillMaxWidth(0.6f)
+                                            ) {
+                                                countriesList.forEach { cn ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(text = cn, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                                        onClick = {
+                                                            presetCountry = cn
+                                                            presetCity = if (cn == "Nepal") "Kathmandu" else {
+                                                                worldCities[cn]?.firstOrNull() ?: "General"
+                                                            }
+                                                            isCountryDropdownExpanded = false
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        
+                                        val isNepal = presetCountry.lowercase() == "nepal"
+                                        Text(
+                                            text = if (isNepal) "Target District in Nepal (जिल्ला)" else "Target City (नगर)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        
+                                        Box(modifier = Modifier.fillMaxWidth()) {
+                                            OutlinedCard(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp)
+                                                    .clickable { isCityDropdownExpanded = true }
+                                                    .testTag("preset_city_trigger"),
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(horizontal = 14.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = presetCity,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                                                }
+                                            }
+                                            
+                                            DropdownMenu(
+                                                expanded = isCityDropdownExpanded,
+                                                onDismissRequest = { isCityDropdownExpanded = false },
+                                                modifier = Modifier.fillMaxWidth(0.6f)
+                                            ) {
+                                                val cities = if (isNepal) nepaliDistricts else (worldCities[presetCountry] ?: listOf("General"))
+                                                cities.forEach { ct ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(text = ct, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                                        onClick = {
+                                                            presetCity = ct
+                                                            isCityDropdownExpanded = false
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        
+                                        Text(
+                                            text = "Blood Group (रक्त समूह)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        
+                                        val bloodList = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+                                        
+                                        Box(modifier = Modifier.fillMaxWidth()) {
+                                            OutlinedCard(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp)
+                                                    .clickable { isBloodDropdownExpanded = true }
+                                                    .testTag("preset_blood_trigger"),
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(horizontal = 14.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Icon(imageVector = Icons.Default.Favorite, contentDescription = null, tint = Color(0xFFE11D48), modifier = Modifier.size(14.dp))
+                                                        Text(
+                                                            text = if (presetBloodGroup.isEmpty()) "Not Selected" else "Blood Group: $presetBloodGroup",
+                                                            fontSize = 12.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                                                }
+                                            }
+                                            
+                                            DropdownMenu(
+                                                expanded = isBloodDropdownExpanded,
+                                                onDismissRequest = { isBloodDropdownExpanded = false },
+                                                modifier = Modifier.fillMaxWidth(0.6f)
+                                            ) {
+                                                bloodList.forEach { bg ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(text = bg, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                                        onClick = {
+                                                            presetBloodGroup = bg
+                                                            isBloodDropdownExpanded = false
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            OutlinedButton(
+                                                onClick = { selectedPresetType = null },
+                                                modifier = Modifier.weight(1f).height(48.dp),
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) {
+                                                Text("Cancel", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                            
+                                            Button(
+                                                onClick = {
+                                                    onGeneratePreset(presetType, presetJobTitle, presetCountry, presetCity, presetBloodGroup)
+                                                    selectedPresetType = null
+                                                },
+                                                modifier = Modifier.weight(1f).height(48.dp).testTag("dialog_preset_generate_button"),
+                                                shape = RoundedCornerShape(12.dp),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = MaterialTheme.colorScheme.primary
+                                                )
+                                            ) {
+                                                Text("Generate", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // General advice footer (Shown on standard dashboard Home view)
+                if (currentHomeTab == "home") {
+                    item {
+                        Text(
+                            text = "ATS SEARCH & RECRUITER TIPS",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.2.sp,
+                            color = Color(0xFF001D3D)
+                        )
+                    }
+
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            TipItem(
+                                title = "Keep Contact Information Top Centered",
+                                desc = "ATS screen readers parse CVs sequentially from head-to-toe. Ensure complete phone numbers and modern email formats sit directly in the first banner card."
+                            )
+                            TipItem(
+                                title = "Use Action Words in Career Bullet Points",
+                                desc = "Replace simple words like 'managed' or 'led' with advanced vocabulary like 'accelerated', 'orchestrated' or 'maximized' to emphasize business scale outcomes."
+                            )
+                            TipItem(
+                                title = "Balance Skills by Category",
+                                desc = "Structure your skill profiles into technical and soft indicators to easily map with generic industry taxonomy listings."
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp)
+                            .testTag("app_footer_credit"),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "This app is made by YOURDOC YOURJOB",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = "Developed by Udaya Raj Khanal",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RenderResumesGrid(
+    filteredResumes: List<Resume>,
+    isDark: Boolean,
+    textColorHero: Color,
+    textMuted: Color,
+    onEditResume: (Int) -> Unit,
+    onDuplicateResume: (Int) -> Unit,
+    onDeleteResume: (Int) -> Unit
+) {
+    if (filteredResumes.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color.White.copy(alpha = 0.5f))
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFE2E8F0),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(vertical = 40.dp, horizontal = 20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF005AC1).copy(alpha = 0.08f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.InsertDriveFile,
+                        contentDescription = null,
+                        tint = Color(0xFF005AC1).copy(alpha = 0.6f),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = "No drafts found in this category",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textColorHero
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Pick a template above to instantly jumpstart a new document draft!",
+                    fontSize = 11.sp,
+                    color = textMuted,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
+    } else {
+        val chunkedResumes = filteredResumes.chunked(2)
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            chunkedResumes.forEach { pair ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    for (resume in pair) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.85f),
+                                            Color.White.copy(alpha = 0.55f)
+                                        )
+                                    )
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.7f),
+                                            Color(0xFF005AC1).copy(alpha = 0.12f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(20.dp)
+                                )
+                                .clickable { onEditResume(resume.id) }
+                                .padding(14.dp)
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(34.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(
+                                                Brush.linearGradient(
+                                                    colors = listOf(Color(0xFF005AC1), Color(0xFF00FFCC))
+                                                )
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Description,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    
+                                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        IconButton(
+                                            onClick = { onDuplicateResume(resume.id) },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ContentCopy,
+                                                contentDescription = "Duplicate",
+                                                tint = Color(0xFF005AC1),
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = { onDeleteResume(resume.id) },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Delete",
+                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(10.dp))
+                                
+                                val personalInfoObj = try {
+                                    com.example.data.JsonParser.fromJson<com.example.data.PersonalInfo>(resume.personalInfo)
+                                } catch(e: Exception) { null }
+                                val pName = personalInfoObj?.fullName?.ifBlank { resume.title } ?: resume.title
+                                val pEmail = personalInfoObj?.email?.ifBlank { "No Contact Listed" } ?: "No Contact Listed"
+
+                                Text(
+                                    text = pName.ifBlank { "Untitled Elite Draft" },
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 13.sp,
+                                    color = textColorHero,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = pEmail.uppercase(),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    letterSpacing = 0.5.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    val customizationObj = try {
+                                        com.example.data.JsonParser.fromJson<com.example.data.Customization>(resume.customization)
+                                    } catch(e: Exception) { null }
+                                    val templateNameLabel = customizationObj?.templateId?.replace("_", " ")?.uppercase() ?: "PROFESSIONAL"
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = templateNameLabel,
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (pair.size < 2) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OldHomeScreen(
+    resumes: List<Resume>,
+    onEditResume: (Int) -> Unit,
+    onDeleteResume: (Int) -> Unit,
+    onDuplicateResume: (Int) -> Unit,
+    onOpenCoverLetter: () -> Unit,
+    onOpenAtsCenter: () -> Unit,
+    onOpenTemplates: () -> Unit,
+    onSelectTemplate: (String) -> Unit,
+    onOpenDocumentMerger: () -> Unit,
+    onGeneratePreset: (cvType: String, jobPosition: String, country: String, city: String, bloodGroup: String) -> Unit
+) {
+    val isDark = false
+    val context = LocalContext.current
+    
+    // States for custom automated presets
+    var selectedPresetType by remember { mutableStateOf<String?>(null) }
+    var presetJobTitle by remember { mutableStateOf("Software Engineer") }
+    var presetCountry by remember { mutableStateOf("Nepal") }
+    var presetCity by remember { mutableStateOf("Kathmandu") }
+    var presetBloodGroup by remember { mutableStateOf("O+") }
+    
+    var isCountryDropdownExpanded by remember { mutableStateOf(false) }
+    var isCityDropdownExpanded by remember { mutableStateOf(false) }
+    var isBloodDropdownExpanded by remember { mutableStateOf(false) }
+    
+    // Deep Space / Luxury metallic background colors
+    val mainBgGradient = if (isDark) {
+        Brush.verticalGradient(
+            colors = listOf(Color(0xFF020617), Color(0xFF0B132B), Color(0xFF01040A))
+        )
+    } else {
+        Brush.verticalGradient(
+            colors = listOf(Color(0xFFF8FAFC), Color(0xFFEDF2F7), Color(0xFFE2E8F0))
+        )
+    }
+    
+    val textColorHero = if (isDark) Color.White else Color(0xFF0F172A)
+    val textMuted = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
+
+    // Layout wrapped in a beautiful ambient background container
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(mainBgGradient)
+    ) {
+        // Floating ambient light spheres (Blobs) for realistic glassmorphism back-lighting
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = this.size.width
+            val h = this.size.height
+            if (isDark) {
+                // Neon blue glow top right
+                drawCircle(
+                    color = Color(0xFF00FFCC).copy(alpha = 0.06f),
+                    radius = w * 0.4f,
+                    center = androidx.compose.ui.geometry.Offset(w * 0.9f, h * 0.15f)
+                )
+                // Royal blue glow bottom left
+                drawCircle(
+                    color = Color(0xFF005AC1).copy(alpha = 0.08f),
+                    radius = w * 0.45f,
+                    center = androidx.compose.ui.geometry.Offset(w * 0.1f, h * 0.75f)
+                )
+            } else {
+                // Light soft blue/silver glow
+                drawCircle(
+                    color = Color(0xFFD3E4FF).copy(alpha = 0.35f),
+                    radius = w * 0.5f,
+                    center = androidx.compose.ui.geometry.Offset(w * 0.8f, h * 0.2f)
+                )
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
+            verticalArrangement = Arrangement.spacedBy(22.dp)
+        ) {
+            // Elegant Glass Header Card
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            Brush.linearGradient(
+                                colors = if (isDark) listOf(
+                                    Color(0xFF0F172A).copy(alpha = 0.5f),
+                                    Color(0xFF1E293B).copy(alpha = 0.25f)
+                                ) else listOf(
+                                    Color.White.copy(alpha = 0.7f),
+                                    Color.White.copy(alpha = 0.4f)
+                                )
+                            )
+                        )
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                colors = if (isDark) listOf(
+                                    Color.White.copy(alpha = 0.1f),
+                                    Color(0xFF00FFCC).copy(alpha = 0.15f)
+                                ) else listOf(
+                                    Color.White.copy(alpha = 0.6f),
+                                    Color(0xFF005AC1).copy(alpha = 0.1f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(24.dp)
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Holographic YD Badge inside header
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF005AC1), Color(0xFF00FFCC))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "YD",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 18.sp,
+                                    letterSpacing = (-1).sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "YOURDOC ELITE",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 15.sp,
+                                    letterSpacing = 1.5.sp,
+                                    color = if (isDark) Color(0xFF00FFCC) else Color(0xFF005AC1)
+                                )
+                                Text(
+                                    text = "Premium Career Architect",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = textMuted
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text(
+                            text = "Build Your Future Professionally",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = textColorHero,
+                            lineHeight = 28.sp
+                        )
+                        
+                        Spacer(modifier = Modifier.height(6.dp))
+                        
+                        Text(
+                            text = "Sleek biometric encryption, offline AI templates, and ATS-optimized career metrics integrated directly into customizable digital document standards.",
+                            fontSize = 12.sp,
+                            color = textMuted,
+                            lineHeight = 17.sp
+                        )
+                    }
+                }
+            }
+
+
+
+            // Translucent Stats Row Component
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            if (isDark) Color(0xFF0F172A).copy(alpha = 0.4f)
+                            else Color.White.copy(alpha = 0.6f)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (isDark) Color.White.copy(alpha = 0.05f) else Color(0xFFE2E8F0),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "SAVED RESUMES",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textMuted,
+                                letterSpacing = 0.5.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "${resumes.size}",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Black,
+                                color = textColorHero
+                            )
+                        }
+                        
+                        // Vertical divider
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(28.dp)
+                                .background(if (isDark) Color.White.copy(alpha = 0.1f) else Color(0xFFE2E8F0))
+                        )
+                        
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "AI COMPLIANCE",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textMuted,
+                                letterSpacing = 0.5.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = Color(0xFF10B981),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    "100% OFFLINE",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF10B981)
+                                )
+                            }
+                        }
+                        
+                        // Vertical divider
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(28.dp)
+                                .background(if (isDark) Color.White.copy(alpha = 0.1f) else Color(0xFFE2E8F0))
+                        )
+                        
+                        Column(
+                            modifier = Modifier.clickable { onOpenCoverLetter() },
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "COVER LETTERS",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textMuted,
+                                letterSpacing = 0.5.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Article,
+                                    contentDescription = null,
+                                    tint = Color(0xFF005AC1),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    "GENERATE",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF005AC1)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 🛑 ALL-IN-ONE DOCUMENT VAULT & MERGER CARD 🛑
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFFF1F5F9),
+                                    Color(0xFF005AC1).copy(alpha = 0.08f)
+                                )
+                            )
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFF005AC1).copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(24.dp)
+                        )
+                        .clickable { onOpenDocumentMerger() }
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Glass circular badge mimicking Europass Blue & Teal elements requested by user
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(Color(0xFF005AC1), Color(0xFF00FFCC))
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Layers,
+                                contentDescription = "Merger",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "DOCUMENT VAULT & MERGER",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF005AC1),
+                                    letterSpacing = 0.5.sp
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0xFF00FFCC).copy(alpha = 0.2f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = "NEW",
+                                        fontSize = 8.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color(0xFF005AC1)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Combine Passport, CV, Experience, Certs & Police clearance (PCC) into one professional circular logo branded portfolio PDF booklet. Arrange items as you wish.",
+                                fontSize = 11.sp,
+                                color = textMuted,
+                                lineHeight = 15.sp
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            tint = Color(0xFF005AC1),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+
+            // Interactive Templates Explorer section
+            item {
+                TemplatesSection(
+                    onViewAll = onOpenTemplates,
+                    onSelect = onSelectTemplate
+                )
+            }
+
+            // List Headers
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "SAVED EXECUTIVE RESUMES",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.2.sp,
+                        color = if (isDark) Color(0xFF00FFCC) else Color(0xFF001D3D)
+                    )
+                    
+                    if (resumes.isNotEmpty()) {
+                        Text(
+                            text = "${resumes.size} Drafts Loaded",
+                            fontSize = 11.sp,
+                            color = textMuted,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            // Beautiful Saved List Content
+            if (resumes.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                if (isDark) Color(0xFF0F172A).copy(alpha = 0.3f)
+                                else Color.White.copy(alpha = 0.5f)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = if (isDark) Color.White.copy(alpha = 0.05f) else Color(0xFFE2E8F0),
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                            .padding(vertical = 40.dp, horizontal = 20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .size(54.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF005AC1).copy(alpha = 0.08f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.InsertDriveFile,
+                                    contentDescription = null,
+                                    tint = Color(0xFF005AC1).copy(alpha = 0.6f),
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "Your digital portfolio is empty",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textColorHero
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Create customizable designs mapped with standard professional schemas.",
+                                fontSize = 11.sp,
+                                color = textMuted,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            } else {
+                val chunkedResumes = resumes.chunked(2)
+                items(chunkedResumes) { pair ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        for (resume in pair) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = if (isDark) listOf(
+                                                Color(0xFF0F172A).copy(alpha = 0.6f),
+                                                Color(0xFF1E293B).copy(alpha = 0.3f)
+                                            ) else listOf(
+                                                Color.White.copy(alpha = 0.85f),
+                                                Color.White.copy(alpha = 0.55f)
+                                            )
+                                        )
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = if (isDark) listOf(
+                                                Color.White.copy(alpha = 0.12f),
+                                                Color(0xFF00FFCC).copy(alpha = 0.15f)
+                                            ) else listOf(
+                                                Color.White.copy(alpha = 0.7f),
+                                                Color(0xFF005AC1).copy(alpha = 0.12f)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(20.dp)
+                                    )
+                                    .clickable { onEditResume(resume.id) }
+                                    .padding(14.dp)
+                                    .testTag("resume_card_${resume.id}")
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Standard Page Icon representing page templates
+                                        Box(
+                                            modifier = Modifier
+                                                .size(34.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(
+                                                    Brush.linearGradient(
+                                                        colors = listOf(Color(0xFF005AC1), Color(0xFF00FFCC))
+                                                    )
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Description,
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+
+                                        // Mini Operation Button Actions
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            IconButton(
+                                                onClick = { onDuplicateResume(resume.id) },
+                                                modifier = Modifier.size(28.dp).testTag("duplicate_resume_button_${resume.id}")
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.ContentCopy,
+                                                    contentDescription = "Duplicate Resume",
+                                                    tint = Color(0xFF005AC1),
+                                                    modifier = Modifier.size(13.dp)
+                                                )
+                                            }
+
+                                            IconButton(
+                                                onClick = { onDeleteResume(resume.id) },
+                                                modifier = Modifier.size(28.dp).testTag("delete_resume_button_${resume.id}")
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = "Delete",
+                                                    tint = MaterialTheme.colorScheme.error,
+                                                    modifier = Modifier.size(13.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    Text(
+                                        text = resume.title.ifEmpty { "Untitled CV Builder Draft" },
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = textColorHero,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    Text(
+                                        text = "Modified: ${android.text.format.DateFormat.format("MMM dd, yyyy", resume.updatedAt)}",
+                                        fontSize = 10.sp,
+                                        color = textMuted
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(Color(0xFF10B981).copy(alpha = 0.12f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            "ATS COMPLIANT",
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF10B981)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        if (pair.size < 2) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+
+            // INSTANT CV ARCHITECT PRESETS section requested by user
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "INSTANT CV ARCHITECT PRESETS / त्वरित सीभी",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.2.sp,
+                        color = if (isDark) Color(0xFF00FFCC) else Color(0xFF001D3D)
+                    )
+                    
+                    Text(
+                        text = "Need a draft immediately? Tap an architectural preset format below to generate a tailored, professional resume loaded with auto-filled country, city/district, job targets, and biological blood group statistics.",
+                        fontSize = 11.sp,
+                        color = textMuted,
+                        lineHeight = 15.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    // 2x2 Clean Grid of 4 gorgeous, tactile buttons with custom visual themes!
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            // Button 1: Europass CV
+                            Card(
+                                onClick = { selectedPresetType = "europass_cv" },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(96.dp)
+                                    .testTag("preset_europass_button"),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFF0A2540) // Navy Blue Europass Motif
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF00D1FF).copy(alpha = 0.2f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Public,
+                                            contentDescription = null,
+                                            tint = Color(0xFF00D1FF),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = "EUROPASS CV",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                        Text(
+                                            text = "EU Standard Blue/Teal template",
+                                            fontSize = 9.sp,
+                                            color = Color.LightGray.copy(alpha = 0.8f),
+                                            lineHeight = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            // Button 2: Normal CV
+                            Card(
+                                onClick = { selectedPresetType = "normal_cv" },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(96.dp)
+                                    .testTag("preset_normal_button"),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFF475569) // Corporate Slate Grey
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFE2E8F0).copy(alpha = 0.2f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Assignment,
+                                            contentDescription = null,
+                                            tint = Color(0xFFF1F5F9),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = "NORMAL CV",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                        Text(
+                                            text = "Clean corporate standard format",
+                                            fontSize = 9.sp,
+                                            color = Color.LightGray.copy(alpha = 0.8f),
+                                            lineHeight = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            // Button 3: ATS optimized CV
+                            Card(
+                                onClick = { selectedPresetType = "ats_cv" },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(96.dp)
+                                    .testTag("preset_ats_button"),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFF0F172A) // Dark Luxury theme
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF00FFCC).copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.TrendingUp,
+                                            contentDescription = null,
+                                            tint = Color(0xFF00FFCC),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = "ATS CV PRESET",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                        Text(
+                                            text = "Keyword targeting sidebar details",
+                                            fontSize = 9.sp,
+                                            color = Color.LightGray.copy(alpha = 0.8f),
+                                            lineHeight = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            // Button 4: Cover Letter Preset
+                            Card(
+                                onClick = { selectedPresetType = "cover_letter" },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(96.dp)
+                                    .testTag("preset_cover_letter_button"),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFF0A5C36) // Deep Green Emerald for success
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF34D399).copy(alpha = 0.2f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Article,
+                                            contentDescription = null,
+                                            tint = Color(0xFF34D399),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = "COVER LETTER",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color.White,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                        Text(
+                                            text = "Custom targeted application letter",
+                                            fontSize = 9.sp,
+                                            color = Color.LightGray.copy(alpha = 0.8f),
+                                            lineHeight = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Stateful configuration fields for custom quick auto-fill presets
+            val countriesList = listOf(
+                "Nepal", "United Kingdom", "Canada", "Australia", "United States", 
+                "United Arab Emirates", "Japan", "South Korea", "Germany", "India"
+            )
+
+            val nepaliDistricts = listOf(
+                "Kathmandu", "Lalitpur", "Bhaktapur", "Kaski (Pokhara)", "Chitwan", 
+                "Rupandehi (Butwal)", "Morang (Biratnagar)", "Sunsari (Dharan)", 
+                "Parsa (Birgunj)", "Jhapa", "Kailali (Dhangadhi)", "Banke (Nepalgunj)", 
+                "Dang", "Makwanpur (Hetauda)", "Gorkha", "Syangja", "Tanahun", 
+                "Kavrepalanchok", "Nuwakot", "Dolakha", "Ilam", "Palpa", "Surkhet"
+            )
+
+            val worldCities = mapOf(
+                "United Kingdom" to listOf("London", "Manchester", "Birmingham", "Edinburgh", "Leeds"),
+                "Canada" to listOf("Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"),
+                "Australia" to listOf("Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"),
+                "United States" to listOf("New York", "San Francisco", "Chicago", "Los Angeles", "Seattle"),
+                "United Arab Emirates" to listOf("Dubai", "Abu Dhabi", "Sharjah", "Ajman"),
+                "Japan" to listOf("Tokyo", "Osaka", "Kyoto", "Yokohama", "Nagoya"),
+                "South Korea" to listOf("Seoul", "Busan", "Incheon", "Daegu"),
+                "Germany" to listOf("Berlin", "Munich", "Frankfurt", "Hamburg", "Düsseldorf"),
+                "India" to listOf("Delhi", "Mumbai", "Bangalore", "Hyderabad", "Chennai", "Pune")
+            )
+
+            if (selectedPresetType != null) {
+                val presetType = selectedPresetType!!
+                item {
+                    Dialog(onDismissRequest = { selectedPresetType = null }) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("preset_creator_dialog"),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Setup Quick Auto-Fill",
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "Configure targets to auto-populate CV data.",
+                                            fontSize = 11.sp,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = { selectedPresetType = null },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.Gray, modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                                
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                
+                                Text(
+                                    text = "Target Job Position (लक्षित कार्य पद)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                val jobPositionsChips = listOf(
+                                    "Software Engineer", "Project Manager", "Accountant", 
+                                    "Civil Engineer", "Medical Officer", "Graphic Designer"
+                                )
+                                
+                                OutlinedTextField(
+                                    value = presetJobTitle,
+                                    onValueChange = { presetJobTitle = it },
+                                    modifier = Modifier.fillMaxWidth().testTag("preset_job_input"),
+                                    placeholder = { Text("E.g. Senior Software Engineer", fontSize = 12.sp) },
+                                    textStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    jobPositionsChips.take(3).forEach { pos ->
+                                        val isSelected = presetJobTitle.lowercase() == pos.lowercase()
+                                        Card(
+                                            onClick = { presetJobTitle = pos },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        ) {
+                                            Text(
+                                                text = pos,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                Text(
+                                    text = "Target Country (लक्षित देश)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(50.dp)
+                                            .clickable { isCountryDropdownExpanded = true }
+                                            .testTag("preset_country_trigger"),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(horizontal = 14.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = presetCountry,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                                        }
+                                    }
+                                    
+                                    DropdownMenu(
+                                        expanded = isCountryDropdownExpanded,
+                                        onDismissRequest = { isCountryDropdownExpanded = false },
+                                        modifier = Modifier.fillMaxWidth(0.6f)
+                                    ) {
+                                        countriesList.forEach { cn ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = cn, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                                onClick = {
+                                                    presetCountry = cn
+                                                    presetCity = if (cn == "Nepal") "Kathmandu" else {
+                                                        worldCities[cn]?.firstOrNull() ?: "General"
+                                                    }
+                                                    isCountryDropdownExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                val isNepal = presetCountry.lowercase() == "nepal"
+                                Text(
+                                    text = if (isNepal) "Target District in Nepal (जिल्ला)" else "Target City (नगर)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(50.dp)
+                                            .clickable { isCityDropdownExpanded = true }
+                                            .testTag("preset_city_trigger"),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(horizontal = 14.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = presetCity,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                                        }
+                                    }
+                                    
+                                    DropdownMenu(
+                                        expanded = isCityDropdownExpanded,
+                                        onDismissRequest = { isCityDropdownExpanded = false },
+                                        modifier = Modifier.fillMaxWidth(0.6f)
+                                    ) {
+                                        val cities = if (isNepal) nepaliDistricts else (worldCities[presetCountry] ?: listOf("General"))
+                                        cities.forEach { ct ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = ct, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                                onClick = {
+                                                    presetCity = ct
+                                                    isCityDropdownExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                Text(
+                                    text = "Blood Group (रक्त समूह)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                val bloodList = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+                                
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(50.dp)
+                                            .clickable { isBloodDropdownExpanded = true }
+                                            .testTag("preset_blood_trigger"),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(horizontal = 14.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Icon(imageVector = Icons.Default.Favorite, contentDescription = null, tint = Color(0xFFE11D48), modifier = Modifier.size(14.dp))
+                                                Text(
+                                                    text = if (presetBloodGroup.isEmpty()) "Not Selected" else "Blood Group: $presetBloodGroup",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                                        }
+                                    }
+                                    
+                                    DropdownMenu(
+                                        expanded = isBloodDropdownExpanded,
+                                        onDismissRequest = { isBloodDropdownExpanded = false },
+                                        modifier = Modifier.fillMaxWidth(0.6f)
+                                    ) {
+                                        bloodList.forEach { bg ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = bg, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                                onClick = {
+                                                    presetBloodGroup = bg
+                                                    isBloodDropdownExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { selectedPresetType = null },
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text("Cancel", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    
+                                    Button(
+                                        onClick = {
+                                            onGeneratePreset(presetType, presetJobTitle, presetCountry, presetCity, presetBloodGroup)
+                                            selectedPresetType = null
+                                        },
+                                        modifier = Modifier.weight(1f).height(48.dp).testTag("dialog_preset_generate_button"),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    ) {
+                                        Text("Generate", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // High-Impact Compliance Tips section
+            item {
+                Text(
+                    text = "ATS SEARCH & RECRUITER TIPS",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.2.sp,
+                    color = if (isDark) Color(0xFF00FFCC) else Color(0xFF001D3D)
+                )
+            }
+
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TipItem(
+                        title = "Keep Contact Information Top Centered",
+                        desc = "ATS screen readers parse CVs sequentially from head-to-toe. Ensure complete phone numbers and modern email formats sit directly in the first banner card."
+                    )
+                    TipItem(
+                        title = "Use Action Words in Career Bullet Points",
+                        desc = "Replace simple words like 'managed' or 'led' with advanced vocabulary like 'accelerated', 'orchestrated' or 'maximized' to emphasize business scale outcomes."
+                    )
+                    TipItem(
+                        title = "Balance Skills by Category",
+                        desc = "Structure your skill profiles into technical and soft indicators to easily map with generic industry taxonomy listings."
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TemplatesSection(
+    onViewAll: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    val isDark = false
+    var isExpanded by remember { mutableStateOf(false) }
+    val templates = CvTemplate.PREDEFINED_TEMPLATES
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = "CV TEMPLATES GALLERY",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+                color = if (isDark) Color.White else Color(0xFF001D3D)
+            )
+            Text(
+                text = "Explore Categories",
+                fontSize = 12.sp,
+                color = Color(0xFF005AC1),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clickable { onViewAll() }
+                    .testTag("templates_view_all_button")
+            )
+        }
+
+        val visibleTemplates = if (isExpanded) templates else templates.take(3)
+        val rows = visibleTemplates.chunked(3)
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            rows.forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowItems.forEach { template ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            val primaryColor = try {
+                                Color(android.graphics.Color.parseColor(template.primaryColorHex))
+                            } catch (e: Exception) {
+                                Color(0xFF005AC1)
+                            }
+                            val lightAccent = try {
+                                Color(android.graphics.Color.parseColor(template.lightAccentHex))
+                            } catch (e: Exception) {
+                                Color(0xFFF1F5F9)
+                            }
+                            TemplateItem(
+                                name = template.name,
+                                isDarkBg = template.isDarkBg,
+                                accentColor = primaryColor,
+                                lightAccent = lightAccent,
+                                onClick = { onSelect(template.id) }
+                            )
+                        }
+                    }
+                    if (rowItems.size < 3) {
+                        for (i in rowItems.size until 3) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // More Expansion Toggle Button
+        OutlinedButton(
+            onClick = { isExpanded = !isExpanded },
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .fillMaxWidth(0.9f),
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color(0xFF005AC1)
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF005AC1).copy(alpha = 0.5f))
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = if (isExpanded) "COLLAPSE EXTRA LAYOUTS" else "MORE TEMPLATES (EXPLORE ALL 10)",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.5.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TemplateItem(
+    name: String,
+    isDarkBg: Boolean,
+    accentColor: Color,
+    lightAccent: Color,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val isSystemDark = false
+        val cardBg = if (isDarkBg) {
+            Color(0xFF1E2226)
+        } else {
+            if (isSystemDark) Color(0xFF1E252E) else Color.White
+        }
+        val borderStroke = if (isSystemDark) {
+            androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2E353F))
+        } else {
+            androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDDE2F0))
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .clickable { onClick() }
+                .testTag("template_item_${name.replace(" ", "_").lowercase()}"),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBg),
+            border = borderStroke,
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Top accent bars represent document lines
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(accentColor)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.75f)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(if (isDarkBg) Color.White.copy(alpha = 0.3f) else Color(0xFFE2E8F0))
+                )
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                // Bottom representation card element
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(lightAccent),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Description,
+                        contentDescription = null,
+                        tint = accentColor.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = name,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isSystemDark) Color.White.copy(alpha = 0.9f) else Color(0xFF44474E),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun TipItem(title: String, desc: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lightbulb,
+                contentDescription = null,
+                tint = Color(0xFFFBBF24),
+                modifier = Modifier
+                    .size(20.dp)
+                    .padding(top = 2.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(title, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(desc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+
+@Composable
+fun LivePreviewModal(
+    show: Boolean,
+    onDismiss: () -> Unit,
+    title: String,
+    personalInfo: PersonalInfo,
+    passportInfo: PassportInfo,
+    workExperiences: List<WorkExperience>,
+    educations: List<Education>,
+    skills: List<Skill>,
+    languages: List<Language>,
+    aboutMe: AboutMe,
+    declaration: Declaration,
+    customization: Customization,
+    certifications: List<CertItem>,
+    projects: List<ProjectItem>,
+    references: List<ReferenceItem>,
+    awards: List<AwardItem>,
+    hobbies: List<HobbyItem>,
+    socialLinks: List<SocialLinkItem>,
+    customSectionsData: Map<String, String>,
+    context: android.content.Context
+) {
+    if (!show) return
+
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Modal Toolbar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF001D3D), Color(0xFF005AC1))
+                            )
+                        )
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        IconButton(
+                            onClick = onDismiss,
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                        ) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Close")
+                        }
+                        Column {
+                            Text(
+                                text = "HD 4K PRINT PREVIEW",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "Exact Layout Matching Sheet & PDF Exporter",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF10B981))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "READY FOR PRINT",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                // Scrollable Live Document Area
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(Color(0xFFF1F5F9))
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(bottom = 80.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // High fidelity print preview text indicator
+                        Text(
+                            text = "📄 Simulated 1:1 Page Alignment for $title",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        // Beautiful shadow-framed white page (Simulates exact physical document page margins)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = 760.dp)
+                                .shadow(8.dp, RoundedCornerShape(4.dp))
+                                .background(Color.White)
+                                .padding(12.dp)
+                        ) {
+                            ResumeDocumentView(
+                                personalInfo = personalInfo,
+                                passportInfo = passportInfo,
+                                workExperiences = workExperiences,
+                                educations = educations,
+                                skills = skills,
+                                languages = languages,
+                                aboutMe = aboutMe,
+                                declaration = declaration,
+                                customization = customization,
+                                certifications = certifications,
+                                projects = projects,
+                                references = references,
+                                awards = awards,
+                                hobbies = hobbies,
+                                socialLinks = socialLinks,
+                                customSectionsData = customSectionsData,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    // Floating Bottom Action Row
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color(0xFFF1F5F9).copy(alpha = 0.95f), Color(0xFFF1F5F9))
+                                )
+                            )
+                            .padding(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth()
+                        ) {
+                            // Close Button
+                            Button(
+                                onClick = onDismiss,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray, contentColor = Color.Black),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.weight(1f).height(48.dp)
+                            ) {
+                                Text("Close Preview", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            }
+
+                            // Download / Export Button
+                            Button(
+                                onClick = {
+                                    PdfExporter.exportToPdfAndShare(
+                                        context = context,
+                                        title = title,
+                                        personalInfo = personalInfo,
+                                        passportInfo = passportInfo,
+                                        workExperiences = workExperiences,
+                                        educations = educations,
+                                        skills = skills,
+                                        languages = languages,
+                                        aboutMe = aboutMe,
+                                        declaration = declaration,
+                                        templateId = customization.templateId,
+                                        showProfilePhoto = customization.showProfilePhoto,
+                                        photoShape = customization.photoShape,
+                                        primaryColorHex = customization.primaryColorHex
+                                    )
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.weight(1.2f).height(48.dp)
+                            ) {
+                                Icon(imageVector = Icons.Default.Download, contentDescription = null, tint = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Download PDF 📄", fontWeight = FontWeight.Black, fontSize = 13.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// ============================================
+// 2. RESUME EDIT STUDIO SCREEN
+// ============================================
+@Composable
+fun EditResumeScreen(
+    viewModel: ResumeViewModel,
+    onNavigateBack: () -> Unit
+) {
+    val context = LocalContext.current
+    var cropTempPhotoPath by remember { mutableStateOf<String?>(null) }
+    var cropTempSignaturePath by remember { mutableStateOf<String?>(null) }
+    
+    val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val fileSuffix = when (context.contentResolver.getType(uri)) {
+                        "image/png" -> ".png"
+                        "image/webp" -> ".webp"
+                        "image/gif" -> ".gif"
+                        else -> ".jpg"
+                    }
+                    val targetFile = java.io.File(context.filesDir, "cv_photo_temp_${System.currentTimeMillis()}$fileSuffix")
+                    val outputStream = java.io.FileOutputStream(targetFile)
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                    outputStream.close()
+                    
+                    cropTempPhotoPath = targetFile.absolutePath
+                }
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(context, "Failed to import photo: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    val signaturePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val fileSuffix = when (context.contentResolver.getType(uri)) {
+                        "image/png" -> ".png"
+                        "image/webp" -> ".webp"
+                        "image/gif" -> ".gif"
+                        else -> ".jpg"
+                    }
+                    val targetFile = java.io.File(context.filesDir, "cv_sig_temp_${System.currentTimeMillis()}$fileSuffix")
+                    val outputStream = java.io.FileOutputStream(targetFile)
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                    outputStream.close()
+                    
+                    cropTempSignaturePath = targetFile.absolutePath
+                }
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(context, "Failed to import signature: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    val title by viewModel.titleState.collectAsStateWithLifecycle()
+    val pInfo by viewModel.personalInfoState.collectAsStateWithLifecycle()
+    val passInfo by viewModel.passportInfoState.collectAsStateWithLifecycle()
+    val workList by viewModel.workExperiencesState.collectAsStateWithLifecycle()
+    val eduList by viewModel.educationsState.collectAsStateWithLifecycle()
+    val skillList by viewModel.skillsState.collectAsStateWithLifecycle()
+    val langList by viewModel.languagesState.collectAsStateWithLifecycle()
+    val aboutMe by viewModel.aboutMeState.collectAsStateWithLifecycle()
+    val decl by viewModel.declarationState.collectAsStateWithLifecycle()
+    val custom by viewModel.customizationState.collectAsStateWithLifecycle()
+
+    val certsList by viewModel.certificationsState.collectAsStateWithLifecycle()
+    val projectsList by viewModel.projectsState.collectAsStateWithLifecycle()
+    val referencesList by viewModel.referencesState.collectAsStateWithLifecycle()
+    val awardsList by viewModel.awardsState.collectAsStateWithLifecycle()
+    val hobbiesList by viewModel.hobbiesState.collectAsStateWithLifecycle()
+    val socialLinksList by viewModel.socialLinksState.collectAsStateWithLifecycle()
+    val customSectionsDataList by viewModel.customSectionDataState.collectAsStateWithLifecycle()
+
+    val aiLoading by viewModel.aiLoading.collectAsStateWithLifecycle()
+    val aiError by viewModel.aiError.collectAsStateWithLifecycle()
+    val aiResult by viewModel.aiResult.collectAsStateWithLifecycle()
+
+    // ATS Audit states
+    val atsAnalysis = viewModel.calculateAtsScore()
+
+    // Sections list
+    var activeTab by remember { mutableStateOf(0) }
+    val configuration = LocalConfiguration.current
+    val isCompactScreen = configuration.screenWidthDp < 720
+    var mobileSelectedTab by remember { mutableStateOf(0) } // 0 = Edit Form, 1 = Live Split, 2 = Full Preview
+    var isTemplateSelectorExpanded by remember { mutableStateOf(false) }
+    var templateFilterCategory by remember { mutableStateOf("All") }
+    var showLivePreviewModal by remember { mutableStateOf(false) }
+
+    var jobApplications by remember {
+        mutableStateOf(
+            listOf(
+                LocalManualJobApplication("Google Inc.", "Senior Android Developer", "Interviewing", "€125,000", "Second round technical interview on Compose layouts next Tuesday."),
+                LocalManualJobApplication("Spotify Ltd.", "Kotlin Platform Engineer", "Applied", "€135,000", "Applied with Europass formatted PDF. Focused on media systems experience."),
+                LocalManualJobApplication("Stripe Payments", "Lead Android Architect", "Offered", "€145,000", "Outstanding formal offer received! Reviewing equity package.")
+            )
+        )
+    }
+
+    val tabsList = listOf(
+        "Header Info",
+        "Experience",
+        "Education",
+        "Skills/Langs",
+        "Extra Lists",
+        "CV Structure",
+        "Objective/AI",
+        "Declaration",
+        "Styling",
+        "ATS Score",
+        "Job Tracker 💼"
+    )
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Document Title Banner Area
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            OutlinedTextField(
+                value = title,
+                onValueChange = { viewModel.titleState.value = it },
+                textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                maxLines = 1,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary
+                )
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = {
+                    viewModel.saveResume {
+                        Toast.makeText(context, "CV Draft Saved Offline Successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("SAVE", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            Button(
+                onClick = { showLivePreviewModal = true },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("PREVIEW", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Tab selection scroll block
+        if (!isCompactScreen || mobileSelectedTab == 0 || mobileSelectedTab == 1) {
+            ScrollableTabRow(
+                selectedTabIndex = activeTab,
+                edgePadding = 12.dp,
+                divider = {}
+            ) {
+                tabsList.forEachIndexed { idx, label ->
+                    Tab(
+                        selected = activeTab == idx,
+                        onClick = { activeTab = idx },
+                        text = { Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                    )
+                }
+            }
+        }
+
+        if (!isCompactScreen || mobileSelectedTab == 0 || mobileSelectedTab == 1) {
+            // Elegant collapsable / expandable layout selector bar
+            val currentTemplate = com.example.data.CvTemplate.PREDEFINED_TEMPLATES.find { it.id == custom.templateId }
+                ?: com.example.data.CvTemplate.PREDEFINED_TEMPLATES[0]
+            
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                )
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Dashboard,
+                                contentDescription = "Layout",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(
+                                        text = "Active Layout Style:",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = currentTemplate.category.uppercase(),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = currentTemplate.name,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                        
+                        TextButton(
+                            onClick = { isTemplateSelectorExpanded = !isTemplateSelectorExpanded },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = if (isTemplateSelectorExpanded) "Hide Layouts ✕" else "Change Layout 🪄",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = isTemplateSelectorExpanded,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp)
+                        ) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(bottom = 10.dp)
+                            )
+                            
+                            // Category Filter row
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                val categories = listOf("All", "Professional", "ATS Friendly", "Corporate", "Creative", "Modern")
+                                categories.forEach { cat ->
+                                    val isCatSelected = templateFilterCategory == cat
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (isCatSelected) MaterialTheme.colorScheme.primary 
+                                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                            )
+                                            .clickable { templateFilterCategory = cat }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = cat,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isCatSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(10.dp))
+                            
+                            // Horizontal scrolling template previews
+                            val filteredTemplates = if (templateFilterCategory == "All") {
+                                com.example.data.CvTemplate.PREDEFINED_TEMPLATES
+                            } else {
+                                com.example.data.CvTemplate.PREDEFINED_TEMPLATES.filter { it.category == templateFilterCategory }
+                            }
+                            
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                filteredTemplates.forEach { template ->
+                                    val isSelected = custom.templateId == template.id
+                                    val customPrimaryColor = try {
+                                        Color(android.graphics.Color.parseColor(template.primaryColorHex))
+                                    } catch(e: Exception) {
+                                        MaterialTheme.colorScheme.primary
+                                    }
+                                    
+                                    Card(
+                                        modifier = Modifier
+                                            .width(200.dp)
+                                            .clickable {
+                                                viewModel.customizationState.value = custom.copy(
+                                                    templateId = template.id,
+                                                    primaryColorHex = template.primaryColorHex,
+                                                    headerColorHex = template.headerColorHex
+                                                )
+                                                Toast.makeText(context, "Applied: ${template.name}", Toast.LENGTH_SHORT).show()
+                                            },
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (isSelected) MaterialTheme.colorScheme.surface 
+                                                             else MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+                                        ),
+                                        border = androidx.compose.foundation.BorderStroke(
+                                            width = if (isSelected) 2.5.dp else 1.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary 
+                                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                        )
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(10.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(14.dp)
+                                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                                        .background(customPrimaryColor)
+                                                )
+                                                
+                                                if (isSelected) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.CheckCircle,
+                                                        contentDescription = "Active",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                            }
+                                            
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = template.name,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = template.description,
+                                                fontSize = 10.sp,
+                                                lineHeight = 12.sp,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = template.category,
+                                                    fontSize = 8.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Custom mobile-gorgeous toggle segmented switcher
+        if (isCompactScreen) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Edit details tab
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (mobileSelectedTab == 0) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .clickable { mobileSelectedTab = 0 },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            tint = if (mobileSelectedTab == 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Fill Details",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (mobileSelectedTab == 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Live split tab
+                Box(
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (mobileSelectedTab == 1) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .clickable { mobileSelectedTab = 1 },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Layers,
+                            contentDescription = null,
+                            tint = if (mobileSelectedTab == 1) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Live Split 🌗",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (mobileSelectedTab == 1) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Preview tab
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (mobileSelectedTab == 2) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .clickable { mobileSelectedTab = 2 },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = if (mobileSelectedTab == 2) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Preview 📄",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (mobileSelectedTab == 2) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        // Master Layout divided between Form Panel & Live Document
+        val renderFormColumn: @Composable (Modifier) -> Unit = { modifier ->
+            Column(
+                modifier = modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                when (activeTab) {
+                    0 -> { // HEADER CONTACTS & PASSPORT
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("⚡", fontSize = 16.sp)
+                                    Text(
+                                        text = "1-CLICK VIP PROFILE AUTO-POPULATE (स्वचालित रूपमा भर्नुहोस्)",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Text(
+                                    text = "Choose your specialization from the high-quality pre-designed Nepali & International profiles below to immediately fill all contact details, passport, and experiences.",
+                                    fontSize = 10.sp,
+                                    color = Color.DarkGray
+                                )
+                                
+                                val presets = listOf(
+                                    "Architect (Android/Fintech)",
+                                    "Civil Engineer (Site/Seismic)",
+                                    "Executive Chef / Resort Manager",
+                                    "Chartered Forensic Accountant"
+                                )
+                                
+                                var selectedPreset by remember { mutableStateOf("") }
+                                var expandedPresetMenu by remember { mutableStateOf(false) }
+                                
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedButton(
+                                        onClick = { expandedPresetMenu = true },
+                                        modifier = Modifier.fillMaxWidth().height(36.dp),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = if (selectedPreset.isBlank()) "👉 CLICK TO CHOOSE VIP PRESET PROFILE" else selectedPreset,
+                                                fontSize = 10.5.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Icon(Icons.Default.ArrowDropDown, null)
+                                        }
+                                    }
+                                    
+                                    DropdownMenu(
+                                        expanded = expandedPresetMenu,
+                                        onDismissRequest = { expandedPresetMenu = false },
+                                        modifier = Modifier.fillMaxWidth(0.9f)
+                                    ) {
+                                        presets.forEach { preset ->
+                                            DropdownMenuItem(
+                                                text = { Text(preset, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                                                onClick = {
+                                                    selectedPreset = preset
+                                                    expandedPresetMenu = false
+                                                    
+                                                    // Trigger corresponding multi-system state injection!
+                                                    when (preset) {
+                                                        "Architect (Android/Fintech)" -> {
+                                                            viewModel.titleState.value = "Udaya Raj Khanal - Lead Android Architect"
+                                                            viewModel.personalInfoState.value = com.example.data.PersonalInfo(
+                                                                fullName = "Udaya Raj Khanal",
+                                                                email = "udaya.khanal@gmail.com",
+                                                                phone = "+977-9801234567",
+                                                                whatsApp = "+9779801234567",
+                                                                website = "https://udaya.dev",
+                                                                currentCountry = "Nepal",
+                                                                homeCountry = "Nepal",
+                                                                currentAddress = "Kathmandu, Bagmati",
+                                                                city = "Kathmandu",
+                                                                bloodGroup = "O+"
+                                                            )
+                                                            viewModel.passportInfoState.value = com.example.data.PassportInfo(
+                                                                passportNumber = "N8176524",
+                                                                passportCountry = "Nepal",
+                                                                placeOfIssue = "DOP Kathmandu",
+                                                                issueDate = "2021-04-12",
+                                                                expiryDate = "2031-04-11"
+                                                            )
+                                                            viewModel.aboutMeState.value = com.example.data.AboutMe(
+                                                                summary = "Multi-certified lead native architect with 7+ years directing core fintech engineering at F1Soft. Expert in secure payment APIs, MVVM state flows, performance tuning, and local database security."
+                                                            )
+                                                            viewModel.workExperiencesState.value = listOf(
+                                                                com.example.data.WorkExperience(
+                                                                    companyName = "F1Soft International",
+                                                                    jobPosition = "Lead Mobile Architect",
+                                                                    country = "Nepal",
+                                                                    city = "Kathmandu",
+                                                                    startDate = "2020-05-01",
+                                                                    responsibilities = "Directed architectural refactoring of principal mobile payment APIs used by 4M+ active daily bank clients. Achieved 99.98% crash-free sessions on Jetpack Compose."
+                                                                )
+                                                            )
+                                                            viewModel.educationsState.value = listOf(
+                                                                com.example.data.Education(
+                                                                    schoolName = "Tribhuvan University IOE Pulchowk",
+                                                                    degree = "Bachelor of Computer Engineering",
+                                                                    country = "Nepal",
+                                                                    city = "Lalitpur",
+                                                                    startDate = "2010-09-01",
+                                                                    endDate = "2014-08-01"
+                                                                )
+                                                            )
+                                                            viewModel.skillsState.value = listOf(
+                                                                com.example.data.Skill("Jetpack Compose", 95, "Technical"),
+                                                                com.example.data.Skill("Kotlin Multiplatform", 90, "Technical"),
+                                                                com.example.data.Skill("Room DB Securing", 85, "Technical")
+                                                            )
+                                                        }
+                                                        "Civil Engineer (Site/Seismic)" -> {
+                                                            viewModel.titleState.value = "Kiran Prasad Bhatta - Principal Site Civil Engineer"
+                                                            viewModel.personalInfoState.value = com.example.data.PersonalInfo(
+                                                                fullName = "Kiran Prasad Bhatta",
+                                                                email = "kiran.bhatta@hotmail.com",
+                                                                phone = "+977-9845671230",
+                                                                whatsApp = "+9779845671230",
+                                                                website = "https://kiranbhatta.com.np",
+                                                                currentCountry = "Nepal",
+                                                                homeCountry = "Nepal",
+                                                                currentAddress = "Pokhara, Gandaki",
+                                                                city = "Pokhara",
+                                                                bloodGroup = "A+"
+                                                            )
+                                                            viewModel.passportInfoState.value = com.example.data.PassportInfo(
+                                                                passportNumber = "N9102384",
+                                                                passportCountry = "Nepal",
+                                                                placeOfIssue = "DOP Pokhara",
+                                                                issueDate = "2020-09-18",
+                                                                expiryDate = "2030-09-17"
+                                                            )
+                                                            viewModel.aboutMeState.value = com.example.data.AboutMe(
+                                                                summary = "Chartered structural supervisor specializing in seismic design compliance and high-resiliency telecom towers across challenging terrains of Western Nepal."
+                                                            )
+                                                            viewModel.workExperiencesState.value = listOf(
+                                                                com.example.data.WorkExperience(
+                                                                    companyName = "Himalayan Telecom Infra",
+                                                                    jobPosition = "Project Director",
+                                                                    country = "Nepal",
+                                                                    city = "Pokhara",
+                                                                    startDate = "2019-02-01",
+                                                                    responsibilities = "Managed full-cycle seismic foundation engineering of 45 site stations across Bagmati and Gandaki districts under standard construction compliance codes."
+                                                                )
+                                                            )
+                                                            viewModel.educationsState.value = listOf(
+                                                                com.example.data.Education(
+                                                                    schoolName = "Kathmandu University",
+                                                                    degree = "Bachelor in Civil Engineering",
+                                                                    country = "Nepal",
+                                                                    city = "Dhulikhel",
+                                                                    startDate = "2008-09-01",
+                                                                    endDate = "2012-08-01"
+                                                                )
+                                                            )
+                                                            viewModel.skillsState.value = listOf(
+                                                                com.example.data.Skill("Seismic Designing", 95, "Technical"),
+                                                                com.example.data.Skill("AutoCAD 3D", 90, "Technical"),
+                                                                com.example.data.Skill("Geotechnical inspection", 85, "Technical")
+                                                            )
+                                                        }
+                                                        "Executive Chef / Resort Manager" -> {
+                                                            viewModel.titleState.value = "Anjali Shrestha - Executive Culinary & Operations"
+                                                            viewModel.personalInfoState.value = com.example.data.PersonalInfo(
+                                                                fullName = "Anjali Shrestha",
+                                                                email = "anjali.shrestha@resorts.ae",
+                                                                phone = "+971-50-123-4567",
+                                                                whatsApp = "+971501234567",
+                                                                website = "https://anjalishrestha.view",
+                                                                currentCountry = "United Arab Emirates",
+                                                                homeCountry = "Nepal",
+                                                                currentAddress = "Dubai Marina, Dubai",
+                                                                city = "Dubai",
+                                                                bloodGroup = "B+"
+                                                            )
+                                                            viewModel.passportInfoState.value = com.example.data.PassportInfo(
+                                                                passportNumber = "N4529182",
+                                                                passportCountry = "Nepal",
+                                                                placeOfIssue = "Passport Office Kathmandu",
+                                                                issueDate = "2022-01-05",
+                                                                expiryDate = "2032-01-04"
+                                                            )
+                                                            viewModel.aboutMeState.value = com.example.data.AboutMe(
+                                                                summary = "Hospitality operations manager with 8+ years guiding luxury F&B workflows, international hygiene audits, and high-performance guest retention schemes at ultra-premium resorts."
+                                                            )
+                                                            viewModel.workExperiencesState.value = listOf(
+                                                                com.example.data.WorkExperience(
+                                                                    companyName = "Atlantis The Palm",
+                                                                    jobPosition = "Resort Operations Lead",
+                                                                    country = "United Arab Emirates",
+                                                                    city = "Dubai",
+                                                                    startDate = "2021-06-01",
+                                                                    responsibilities = "Standardized Michelin-tiered guest lounge workflows and menu distribution cycles, scoring 98% customer satisfaction rating."
+                                                                )
+                                                            )
+                                                            viewModel.educationsState.value = listOf(
+                                                                com.example.data.Education(
+                                                                    schoolName = "Nepal Academy of Tourism (NATHM)",
+                                                                    degree = "Bachelor in Hotel Management",
+                                                                    country = "Nepal",
+                                                                    city = "Kathmandu",
+                                                                    startDate = "2010-09-01",
+                                                                    endDate = "2014-08-01"
+                                                                )
+                                                            )
+                                                            viewModel.skillsState.value = listOf(
+                                                                com.example.data.Skill("Luxury Service Workflows", 95, "Technical"),
+                                                                com.example.data.Skill("F&B Budgeting", 90, "Technical"),
+                                                                com.example.data.Skill("HACCP Audit Guidelines", 92, "Technical")
+                                                            )
+                                                        }
+                                                        "Chartered Forensic Accountant" -> {
+                                                            viewModel.titleState.value = "Rajendra Prasad Acharya - Chartered Accountant"
+                                                            viewModel.personalInfoState.value = com.example.data.PersonalInfo(
+                                                                fullName = "Rajendra Prasad Acharya",
+                                                                email = "rajendra.acharya.ca@gmail.com",
+                                                                phone = "+977-9812903487",
+                                                                whatsApp = "+9779812903487",
+                                                                website = "https://rajendraacharya.audit",
+                                                                currentCountry = "Nepal",
+                                                                homeCountry = "Nepal",
+                                                                currentAddress = "Lalitpur, Bagmati",
+                                                                city = "Lalitpur",
+                                                                bloodGroup = "AB+"
+                                                            )
+                                                            viewModel.passportInfoState.value = com.example.data.PassportInfo(
+                                                                passportNumber = "N6281023",
+                                                                passportCountry = "Nepal",
+                                                                placeOfIssue = "DOP Kathmandu",
+                                                                issueDate = "2023-05-14",
+                                                                expiryDate = "2033-05-13"
+                                                            )
+                                                            viewModel.aboutMeState.value = com.example.data.AboutMe(
+                                                                summary = "Certified Chartered Accountant (CA) with extensive audit backgrounds inspecting national telecom networks, corporate balance sheets, and tax compliance regulations."
+                                                            )
+                                                            viewModel.workExperiencesState.value = listOf(
+                                                                com.example.data.WorkExperience(
+                                                                    companyName = "Nepal Telecom",
+                                                                    jobPosition = "Executive Forensic Auditor",
+                                                                    country = "Nepal",
+                                                                    city = "Kathmandu",
+                                                                    startDate = "2020-01-15",
+                                                                    responsibilities = "Spearheaded forensic audits of capital infrastructure expenditures, saving 4% in vendor leakage cycles under NFRS compliance."
+                                                                )
+                                                            )
+                                                            viewModel.educationsState.value = listOf(
+                                                                com.example.data.Education(
+                                                                    schoolName = "Institute of Chartered Accountants of Nepal",
+                                                                    degree = "Chartered Accountant (ICAN)",
+                                                                    country = "Nepal",
+                                                                    city = "Kathmandu",
+                                                                    startDate = "2011-01-01",
+                                                                    endDate = "2016-12-01"
+                                                                )
+                                                            )
+                                                            viewModel.skillsState.value = listOf(
+                                                                com.example.data.Skill("NFRS/IFRS Standards", 95, "Technical"),
+                                                                com.example.data.Skill("Forensic tax accounting", 90, "Technical"),
+                                                                com.example.data.Skill("Capital Projection", 88, "Technical")
+                                                            )
+                                                        }
+                                                    }
+                                                    android.widget.Toast.makeText(context, "VIP Preset Profile Loaded Instantly!", android.widget.Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        FormSectionHeader("PERSONAL & PRIMARY DETAIL")
+                        
+                        // Beautiful Portrait Photo Upload Section with round border + custom size
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "UPLOAD CV PORTRAIT PHOTO / तस्बिर हाल्नुहोस्",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                letterSpacing = 0.5.sp
+                            )
+                            
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                            ) {
+                                // Large left side top premium image with a custom border
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color.White)
+                                        .border(2.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (pInfo.profilePhotoUri.isNotBlank()) {
+                                        coil.compose.AsyncImage(
+                                            model = pInfo.profilePhotoUri,
+                                            contentDescription = "Profile Photo",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "👤",
+                                            fontSize = 32.sp
+                                        )
+                                    }
+                                }
+                                
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Add face portrait photo for your Curriculum Vitae templates (Supports JPG, PNG, WEBP, etc.)",
+                                        fontSize = 11.sp,
+                                        color = Color.Gray,
+                                        lineHeight = 14.sp
+                                    )
+                                    
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Button(
+                                            onClick = { photoPickerLauncher.launch("image/*") },
+                                            modifier = Modifier.height(34.dp),
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = PaddingValues(horizontal = 12.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(12.dp))
+                                                Text("Choose Photo", fontSize = 10.sp, fontWeight = FontWeight.Black)
+                                            }
+                                        }
+                                        if (pInfo.profilePhotoUri.isNotBlank()) {
+                                            Button(
+                                                onClick = { cropTempPhotoPath = pInfo.profilePhotoUri },
+                                                modifier = Modifier.height(34.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                                                contentPadding = PaddingValues(horizontal = 12.dp)
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                ) {
+                                                    Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(12.dp))
+                                                    Text("Adjust & Crop", fontSize = 10.sp, fontWeight = FontWeight.Black)
+                                                }
+                                            }
+                                            OutlinedButton(
+                                                onClick = {
+                                                    viewModel.personalInfoState.value = pInfo.copy(profilePhotoUri = "")
+                                                },
+                                                modifier = Modifier.height(34.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                contentPadding = PaddingValues(horizontal = 12.dp)
+                                            ) {
+                                                Text("Clear", fontSize = 10.sp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        FormDropdownField(label = "Full Display Name", value = pInfo.fullName, options = listOf("Udaya Raj Khanal", "Kiran Prasad Bhatta", "Anjali Shrestha", "Rajendra Prasad Acharya", "Ananta Prasad Rijal")) { viewModel.personalInfoState.value = pInfo.copy(fullName = it) }
+                        FormTextField(label = "Primary Email", value = pInfo.email) { viewModel.personalInfoState.value = pInfo.copy(email = it) }
+                        FormTextField(label = "Phone Number", value = pInfo.phone) { viewModel.personalInfoState.value = pInfo.copy(phone = it) }
+                        FormTextField(label = "WhatsApp Link Number", value = pInfo.whatsApp) { viewModel.personalInfoState.value = pInfo.copy(whatsApp = it) }
+                        FormTextField(label = "Profile Website / Portfolio", value = pInfo.website) { viewModel.personalInfoState.value = pInfo.copy(website = it) }
+                        FormDropdownField(label = "Current Address / City", value = pInfo.currentAddress, options = listOf("Kathmandu, Bagmati", "Pokhara, Gandaki", "Lalitpur, Bagmati", "Dubai Marina, Dubai", "California, United States")) { viewModel.personalInfoState.value = pInfo.copy(currentAddress = it) }
+
+                        // Beautiful Dropdown selector for Blood Group (रक्त समूह)
+                        var isBloodDropdownExpanded by remember { mutableStateOf(false) }
+                        val bloodGroupsList = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+                        
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Blood Group (रक्त समूह)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                letterSpacing = 0.5.sp
+                            )
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                OutlinedCard(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp)
+                                        .clickable { isBloodDropdownExpanded = true }
+                                        .testTag("blood_group_dropdown_trigger"),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.outlinedCardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+                                    ),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 14.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Favorite,
+                                                contentDescription = null,
+                                                tint = Color(0xFFE11D48),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text(
+                                                text = if (pInfo.bloodGroup.isEmpty()) "Not Selected / Specify Blood Group" else "Blood Group: ${pInfo.bloodGroup}",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (pInfo.bloodGroup.isEmpty()) Color.Gray else MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                
+                                DropdownMenu(
+                                    expanded = isBloodDropdownExpanded,
+                                    onDismissRequest = { isBloodDropdownExpanded = false },
+                                    modifier = Modifier.fillMaxWidth(0.85f)
+                                ) {
+                                    bloodGroupsList.forEach { bg ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Favorite,
+                                                        contentDescription = null,
+                                                        tint = Color(0xFFE11D48),
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
+                                                    Text(text = bg, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                                }
+                                            },
+                                            onClick = {
+                                                viewModel.personalInfoState.value = pInfo.copy(bloodGroup = bg)
+                                                isBloodDropdownExpanded = false
+                                            }
+                                        )
+                                    }
+                                    DropdownMenuItem(
+                                        text = { Text(text = "Not Specified (Clear)", color = Color.Gray, fontSize = 12.sp) },
+                                        onClick = {
+                                            viewModel.personalInfoState.value = pInfo.copy(bloodGroup = "")
+                                            isBloodDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        FormSectionHeader("PASSPORT / VISA CLASSIFICATION")
+                        FormTextField(label = "Passport Number", value = passInfo.passportNumber) { viewModel.passportInfoState.value = passInfo.copy(passportNumber = it) }
+                        
+                        Text("Quick Country Options (द्रुत देश चयन):", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp))
+                        val suggestionCountries = listOf("Nepal", "United Kingdom", "Canada", "Australia", "United States", "Japan", "India")
+                        val issuingAuthorities = mapOf(
+                            "Nepal" to "Department of Passports, Kathmandu (DOP)",
+                            "United Kingdom" to "HM Passport Office (HMPO), London",
+                            "Canada" to "Passport Program Canada (PPTC), Ottawa",
+                            "Australia" to "Australian Passport Office (APO), Canberra",
+                            "United States" to "US Department of State (USDOS), Washington D.C.",
+                            "Japan" to "Ministry of Foreign Affairs (MoFA), Tokyo",
+                            "India" to "Regional Passport Office (RPO), Delhi"
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                items(suggestionCountries.size) { idx ->
+                                    val countryName = suggestionCountries[idx]
+                                    Card(
+                                        onClick = {
+                                            viewModel.passportInfoState.value = passInfo.copy(
+                                                passportCountry = countryName,
+                                                placeOfIssue = issuingAuthorities[countryName] ?: ""
+                                            )
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (passInfo.passportCountry.lowercase() == countryName.lowercase()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            contentColor = if (passInfo.passportCountry.lowercase() == countryName.lowercase()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    ) {
+                                        Text(
+                                            text = countryName,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        FormTextField(label = "Passport Country Of Origin", value = passInfo.passportCountry) { viewModel.passportInfoState.value = passInfo.copy(passportCountry = it) }
+                        FormTextField(label = "Place of Issue", value = passInfo.placeOfIssue) { viewModel.passportInfoState.value = passInfo.copy(placeOfIssue = it) }
+                        FormDatePickerField(label = "Issue Date (YYYY-MM-DD)", value = passInfo.issueDate) { viewModel.passportInfoState.value = passInfo.copy(issueDate = it) }
+                        FormDatePickerField(label = "Expiry Date (YYYY-MM-DD)", value = passInfo.expiryDate) { viewModel.passportInfoState.value = passInfo.copy(expiryDate = it) }
+                    }
+                    1 -> { // EXPERIENCE
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FormSectionHeader("WORK EXPERIENCE TIMELINE")
+                            IconButton(onClick = {
+                                viewModel.workExperiencesState.value = workList + WorkExperience(
+                                    companyName = "New Company",
+                                    jobPosition = "Position Title"
+                                )
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = "Add Experience", tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+
+                        workList.forEachIndexed { index, exp ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Position Entry ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                        Icon(
+                                            imageVector = Icons.Default.DeleteSweep,
+                                            contentDescription = "Delete",
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .clickable {
+                                                    viewModel.workExperiencesState.value =
+                                                        workList.filterIndexed { i, _ -> i != index }
+                                                }
+                                        )
+                                    }
+                                    FormTextField(label = "Company Name", value = exp.companyName) { newVal ->
+                                        viewModel.workExperiencesState.value = workList.mapIndexed { i, item -> if (i == index) item.copy(companyName = newVal) else item }
+                                    }
+                                    FormTextField(label = "Job Position Designation", value = exp.jobPosition) { newVal ->
+                                        viewModel.workExperiencesState.value = workList.mapIndexed { i, item -> if (i == index) item.copy(jobPosition = newVal) else item }
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            FormDatePickerField(label = "Start Date (YYYY-MM-DD)", value = exp.startDate) { newVal ->
+                                                viewModel.workExperiencesState.value = workList.mapIndexed { i, item -> if (i == index) item.copy(startDate = newVal) else item }
+                                            }
+                                        }
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            if (exp.isCurrentlyWorking) {
+                                                FormTextField(label = "End Date", value = "Present") { }
+                                            } else {
+                                                FormDatePickerField(label = "End Date (YYYY-MM-DD)", value = exp.endDate) { newVal ->
+                                                    viewModel.workExperiencesState.value = workList.mapIndexed { i, item -> if (i == index) item.copy(endDate = newVal) else item }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Checkbox(
+                                            checked = exp.isCurrentlyWorking,
+                                            onCheckedChange = { newVal ->
+                                                viewModel.workExperiencesState.value = workList.mapIndexed { i, item -> if (i == index) item.copy(isCurrentlyWorking = newVal) else item }
+                                            }
+                                        )
+                                        Text("Currently working here", fontSize = 12.sp)
+                                    }
+                                    FormTextField(label = "Responsibilities / Tasks", value = exp.responsibilities, singleLine = false) { newVal ->
+                                        viewModel.workExperiencesState.value = workList.mapIndexed { i, item -> if (i == index) item.copy(responsibilities = newVal) else item }
+                                    }
+                                    FormTextField(label = "Achievements Highlights", value = exp.achievements, singleLine = false) { newVal ->
+                                        viewModel.workExperiencesState.value = workList.mapIndexed { i, item -> if (i == index) item.copy(achievements = newVal) else item }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    2 -> { // EDUCATION
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FormSectionHeader("ACADEMIC PREPARATIONS")
+                            IconButton(onClick = {
+                                viewModel.educationsState.value = eduList + Education(
+                                    schoolName = "College/School Name",
+                                    degree = "Degree details",
+                                    fieldOfStudy = "General Studies",
+                                    educationLevel = "Bachelor Degree",
+                                    gpa = "",
+                                    country = "Nepal",
+                                    city = "Kathmandu",
+                                    startDate = "",
+                                    endDate = "",
+                                    isCurrentlyStudying = false,
+                                    description = "",
+                                    mainSubjects = "",
+                                    achievements = "",
+                                    certificates = "",
+                                    trainingCourses = ""
+                                )
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = "Add Education", tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+
+                        eduList.forEachIndexed { index, edu ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Degree Entry ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                        Icon(
+                                            imageVector = Icons.Default.DeleteSweep,
+                                            contentDescription = "Delete",
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .clickable {
+                                                    viewModel.educationsState.value =
+                                                        eduList.filterIndexed { i, _ -> i != index }
+                                                }
+                                        )
+                                    }
+                                    FormTextField(label = "Institution / Board / University Name", value = edu.schoolName) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(schoolName = newVal) else item }
+                                    }
+                                    
+                                    SearchableDropdown(
+                                        label = "Academic Degree Level",
+                                        selectedValue = edu.educationLevel,
+                                        options = GlobalDataPackage.educationLevels
+                                    ) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(educationLevel = newVal) else item }
+                                    }
+
+                                    FormTextField(label = "Field of Study / Specialization", value = edu.fieldOfStudy) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(fieldOfStudy = newVal) else item }
+                                    }
+
+                                    FormTextField(label = "Degree/Certificate Name (e.g. B.Sc. CS)", value = edu.degree) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(degree = newVal) else item }
+                                    }
+                                    
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            SearchableDropdown(
+                                                label = "Origin Country",
+                                                selectedValue = edu.country,
+                                                options = GlobalDataPackage.countries
+                                            ) { selectedCountry ->
+                                                val detail = GlobalDataPackage.countryDetails[selectedCountry]
+                                                val suggestedCity = detail?.cities?.firstOrNull() ?: ""
+                                                viewModel.educationsState.value = eduList.mapIndexed { i, item -> 
+                                                    if (i == index) item.copy(country = selectedCountry, city = suggestedCity) else item 
+                                                }
+                                                // Auto country code for phone and suggest passport country & nationality!
+                                                val info = viewModel.personalInfoState.value
+                                                if (info.phone.isBlank() && detail != null) {
+                                                    viewModel.personalInfoState.value = info.copy(phone = detail.code + " ")
+                                                }
+                                                val passInfo = viewModel.passportInfoState.value
+                                                if (passInfo.passportCountry.isBlank() && detail != null) {
+                                                    viewModel.passportInfoState.value = passInfo.copy(passportCountry = detail.nationality)
+                                                }
+                                            }
+                                        }
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            val relatedCities = GlobalDataPackage.countryDetails[edu.country]?.cities ?: emptyList()
+                                            SearchableDropdown(
+                                                label = "City",
+                                                selectedValue = edu.city,
+                                                options = relatedCities.ifEmpty { listOf("Kathmandu", "New York", "London", "Delhi", "Dubai") }
+                                            ) { selectedCity ->
+                                                viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(city = selectedCity) else item }
+                                            }
+                                        }
+                                    }
+
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            FormDatePickerField(label = "Graduation Date (YYYY-MM-DD)", value = edu.startDate) { newVal ->
+                                                viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(startDate = newVal) else item }
+                                            }
+                                        }
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            FormTextField(label = "Graduation GPA / %", value = edu.gpa) { newVal ->
+                                                viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(gpa = newVal) else item }
+                                            }
+                                        }
+                                    }
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Checkbox(
+                                            checked = edu.isCurrentlyStudying,
+                                            onCheckedChange = { newVal ->
+                                                viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(isCurrentlyStudying = newVal) else item }
+                                            }
+                                        )
+                                        Text("Currently studying here", fontSize = 12.sp)
+                                        
+                                        if (!edu.isCurrentlyStudying) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                FormTextField(label = "End Date / Year", value = edu.endDate) { newVal ->
+                                                    viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(endDate = newVal) else item }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    FormTextField(label = "Description / Overview", value = edu.description, singleLine = false) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(description = newVal) else item }
+                                    }
+                                    FormTextField(label = "Main Subjects", value = edu.mainSubjects) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(mainSubjects = newVal) else item }
+                                    }
+                                    FormTextField(label = "Academic Achievements", value = edu.achievements) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(achievements = newVal) else item }
+                                    }
+                                    FormTextField(label = "Certificates Awarded", value = edu.certificates) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(certificates = newVal) else item }
+                                    }
+                                    FormTextField(label = "Training Courses Completed", value = edu.trainingCourses) { newVal ->
+                                        viewModel.educationsState.value = eduList.mapIndexed { i, item -> if (i == index) item.copy(trainingCourses = newVal) else item }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    3 -> { // SKILLS & LANGUAGES
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FormSectionHeader("COMPETENCIES & CRITERIA")
+                            Button(onClick = {
+                                viewModel.skillsState.value = skillList + Skill("New Skill", 80, "Technical")
+                            }) {
+                                Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Skills Group", fontSize = 11.sp)
+                            }
+                        }
+
+                        skillList.forEachIndexed { index, skom ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Box(modifier = Modifier.weight(1.5f)) {
+                                    OutlinedTextField(
+                                        value = skom.name,
+                                        onValueChange = { newVal ->
+                                            viewModel.skillsState.value = skillList.mapIndexed { i, item -> if (i == index) item.copy(name = newVal) else item }
+                                        },
+                                        textStyle = TextStyle(fontSize = 12.sp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                                Box(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Slider(
+                                            value = skom.percentage.toFloat(),
+                                            onValueChange = { newVal ->
+                                                viewModel.skillsState.value = skillList.mapIndexed { i, item -> if (i == index) item.copy(percentage = newVal.toInt()) else item }
+                                            },
+                                            valueRange = 10f..100f,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text("${skom.percentage}%", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Delete",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable {
+                                            viewModel.skillsState.value =
+                                                skillList.filterIndexed { i, _ -> i != index }
+                                        }
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FormSectionHeader("LANGUAGES PROFICIENCY")
+                            Button(
+                                onClick = {
+                                    viewModel.languagesState.value = langList + Language("New Language", "5 Stars")
+                                },
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("+ Add Language", fontSize = 11.sp)
+                            }
+                        }
+                        
+                        // Languages Auto-Fill Chips
+                        Text(
+                            text = "Tap to Auto-Fill Major Languages (द्रुत भाषा थप्नुहोस्):",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                        )
+                        androidx.compose.foundation.lazy.LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        ) {
+                            val autofillLangs = listOf(
+                                Pair("English", "5 Stars"),
+                                Pair("Nepali", "Native (5 Stars)"),
+                                Pair("Hindi", "4 Stars"),
+                                Pair("Arabic", "4 Stars"),
+                                Pair("Japanese", "3 Stars"),
+                                Pair("German", "3 Stars")
+                            )
+                            items(autofillLangs.size) { i ->
+                                val (lName, lLevel) = autofillLangs[i]
+                                val exists = langList.any { it.name.lowercase() == lName.lowercase() }
+                                androidx.compose.material3.InputChip(
+                                    selected = exists,
+                                    onClick = {
+                                        if (!exists) {
+                                            viewModel.languagesState.value = langList + Language(lName, lLevel)
+                                        }
+                                    },
+                                    label = { Text(lName, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                                )
+                            }
+                        }
+
+                        langList.forEachIndexed { idx, lang ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(modifier = Modifier.weight(1.2f)) {
+                                            OutlinedTextField(
+                                                value = lang.name,
+                                                onValueChange = { newVal ->
+                                                    viewModel.languagesState.value = langList.mapIndexed { i, l -> if (i == idx) l.copy(name = newVal) else l }
+                                                },
+                                                label = { Text("Language Name", fontSize = 10.sp) },
+                                                textStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                                                singleLine = true,
+                                                shape = RoundedCornerShape(8.dp),
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        IconButton(onClick = {
+                                            viewModel.languagesState.value = langList.filterIndexed { i, _ -> i != idx }
+                                        }) {
+                                            Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                                        }
+                                    }
+
+                                    // Choices / Options format selection
+                                    val isPercentage = lang.speakingLevel.endsWith("%")
+                                    val currentStarVal = when {
+                                        lang.speakingLevel.contains("5") || lang.speakingLevel.count { it == '★' || it == '⭐' } == 5 -> 5
+                                        lang.speakingLevel.contains("4") || lang.speakingLevel.count { it == '★' || it == '⭐' } == 4 -> 4
+                                        lang.speakingLevel.contains("3") || lang.speakingLevel.count { it == '★' || it == '⭐' } == 3 -> 3
+                                        lang.speakingLevel.contains("2") || lang.speakingLevel.count { it == '★' || it == '⭐' } == 2 -> 2
+                                        lang.speakingLevel.contains("1") || lang.speakingLevel.count { it == '★' || it == '⭐' } == 1 -> 1
+                                        else -> 5
+                                    }
+                                    val currentPercentVal = if (isPercentage) {
+                                        lang.speakingLevel.replace("%", "").toIntOrNull() ?: 90
+                                    } else {
+                                        currentStarVal * 20
+                                    }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Format:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        
+                                        // Choose Stars button
+                                        androidx.compose.material3.FilterChip(
+                                            selected = !isPercentage,
+                                            onClick = {
+                                                viewModel.languagesState.value = langList.mapIndexed { i, l -> 
+                                                    if (i == idx) l.copy(speakingLevel = "$currentStarVal Stars") else l 
+                                                }
+                                            },
+                                            label = { Text("⭐ Stars", fontSize = 10.sp) }
+                                        )
+
+                                        // Choose Percentage button
+                                        androidx.compose.material3.FilterChip(
+                                            selected = isPercentage,
+                                            onClick = {
+                                                viewModel.languagesState.value = langList.mapIndexed { i, l -> 
+                                                    if (i == idx) l.copy(speakingLevel = "$currentPercentVal%") else l 
+                                                }
+                                            },
+                                            label = { Text("% Percent", fontSize = 10.sp) }
+                                        )
+                                    }
+
+                                    // Star or percentage picker interaction
+                                    if (!isPercentage) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text("Proficiency Stars:", fontSize = 11.sp)
+                                            Row {
+                                                for (starIdx in 1..5) {
+                                                    val isGold = starIdx <= currentStarVal
+                                                    IconButton(
+                                                        onClick = {
+                                                            viewModel.languagesState.value = langList.mapIndexed { i, l -> 
+                                                                if (i == idx) l.copy(speakingLevel = "$starIdx Stars") else l 
+                                                            }
+                                                        },
+                                                        modifier = Modifier.size(28.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "★",
+                                                            color = if (isGold) Color(0xFFFFD700) else Color.LightGray,
+                                                            fontSize = 18.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text("Proficiency Percent:", fontSize = 11.sp)
+                                                Text("$currentPercentVal%", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                            }
+                                            androidx.compose.material3.Slider(
+                                                value = currentPercentVal.toFloat(),
+                                                onValueChange = { percent ->
+                                                    viewModel.languagesState.value = langList.mapIndexed { i, l -> 
+                                                        if (i == idx) l.copy(speakingLevel = "${percent.toInt()}%") else l 
+                                                    }
+                                                },
+                                                valueRange = 10f..100f,
+                                                steps = 8,
+                                                modifier = Modifier.fillMaxWidth().height(24.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    4 -> { // EXTRA LISTS SECTION (Certifications, Projects, References, Awards, Hobbies, Social Links)
+                        val certs by viewModel.certificationsState.collectAsStateWithLifecycle()
+                        val projs by viewModel.projectsState.collectAsStateWithLifecycle()
+                        val refs by viewModel.referencesState.collectAsStateWithLifecycle()
+                        val awas by viewModel.awardsState.collectAsStateWithLifecycle()
+                        val hobs by viewModel.hobbiesState.collectAsStateWithLifecycle()
+                        val socs by viewModel.socialLinksState.collectAsStateWithLifecycle()
+
+                        // 1. Certifications
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            FormSectionHeader("CERTIFICATIONS")
+                            IconButton(onClick = {
+                                viewModel.certificationsState.value = certs + CertItem("New Certificate", "Issuer Corp", "2024")
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        certs.forEachIndexed { index, cert ->
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))) {
+                                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Certification ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp).clickable {
+                                            viewModel.certificationsState.value = certs.filterIndexed { i, _ -> i != index }
+                                        })
+                                    }
+                                    FormTextField("Certification Title", cert.title) { newVal ->
+                                        viewModel.certificationsState.value = certs.mapIndexed { i, item -> if (i == index) item.copy(title = newVal) else item }
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(modifier = Modifier.weight(1.5f)) {
+                                            FormTextField("Issuing Body / Authority", cert.issuer) { newVal ->
+                                                viewModel.certificationsState.value = certs.mapIndexed { i, item -> if (i == index) item.copy(issuer = newVal) else item }
+                                            }
+                                        }
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            FormTextField("Year / Date", cert.date) { newVal ->
+                                                viewModel.certificationsState.value = certs.mapIndexed { i, item -> if (i == index) item.copy(date = newVal) else item }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // 2. Projects
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            FormSectionHeader("PROJECTS PORTFOLIO")
+                            IconButton(onClick = {
+                                viewModel.projectsState.value = projs + ProjectItem("Enterprise App", "A scalable modern offline-first system.", "Kotlin, Compose", "https://github.com")
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        projs.forEachIndexed { index, proj ->
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))) {
+                                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Project ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp).clickable {
+                                            viewModel.projectsState.value = projs.filterIndexed { i, _ -> i != index }
+                                        })
+                                    }
+                                    FormTextField("Project Name", proj.name) { newVal ->
+                                        viewModel.projectsState.value = projs.mapIndexed { i, item -> if (i == index) item.copy(name = newVal) else item }
+                                    }
+                                    FormTextField("Description", proj.description, singleLine = false) { newVal ->
+                                        viewModel.projectsState.value = projs.mapIndexed { i, item -> if (i == index) item.copy(description = newVal) else item }
+                                    }
+                                    FormTextField("Technologies Used", proj.technologies) { newVal ->
+                                        viewModel.projectsState.value = projs.mapIndexed { i, item -> if (i == index) item.copy(technologies = newVal) else item }
+                                    }
+                                    FormTextField("Project Link / Source URL", proj.link) { newVal ->
+                                        viewModel.projectsState.value = projs.mapIndexed { i, item -> if (i == index) item.copy(link = newVal) else item }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // 3. References
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            FormSectionHeader("REFERENCES")
+                            IconButton(onClick = {
+                                viewModel.referencesState.value = refs + ReferenceItem("Jane Smith", "Project Director", "Acme Tech", "jane@acme.com")
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        refs.forEachIndexed { index, ref ->
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))) {
+                                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Reference ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp).clickable {
+                                            viewModel.referencesState.value = refs.filterIndexed { i, _ -> i != index }
+                                        })
+                                    }
+                                    FormTextField("Reference Name", ref.name) { newVal ->
+                                        viewModel.referencesState.value = refs.mapIndexed { i, item -> if (i == index) item.copy(name = newVal) else item }
+                                    }
+                                    FormTextField("Position", ref.position) { newVal ->
+                                        viewModel.referencesState.value = refs.mapIndexed { i, item -> if (i == index) item.copy(position = newVal) else item }
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            FormTextField("Company", ref.company) { newVal ->
+                                                viewModel.referencesState.value = refs.mapIndexed { i, item -> if (i == index) item.copy(company = newVal) else item }
+                                            }
+                                        }
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            FormTextField("Contact Info", ref.contact) { newVal ->
+                                                viewModel.referencesState.value = refs.mapIndexed { i, item -> if (i == index) item.copy(contact = newVal) else item }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // 4. Awards
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            FormSectionHeader("AWARDS & HONORS")
+                            IconButton(onClick = {
+                                viewModel.awardsState.value = awas + AwardItem("Outstanding Contribution", "Acme Tech", "2023", "Recognized for driving architecture standards.")
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        awas.forEachIndexed { index, award ->
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))) {
+                                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Award ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp).clickable {
+                                            viewModel.awardsState.value = awas.filterIndexed { i, _ -> i != index }
+                                        })
+                                    }
+                                    FormTextField("Award Title", award.title) { newVal ->
+                                        viewModel.awardsState.value = awas.mapIndexed { i, item -> if (i == index) item.copy(title = newVal) else item }
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(modifier = Modifier.weight(1.5f)) {
+                                            FormTextField("Issuer Entity", award.issuer) { newVal ->
+                                                viewModel.awardsState.value = awas.mapIndexed { i, item -> if (i == index) item.copy(issuer = newVal) else item }
+                                            }
+                                        }
+                                        Box(modifier = Modifier.weight(1.0f)) {
+                                            FormTextField("Year", award.year) { newVal ->
+                                                viewModel.awardsState.value = awas.mapIndexed { i, item -> if (i == index) item.copy(year = newVal) else item }
+                                            }
+                                        }
+                                    }
+                                    FormTextField("Brief Description", award.description) { newVal ->
+                                        viewModel.awardsState.value = awas.mapIndexed { i, item -> if (i == index) item.copy(description = newVal) else item }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // 5. Hobbies
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            FormSectionHeader("HOBBIES & INTERESTS")
+                            IconButton(onClick = {
+                                viewModel.hobbiesState.value = hobs + HobbyItem("Blogging")
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        hobs.forEachIndexed { index, hobby ->
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))) {
+                                Row(modifier = Modifier.padding(8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        FormTextField("Hobby Name", hobby.name) { newVal ->
+                                            viewModel.hobbiesState.value = hobs.mapIndexed { i, item -> if (i == index) item.copy(name = newVal) else item }
+                                        }
+                                    }
+                                    Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp).clickable {
+                                        viewModel.hobbiesState.value = hobs.filterIndexed { i, _ -> i != index }
+                                    })
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // 6. Social Links
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            FormSectionHeader("SOCIAL NETWORKS / LINKS")
+                            IconButton(onClick = {
+                                viewModel.socialLinksState.value = socs + SocialLinkItem("LinkedIn", "linkedin.com/in/johndoe")
+                            }) {
+                                Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        socs.forEachIndexed { index, soc ->
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))) {
+                                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Link ${index + 1}", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp).clickable {
+                                            viewModel.socialLinksState.value = socs.filterIndexed { i, _ -> i != index }
+                                        })
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            FormTextField("Platform", soc.platform) { newVal ->
+                                                viewModel.socialLinksState.value = socs.mapIndexed { i, item -> if (i == index) item.copy(platform = newVal) else item }
+                                            }
+                                        }
+                                        Box(modifier = Modifier.weight(2.5f)) {
+                                            FormTextField("Universal Link Profile URL", soc.url) { newVal ->
+                                                viewModel.socialLinksState.value = socs.mapIndexed { i, item -> if (i == index) item.copy(url = newVal) else item }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    5 -> { // CV STRUCTURE ORDER & SECTION REORDERING & CUSTOM SECTIONS CONTROL
+                        val customDataMap by viewModel.customSectionDataState.collectAsStateWithLifecycle()
+                        FormSectionHeader("CV STRUCTURE CONTROL")
+                        Text(
+                            "Arrange order, toggle visibility, rename headings, and insert custom paragraph/text blocks freely. Order numbers are updated instantly in the live design below.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Reorderable Action Buttons list
+                        custom.sections.sortedBy { it.order }.forEachIndexed { index, sec ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = if (sec.isHidden) Color.LightGray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (sec.isHidden) Color.LightGray else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = when (sec.id) {
+                                                "personal" -> Icons.Default.Person
+                                                "about" -> Icons.Default.AssignmentInd
+                                                "work" -> Icons.Default.WorkOutline
+                                                "education" -> Icons.Default.School
+                                                "skills" -> Icons.Default.MilitaryTech
+                                                "languages" -> Icons.Default.Translate
+                                                "passport" -> Icons.Default.Badge
+                                                "certifications" -> Icons.Default.WorkspacePremium
+                                                "projects" -> Icons.Default.Code
+                                                "references" -> Icons.Default.GroupAdd
+                                                "declaration" -> Icons.Default.FactCheck
+                                                "awards" -> Icons.Default.EmojiEvents
+                                                "hobbies" -> Icons.Default.Casino
+                                                "social" -> Icons.Default.Public
+                                                else -> Icons.Default.Extension
+                                            },
+                                            contentDescription = null,
+                                            tint = if (sec.isHidden) Color.Gray else MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+
+                                        // Section Name Editable
+                                        OutlinedTextField(
+                                            value = sec.name,
+                                            onValueChange = { viewModel.renameSection(sec.id, it) },
+                                            textStyle = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                                            modifier = Modifier.weight(1f).height(42.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedBorderColor = MaterialTheme.colorScheme.primary
+                                            )
+                                        )
+
+                                        // Move UP Action (Item 41)
+                                        IconButton(
+                                            onClick = { viewModel.moveSectionUp(sec.id) },
+                                            enabled = index > 0,
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(imageVector = Icons.Default.ArrowUpward, contentDescription = "UP", modifier = Modifier.size(16.dp))
+                                        }
+
+                                        // Move DOWN Action (Item 41)
+                                        IconButton(
+                                            onClick = { viewModel.moveSectionDown(sec.id) },
+                                            enabled = index < custom.sections.size - 1,
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(imageVector = Icons.Default.ArrowDownward, contentDescription = "DOWN", modifier = Modifier.size(16.dp))
+                                        }
+
+                                        // Toggle visibility (Item 41)
+                                        IconButton(
+                                            onClick = { viewModel.toggleSectionVisibility(sec.id) },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (sec.isHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                                contentDescription = "Hide",
+                                                tint = if (sec.isHidden) Color.Red else MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+
+                                        // Delete option for custom sections or others directly
+                                        if (sec.id.startsWith("custom_")) {
+                                            IconButton(
+                                                onClick = { viewModel.deleteSection(sec.id) },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(imageVector = Icons.Default.DeleteForever, contentDescription = "Delete", tint = Color.Red, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                    }
+
+                                    // If custom section, show its text editor panel inline! (Item 42)
+                                    if (sec.id.startsWith("custom_")) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        val existingVal = customDataMap[sec.id] ?: ""
+                                        FormTextField(
+                                            label = "Custom Section Body (supports raw text / descriptions)",
+                                            value = existingVal,
+                                            singleLine = false
+                                        ) { newVal ->
+                                            viewModel.customSectionDataState.value = customDataMap + (sec.id to newVal)
+                                        }
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        
+                        // Add Custom Section panel (Item 42)
+                        var newSecName by remember { mutableStateOf("") }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = newSecName,
+                                onValueChange = { newSecName = it },
+                                label = { Text("New Custom Section Name", fontSize = 11.sp) },
+                                modifier = Modifier.weight(1f),
+                                textStyle = TextStyle(fontSize = 12.sp)
+                            )
+                            Button(
+                                onClick = {
+                                    if (newSecName.isNotBlank()) {
+                                        viewModel.addCustomSection(newSecName)
+                                        newSecName = ""
+                                        Toast.makeText(context, "Custom Section Created!", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                shape = RoundedCornerShape(4.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                            ) {
+                                Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("ADD", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                    6 -> { // ABOUT ME SUMMARY & AI FEATURES AS PER MANDATE!
+                        FormSectionHeader("PROFESSIONAL STATEMENT SUMMARY")
+                        FormTextField(
+                            label = "Summary Draft",
+                            value = aboutMe.summary,
+                            singleLine = false,
+                            onValueChange = { viewModel.aboutMeState.value = aboutMe.copy(summary = it) }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // CORE AI RE-WRITE SECTION
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("YOURDOC AI STUDIO ASSISTANT", fontSize = 12.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    "Leverage Gemini AI models to correct English grammar, add executive keywords, and structure your professional profile instantly offline.",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Button(
+                                        onClick = { viewModel.improveAboutMeAI() },
+                                        enabled = !aiLoading,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        if (aiLoading) {
+                                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                        } else {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(imageVector = Icons.Default.ModelTraining, contentDescription = null, modifier = Modifier.size(14.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("AI OPTIMIZE", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+
+                                    Button(
+                                        onClick = { viewModel.suggestAtsKeywordsAI() },
+                                        enabled = !aiLoading,
+                                        modifier = Modifier.weight(1.2f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                                    ) {
+                                        Text("ATS KEYWORDS", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+
+                                if (aiError != null) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text("Error: $aiError", color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
+                                }
+
+                                if (aiResult != null) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text("AI Suggestion Result:", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(MaterialTheme.colorScheme.surface)
+                                            .padding(10.dp)
+                                    ) {
+                                        Text(aiResult ?: "", fontSize = 11.sp, color = Color.DarkGray)
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        FormSectionHeader("SETTINGS & CUSTOM API KEY MANAGER")
+                        
+                        val userApiKeyType by viewModel.userApiKeyTypeState.collectAsStateWithLifecycle()
+                        val userApiKeyVal by viewModel.userApiKeyValState.collectAsStateWithLifecycle()
+                        val openaiModel by viewModel.openaiModelState.collectAsStateWithLifecycle()
+                        
+                        var localKeyInput by remember(userApiKeyVal) { mutableStateOf(userApiKeyVal) }
+                        var selectedType by remember(userApiKeyType) { mutableStateOf(userApiKeyType) }
+                        var selectedModel by remember(openaiModel) { mutableStateOf(openaiModel) }
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text("Dynamic AI Provider Settings", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Toggle between Google Gemini and ChatGPT OpenAI, and enter your own personal API key to run summaries, keywords, and cover letters dynamically.", fontSize = 11.sp, color = Color.Gray)
+                                
+                                // Providers Row Selector
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Button(
+                                        onClick = { selectedType = "google" },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (selectedType == "google") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                                            contentColor = if (selectedType == "google") Color.White else MaterialTheme.colorScheme.onSurface
+                                        ),
+                                        modifier = Modifier.weight(1f),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                                    ) {
+                                        Text("Google Gemini", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Button(
+                                        onClick = { selectedType = "openai" },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (selectedType == "openai") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                                            contentColor = if (selectedType == "openai") Color.White else MaterialTheme.colorScheme.onSurface
+                                        ),
+                                        modifier = Modifier.weight(1f),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                                    ) {
+                                        Text("ChatGPT OpenAI", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+
+                                if (selectedType == "openai") {
+                                    // OpenAI Model Selection Row
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Model:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        listOf("gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo").forEach { m ->
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            FilterChip(
+                                                selected = selectedModel == m,
+                                                onClick = { selectedModel = m },
+                                                label = { Text(m, fontSize = 10.sp) }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // API Key Input Field
+                                OutlinedTextField(
+                                    value = localKeyInput,
+                                    onValueChange = { localKeyInput = it },
+                                    label = { Text("Personal API Key Value", fontSize = 11.sp) },
+                                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    textStyle = TextStyle(fontSize = 12.sp),
+                                    singleLine = true,
+                                    placeholder = { Text(if (selectedType == "google") "Fallback to build key" else "sk-proj-...", fontSize = 11.sp) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                // Apply changes button
+                                Button(
+                                    onClick = {
+                                        viewModel.saveApiSettings(selectedType, localKeyInput, selectedModel)
+                                        Toast.makeText(context, "API Credentials Saved Successfully!", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.align(Alignment.End),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Save, contentDescription = null, modifier = Modifier.size(12.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("SAVE KEYS", fontSize = 11.sp)
+                                }
+                            }
+                        }
+                    }
+                    7 -> { // DECLARATION & SIGNATURE SYSTEM
+                        FormSectionHeader("OFFICE DECLARATIONS")
+                        FormTextField(
+                            label = "Declaration Oath Text",
+                            value = decl.text,
+                            singleLine = false,
+                            onValueChange = { viewModel.declarationState.value = decl.copy(text = it) }
+                        )
+                        FormTextField(
+                            label = "Oaths Declarant Full Name",
+                            value = decl.fullName,
+                            onValueChange = { viewModel.declarationState.value = decl.copy(fullName = it) }
+                        )
+                        FormTextField(
+                            label = "Signed Date",
+                            value = decl.date,
+                            onValueChange = { viewModel.declarationState.value = decl.copy(date = it) }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FormSectionHeader("DIGITAL SIGN EMBLEM")
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(120.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.White)
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (decl.signaturePathJson.isEmpty()) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Icon(imageVector = Icons.Default.Gesture, contentDescription = null, tint = Color.Gray)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text("No Signature Uploaded", fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                                        }
+                                    } else if (decl.signaturePathJson == "signed") {
+                                        Text("Signed Electronically ✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    } else if (java.io.File(decl.signaturePathJson).exists()) {
+                                        androidx.compose.foundation.Image(
+                                            bitmap = android.graphics.BitmapFactory.decodeFile(decl.signaturePathJson).asImageBitmap(),
+                                            contentDescription = "Signature Image",
+                                            modifier = Modifier.fillMaxSize().padding(10.dp),
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                                        )
+                                    } else {
+                                        Text("Signed Electronically ✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            viewModel.declarationState.value = decl.copy(signaturePathJson = "signed")
+                                            Toast.makeText(context, "Electronic Seal Applied", Toast.LENGTH_SHORT).show()
+                                        },
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("APPLY TEXT", fontSize = 10.sp, maxLines = 1)
+                                    }
+                                    Button(
+                                        onClick = {
+                                            signaturePickerLauncher.launch("image/*")
+                                        },
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier = Modifier.weight(1.3f)
+                                    ) {
+                                        Text("UPLOAD SIGN 🖼️", fontSize = 10.sp, maxLines = 1)
+                                    }
+                                    OutlinedButton(
+                                        onClick = {
+                                            viewModel.declarationState.value = decl.copy(signaturePathJson = "")
+                                        },
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text("CLEAR", fontSize = 10.sp, maxLines = 1)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    8 -> { // STYLING AND GRAPHICS CUSTOMIZATION
+                        FormSectionHeader("TEMPLATE THEMES GALLERY")
+                        com.example.data.CvTemplate.PREDEFINED_TEMPLATES.forEach { template ->
+                            TemplateChoiceRow(
+                                label = template.name,
+                                isSelected = custom.templateId == template.id,
+                                onClick = {
+                                    viewModel.customizationState.value = custom.copy(
+                                        templateId = template.id,
+                                        primaryColorHex = template.primaryColorHex,
+                                        headerColorHex = template.headerColorHex
+                                    )
+                                }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        FormSectionHeader("PRECISE LAYOUT ADJUST")
+
+                        FormSectionHeader("Custom Color Accents")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ColorSwatch("#002F6C", "Classic") { viewModel.customizationState.value = custom.copy(primaryColorHex = it) }
+                            ColorSwatch("#0D9488", "Teal") { viewModel.customizationState.value = custom.copy(primaryColorHex = it) }
+                            ColorSwatch("#B91C1C", "Red") { viewModel.customizationState.value = custom.copy(primaryColorHex = it) }
+                            ColorSwatch("#0F172A", "Midnighte") { viewModel.customizationState.value = custom.copy(primaryColorHex = it) }
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = custom.showProfilePhoto, onCheckedChange = { viewModel.customizationState.value = custom.copy(showProfilePhoto = it) })
+                            Text("Render Image Box", fontSize = 12.sp)
+                        }
+
+                         FormSectionHeader("Multiple CV Borders Selector")
+                         Row(
+                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                             horizontalArrangement = Arrangement.spacedBy(6.dp)
+                         ) {
+                             val borderPresets = listOf(
+                                 Triple(0f, false, "None"),
+                                 Triple(1f, true, "Thin"),
+                                 Triple(2f, true, "Double"),
+                                 Triple(3f, true, "Accent"),
+                                 Triple(4f, true, "Charcoal")
+                             )
+                             borderPresets.forEach { (thickVal, isEnable, label) ->
+                                 val isSelected = if (!isEnable) !custom.isBorderEnabled else (custom.isBorderEnabled && custom.borderThicknessDp == thickVal)
+                                 Card(
+                                     modifier = Modifier
+                                         .weight(1f)
+                                         .clickable {
+                                             viewModel.customizationState.value = custom.copy(
+                                                 isBorderEnabled = isEnable,
+                                                 borderThicknessDp = thickVal
+                                             )
+                                         },
+                                     colors = CardDefaults.cardColors(
+                                         containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                     ),
+                                     border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+                                 ) {
+                                     Box(modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                        Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Black)
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                    9 -> { // DYNAMIC ATS AUDIT
+                        FormSectionHeader("ATS COMPLIANCE SCORE")
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(RoundedCornerShape(40.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${atsAnalysis.score}%",
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = atsAnalysis.rating,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text("Ats Improvement Checklist:", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.fillMaxWidth())
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                if (atsAnalysis.suggestions.isEmpty()) {
+                                    Text("✓ Outstanding! Your structure is perfectly organized for ATS crawler matching.", fontSize = 11.sp, color = Color(0xFF10B981))
+                                } else {
+                                    atsAnalysis.suggestions.forEach { suggestion ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 2.dp),
+                                            verticalAlignment = Alignment.Top
+                                        ) {
+                                            Text("•", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(suggestion, fontSize = 11.sp, color = Color.Gray)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    10 -> { // JOB TRACKER APPLICATION MANAGER
+                        FormSectionHeader("ACTIVE JOB APPLICATIONS MANAGER")
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f))
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text("Careers & Application Stage Progress", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Organize, prepare, and track submissions sent using YourDoc standard documents.", fontSize = 11.sp, color = Color.Gray)
+                            }
+                        }
+
+                        // Add application button and entry fields
+                        var newCompany by remember { mutableStateOf("") }
+                        var newRole by remember { mutableStateOf("") }
+                        var newStatus by remember { mutableStateOf("Applied") }
+                        var newSalary by remember { mutableStateOf("") }
+                        var newNotes by remember { mutableStateOf("") }
+                        var isAddingNew by remember { mutableStateOf(false) }
+
+                        if (isAddingNew) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text("Add Application Record", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    FormTextField(label = "Company / Organization Name", value = newCompany) { newCompany = it }
+                                    FormTextField(label = "Job Title / Role", value = newRole) { newRole = it }
+                                    FormTextField(label = "Expected Salary / Package", value = newSalary) { newSalary = it }
+                                    
+                                    // Status selector
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text("Stage Status:", fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                        listOf("Applied", "Interviewing", "Offered", "Archived").forEach { st ->
+                                            val isAct = newStatus == st
+                                            Card(
+                                                modifier = Modifier.clickable { newStatus = st },
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = if (isAct) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceVariant
+                                                )
+                                            ) {
+                                                Text(st, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = if (isAct) Color.White else Color.Black)
+                                            }
+                                        }
+                                    }
+                                    FormTextField(label = "Preparation / Follow-up Notes", value = newNotes, singleLine = false) { newNotes = it }
+                                    
+                                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                                        TextButton(onClick = { isAddingNew = false }) { Text("Cancel", fontSize = 11.sp) }
+                                        Button(
+                                            onClick = {
+                                                if (newCompany.isNotBlank() && newRole.isNotBlank()) {
+                                                    jobApplications = jobApplications + LocalManualJobApplication(newCompany, newRole, newStatus, newSalary, newNotes)
+                                                    newCompany = ""
+                                                    newRole = ""
+                                                    newSalary = ""
+                                                    newNotes = ""
+                                                    isAddingNew = false
+                                                    Toast.makeText(context, "Added Application!", Toast.LENGTH_SHORT).show()
+                                                }
+                                            },
+                                            shape = RoundedCornerShape(4.dp)
+                                        ) {
+                                            Text("Save Record", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Button(
+                                onClick = { isAddingNew = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("TRACK NEW SUBMISSION", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                        }
+
+                        // Display tracked applications list
+                        jobApplications.forEachIndexed { index, app ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.LightGray),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(app.role, fontWeight = FontWeight.Black, fontSize = 14.sp, color = Color.Black)
+                                            Text(app.company, fontSize = 12.sp, color = Color.DarkGray, fontWeight = FontWeight.Medium)
+                                        }
+                                        
+                                        // Badge
+                                        val badgeCol = when (app.status) {
+                                            "Offered" -> Color(0xFF10B981) // Green
+                                            "Interviewing" -> Color(0xFF3B82F6) // Blue
+                                            "Applied" -> Color(0xFFF59E0B) // Amber
+                                            else -> Color.Gray
+                                        }
+                                        Card(
+                                            colors = CardDefaults.cardColors(containerColor = badgeCol.copy(alpha = 0.15f))
+                                        ) {
+                                            Text(
+                                                app.status.uppercase(),
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = badgeCol,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                    
+                                    if (app.salary.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("Package Range: " + app.salary, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF15803D))
+                                    }
+                                    
+                                    if (app.notes.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(app.notes, fontSize = 11.sp, color = Color.DarkGray)
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Remove",
+                                            tint = Color.Red,
+                                            modifier = Modifier
+                                                .size(18.dp)
+                                                .clickable {
+                                                    jobApplications = jobApplications.filterIndexed { i, _ -> i != index }
+                                                }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Real-Time Document Visual Display Right Column
+        val renderPreviewColumn: @Composable (Modifier) -> Unit = { modifier ->
+            Card(
+                modifier = modifier,
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFECEFF1).copy(alpha = 0.8f))
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.secondary)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "LIVE SHEET REVIEW",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 10.sp,
+                            color = Color.White
+                        )
+                        Button(
+                            onClick = {
+                                PdfExporter.exportToPdfAndShare(
+                                    context = context,
+                                    title = title,
+                                    personalInfo = pInfo,
+                                    passportInfo = passInfo,
+                                    workExperiences = workList,
+                                    educations = eduList,
+                                    skills = skillList,
+                                    languages = langList,
+                                    aboutMe = aboutMe,
+                                    declaration = decl,
+                                    templateId = custom.templateId,
+                                    showProfilePhoto = custom.showProfilePhoto,
+                                    photoShape = custom.photoShape,
+                                    primaryColorHex = custom.primaryColorHex
+                                )
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
+                            shape = RoundedCornerShape(4.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(28.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("EXPORT COMPACT", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    // Render Document Canvas inside detailed scrolls
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(10.dp)
+                    ) {
+                        ResumeDocumentView(
+                            personalInfo = pInfo,
+                            passportInfo = passInfo,
+                            workExperiences = workList,
+                            educations = eduList,
+                            skills = skillList,
+                            languages = langList,
+                            aboutMe = aboutMe,
+                            declaration = decl,
+                            customization = custom,
+                            certifications = certsList,
+                            projects = projectsList,
+                            references = referencesList,
+                            awards = awardsList,
+                            hobbies = hobbiesList,
+                            socialLinks = socialLinksList,
+                            customSectionsData = customSectionsDataList,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+
+        // Adaptive Master Workspace Layout (Horizontal or Vertical Split for Mobile)
+        if (!isCompactScreen) {
+            Row(modifier = Modifier.weight(1f)) {
+                renderFormColumn(Modifier.weight(1f).fillMaxHeight())
+                renderPreviewColumn(
+                    Modifier
+                        .weight(1.2f)
+                        .fillMaxHeight()
+                        .padding(16.dp)
+                )
+            }
+        } else {
+            Column(modifier = Modifier.weight(1f)) {
+                if (mobileSelectedTab == 0 || mobileSelectedTab == 1) {
+                    renderFormColumn(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    )
+                }
+                if (mobileSelectedTab == 2 || mobileSelectedTab == 1) {
+                    renderPreviewColumn(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+
+            if (cropTempPhotoPath != null) {
+                PhotoCropAdjustDialog(
+                    photoPath = cropTempPhotoPath!!,
+                    initialShape = custom.photoShape,
+                    onDismiss = { cropTempPhotoPath = null },
+                    onSaveCropped = { newCroppedPath, finalShape ->
+                        viewModel.personalInfoState.value = pInfo.copy(
+                            profilePhotoUri = newCroppedPath
+                        )
+                        viewModel.customizationState.value = custom.copy(
+                            showProfilePhoto = true,
+                            photoShape = finalShape
+                        )
+                        cropTempPhotoPath = null
+                    }
+                )
+            }
+
+            if (cropTempSignaturePath != null) {
+                SignatureCropAdjustDialog(
+                    photoPath = cropTempSignaturePath!!,
+                    onDismiss = { cropTempSignaturePath = null },
+                    onSaveCropped = { newCroppedPath ->
+                        viewModel.declarationState.value = decl.copy(
+                            signaturePathJson = newCroppedPath
+                        )
+                        cropTempSignaturePath = null
+                    }
+                )
+            }
+
+            if (showLivePreviewModal) {
+                LivePreviewModal(
+                    show = showLivePreviewModal,
+                    onDismiss = { showLivePreviewModal = false },
+                    title = title,
+                    personalInfo = pInfo,
+                    passportInfo = passInfo,
+                    workExperiences = workList,
+                    educations = eduList,
+                    skills = skillList,
+                    languages = langList,
+                    aboutMe = aboutMe,
+                    declaration = decl,
+                    customization = custom,
+                    certifications = certsList,
+                    projects = projectsList,
+                    references = referencesList,
+                    awards = awardsList,
+                    hobbies = hobbiesList,
+                    socialLinks = socialLinksList,
+                    customSectionsData = customSectionsDataList,
+                    context = context
+                )
+            }
+        }
+    }
+
+fun removeWhiteBackground(src: android.graphics.Bitmap): android.graphics.Bitmap {
+    val width = src.width
+    val height = src.height
+    val out = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+    val pixels = IntArray(width * height)
+    src.getPixels(pixels, 0, width, 0, 0, width, height)
+    for (i in 0 until width * height) {
+        val color = pixels[i]
+        val r = (color shr 16) and 0xFF
+        val g = (color shr 8) and 0xFF
+        val b = color and 0xFF
+        val luminance = (0.299f * r + 0.587f * g + 0.114f * b)
+        if (luminance > 215f) {
+            pixels[i] = android.graphics.Color.TRANSPARENT
+        }
+    }
+    out.setPixels(pixels, 0, width, 0, 0, width, height)
+    return out
+}
+
+fun cropHDPhoto(
+    context: android.content.Context,
+    photoPath: String,
+    zoom: Float,
+    xOffset: Float,
+    yOffset: Float,
+    rotation: Float,
+    autoOptimize: Boolean = true,
+    removeBg: Boolean = false
+): String? {
+    try {
+        val originalFromFile = android.graphics.BitmapFactory.decodeFile(photoPath) ?: return null
+        val original = if (removeBg) {
+            val noBg = removeWhiteBackground(originalFromFile)
+            originalFromFile.recycle()
+            noBg
+        } else {
+            originalFromFile
+        }
+        
+        val rotated = if (rotation != 0f) {
+            val matrix = android.graphics.Matrix().apply { postRotate(rotation) }
+            val rb = android.graphics.Bitmap.createBitmap(original, 0, 0, original.width, original.height, matrix, true)
+            if (rb != original) original.recycle()
+            rb
+        } else {
+            original
+        }
+
+        val targetSize = 512
+        val cropped = android.graphics.Bitmap.createBitmap(targetSize, targetSize, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(cropped)
+        if (removeBg) {
+            canvas.drawColor(android.graphics.Color.TRANSPARENT)
+        } else {
+            canvas.drawColor(android.graphics.Color.WHITE)
+        }
+
+        val paint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            isFilterBitmap = true
+        }
+
+        if (autoOptimize) {
+            val contrast = 1.08f
+            val brightness = 15f
+            val colorMatrix = android.graphics.ColorMatrix(floatArrayOf(
+                contrast, 0f, 0f, 0f, brightness,
+                0f, contrast, 0f, 0f, brightness,
+                0f, 0f, contrast, 0f, brightness,
+                0f, 0f, 0f, 1f, 0f
+            ))
+            paint.colorFilter = android.graphics.ColorMatrixColorFilter(colorMatrix)
+        }
+
+        val fitScale = targetSize.toFloat() / Math.max(rotated.width, rotated.height).toFloat()
+        val baseScale = fitScale * zoom
+
+        val matrix = android.graphics.Matrix()
+        val dx = (targetSize - rotated.width * baseScale) / 2f
+        val dy = (targetSize - rotated.height * baseScale) / 2f
+        
+        matrix.postScale(baseScale, baseScale)
+        val viewportScale = targetSize.toFloat() / 180f
+        matrix.postTranslate(dx + (xOffset * viewportScale), dy + (yOffset * viewportScale))
+
+        canvas.drawBitmap(rotated, matrix, paint)
+        rotated.recycle()
+
+        val formatSuffix = if (removeBg) ".png" else ".jpg"
+        val finalFile = java.io.File(context.filesDir, "cv_photo_hq_${System.currentTimeMillis()}$formatSuffix")
+        val out = java.io.FileOutputStream(finalFile)
+        val compressFormat = if (removeBg) android.graphics.Bitmap.CompressFormat.PNG else android.graphics.Bitmap.CompressFormat.JPEG
+        cropped.compress(compressFormat, 95, out)
+        out.flush()
+        out.close()
+        cropped.recycle()
+
+        return finalFile.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        return null
+    }
+}
+
+@Composable
+fun PhotoCropAdjustDialog(
+    photoPath: String,
+    initialShape: String,
+    onDismiss: () -> Unit,
+    onSaveCropped: (newCroppedPath: String, finalShape: String) -> Unit
+) {
+    var zoom by remember { mutableStateOf(1.0f) }
+    var xOffset by remember { mutableStateOf(0.0f) }
+    var yOffset by remember { mutableStateOf(0.0f) }
+    var rotation by remember { mutableStateOf(0f) }
+    var selectedShape by remember { mutableStateOf(initialShape.ifEmpty { "circle" }) }
+    var autoOptimize by remember { mutableStateOf(true) }
+    var backgroundRemoved by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    
+    val previewBitmap = remember(photoPath) {
+        try {
+            android.graphics.BitmapFactory.decodeFile(photoPath)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    if (previewBitmap == null) {
+        onDismiss()
+        return
+    }
+
+    val displayedBitmap = remember(previewBitmap, backgroundRemoved) {
+        if (backgroundRemoved && previewBitmap != null) {
+            removeWhiteBackground(previewBitmap)
+        } else {
+            previewBitmap
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Header group
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "CROP & ADJUST PROFILE PHOTO",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 12.5.sp,
+                        color = Color.Black,
+                        letterSpacing = 0.5.sp
+                    )
+                    Text(
+                        text = "Sliders positioned on the right for elegant visual control.",
+                        fontSize = 10.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                val shapeModifier = when (selectedShape) {
+                    "square" -> RoundedCornerShape(12.dp)
+                    "oval" -> RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp, bottomStart = 12.dp, bottomEnd = 12.dp)
+                    "simple" -> RoundedCornerShape(4.dp)
+                    else -> androidx.compose.foundation.shape.CircleShape
+                }
+
+                // Modern Side-by-Side row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left viewport
+                    Box(
+                        modifier = Modifier
+                            .size(140.dp)
+                            .border(2.dp, Color(0xFFE2E8F0), shapeModifier)
+                            .clip(shapeModifier)
+                            .background(Color(0xFFF1F5F9))
+                            .pointerInput(Unit) {
+                                detectTransformGestures { centroid, pan, zoomAmount, rotationAmount ->
+                                    zoom = (zoom * zoomAmount).coerceIn(0.5f, 4.0f)
+                                    xOffset += pan.x
+                                    yOffset += pan.y
+                                    rotation = (rotation + rotationAmount) % 360f
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.foundation.Image(
+                            bitmap = displayedBitmap.asImageBitmap(),
+                            contentDescription = "Preview",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(
+                                    scaleX = zoom,
+                                    scaleY = zoom,
+                                    translationX = xOffset,
+                                    translationY = yOffset,
+                                    rotationZ = rotation
+                                ),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .border(0.5.dp, Color.White.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape)
+                        )
+                    }
+
+                    // Right column containing all Sliders & controls
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Zoom slider
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("🔎 Zoom", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                Text(String.format("%.1fx", zoom), fontSize = 10.sp, color = Color.Gray)
+                            }
+                            Slider(
+                                value = zoom,
+                                onValueChange = { zoom = it },
+                                valueRange = 0.5f..4.0f,
+                                modifier = Modifier.height(24.dp)
+                            )
+                        }
+
+                        // Horizontal drag
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text("↔️ Horizontal Shift", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Slider(
+                                value = xOffset,
+                                onValueChange = { xOffset = it },
+                                valueRange = -150f..150f,
+                                modifier = Modifier.height(24.dp)
+                            )
+                        }
+
+                        // Vertical drag
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text("↕️ Vertical Shift", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Slider(
+                                value = yOffset,
+                                onValueChange = { yOffset = it },
+                                valueRange = -150f..150f,
+                                modifier = Modifier.height(24.dp)
+                            )
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+
+                // Shape and Quick features list
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Shape:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    listOf("circle" to "Circle", "square" to "Square", "oval" to "Oval", "simple" to "Passport").forEach { (id, label) ->
+                        val isSel = selectedShape == id
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSel) MaterialTheme.colorScheme.primary else Color(0xFFF1F5F9),
+                                contentColor = if (isSel) Color.White else Color.DarkGray
+                            ),
+                            shape = RoundedCornerShape(6.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { selectedShape = id }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 5.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(label, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
+                // Remove Background button
+                Button(
+                    onClick = { backgroundRemoved = !backgroundRemoved },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (backgroundRemoved) Color(0xFF0F172A) else Color(0xFFE2E8F0),
+                        contentColor = if (backgroundRemoved) Color.White else Color.DarkGray
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (backgroundRemoved) Icons.Default.Check else Icons.Default.ContentCut,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (backgroundRemoved) "Background Removed ✓" else "Remove Photo Background (Transparent)",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { autoOptimize = !autoOptimize },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Checkbox(
+                        checked = autoOptimize,
+                        onCheckedChange = { autoOptimize = it }
+                    )
+                    Text("Auto-Optimize Portrait Quality ⚡", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+
+                // Bottom actions row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = { rotation = (rotation + 90f) % 360f },
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.height(34.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Rotate", modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Rotate 90°", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel", color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Button(
+                            onClick = {
+                                val resultPath = cropHDPhoto(context, photoPath, zoom, xOffset, yOffset, rotation, autoOptimize, backgroundRemoved)
+                                if (resultPath != null) {
+                                    onSaveCropped(resultPath, selectedShape)
+                                } else {
+                                    android.widget.Toast.makeText(context, "Cropping failed!", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            Text("Apply Crop", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SignatureCropAdjustDialog(
+    photoPath: String,
+    onDismiss: () -> Unit,
+    onSaveCropped: (newCroppedPath: String) -> Unit
+) {
+    var zoom by remember { mutableStateOf(1.0f) }
+    var xOffset by remember { mutableStateOf(0.0f) }
+    var yOffset by remember { mutableStateOf(0.0f) }
+    var rotation by remember { mutableStateOf(0f) }
+    var backgroundRemoved by remember { mutableStateOf(true) } // default true for signature!
+    var autoOptimize by remember { mutableStateOf(true) }
+
+    val context = LocalContext.current
+    
+    val previewBitmap = remember(photoPath) {
+        try {
+            android.graphics.BitmapFactory.decodeFile(photoPath)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    if (previewBitmap == null) {
+        onDismiss()
+        return
+    }
+
+    val displayedBitmap = remember(previewBitmap, backgroundRemoved) {
+        if (backgroundRemoved && previewBitmap != null) {
+            removeWhiteBackground(previewBitmap)
+        } else {
+            previewBitmap
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Header group
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "ADJUST HANDWRITTEN SIGNATURE",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 12.5.sp,
+                        color = Color.Black,
+                        letterSpacing = 0.5.sp
+                    )
+                    Text(
+                        text = "Responsive split adjustment with control slider on the right.",
+                        fontSize = 10.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                val shapeModifier = RoundedCornerShape(8.dp)
+
+                // Split Layout Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left Side: Signature canvas viewport
+                    Box(
+                        modifier = Modifier
+                            .weight(1.1f)
+                            .height(110.dp)
+                            .border(1.dp, Color(0xFFE2E8F0), shapeModifier)
+                            .clip(shapeModifier)
+                            .background(Color(0xFFF8FAFC))
+                            .pointerInput(Unit) {
+                                detectTransformGestures { centroid, pan, zoomAmount, rotationAmount ->
+                                    zoom = (zoom * zoomAmount).coerceIn(0.5f, 5.0f)
+                                    xOffset += pan.x
+                                    yOffset += pan.y
+                                    rotation = (rotation + rotationAmount) % 360f
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.foundation.Image(
+                            bitmap = displayedBitmap.asImageBitmap(),
+                            contentDescription = "Signature Preview",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(
+                                    scaleX = zoom,
+                                    scaleY = zoom,
+                                    translationX = xOffset,
+                                    translationY = yOffset,
+                                    rotationZ = rotation
+                                ),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                        )
+                    }
+
+                    // Right Side: Zoom and Adjustment slider
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("🔍 Zoom", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            Text(String.format("%.1fx", zoom), fontSize = 10.sp, color = Color.Gray)
+                        }
+                        Slider(
+                            value = zoom,
+                            onValueChange = { zoom = it },
+                            valueRange = 0.5f..4.0f,
+                            modifier = Modifier.height(24.dp)
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+
+                // Background removal button
+                Button(
+                    onClick = { backgroundRemoved = !backgroundRemoved },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (backgroundRemoved) Color(0xFF0F172A) else Color(0xFFE2E8F0),
+                        contentColor = if (backgroundRemoved) Color.White else Color.DarkGray
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (backgroundRemoved) Icons.Default.Check else Icons.Default.ContentCut,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (backgroundRemoved) "Background Removed (Transparent) ✓" else "Remove Background (Make Transparent)",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Ink customization
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { autoOptimize = !autoOptimize },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Checkbox(
+                        checked = autoOptimize,
+                        onCheckedChange = { autoOptimize = it }
+                    )
+                    Column {
+                        Text("Darken Signature Ink 🖊️", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    }
+                }
+
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("CANCEL", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = {
+                            val resultPath = cropHDPhoto(
+                                context = context,
+                                photoPath = photoPath,
+                                zoom = zoom,
+                                xOffset = xOffset,
+                                yOffset = yOffset,
+                                rotation = rotation,
+                                autoOptimize = autoOptimize,
+                                removeBg = backgroundRemoved
+                            )
+                            if (resultPath != null) {
+                                onSaveCropped(resultPath)
+                            } else {
+                                android.widget.Toast.makeText(context, "Error saving signature", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("APPLY SIGNATURE", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FormSectionHeader(label: String) {
+    Text(
+        text = label.uppercase(),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Black,
+        color = MaterialTheme.colorScheme.primary,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(top = 8.dp)
+    )
+}
+
+@Composable
+fun SupportDialog(
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header of dialog
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFEBEE)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = null,
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "SUPPORT & DONATION",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 14.sp,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "Help fund & build future updates",
+                            fontSize = 11.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+                
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+                
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .weight(1f, fill = false)
+                ) {
+                    // eSewa Wallet
+                    SupportItem(
+                        icon = Icons.Default.Business,
+                        color = Color(0xFF60BB46), // eSewa Greenish color
+                        title = "eSewa Mobile Wallet",
+                        value = "+9779864353535",
+                        onCopy = {
+                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString("+9779864353535"))
+                            Toast.makeText(context, "eSewa Number Copied!", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                    
+                    // Khalti Wallet
+                    SupportItem(
+                        icon = Icons.Default.Business,
+                        color = Color(0xFF5C2D91), // Khalti Purple
+                        title = "Khalti Digital Wallet",
+                        value = "+9779864353535",
+                        onCopy = {
+                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString("+9779864353535"))
+                            Toast.makeText(context, "Khalti Number Copied!", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                    
+                    // IPS
+                    SupportItem(
+                        icon = Icons.Default.Business,
+                        color = Color(0xFF005AC1),
+                        title = "IPS (Interbank Payment)",
+                        value = "Coming Soon",
+                        isLabelOnly = true
+                    )
+                    
+                    // Buy Me A Coffee
+                    SupportItem(
+                        icon = Icons.Default.Favorite,
+                        color = Color(0xFFFFDD00),
+                        title = "Buy Me A Coffee",
+                        value = "Coming Soon",
+                        isLabelOnly = true
+                    )
+                    
+                    // Crypto section
+                    Text(
+                        text = "CRYPTOCURRENCY WALLETS",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color.DarkGray,
+                        letterSpacing = 0.5.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    
+                    val cryptoList = listOf(
+                        "BTC" to Color(0xFFF7931A),
+                        "ETH" to Color(0xFF627EEA),
+                        "SOL" to Color(0xFF14F195),
+                        "USDT" to Color(0xFF26A17B)
+                    )
+                    
+                    cryptoList.forEach { (cryptoName, coinColor) ->
+                        SupportItem(
+                            icon = Icons.Default.Public,
+                            color = coinColor,
+                            title = "$cryptoName Address",
+                            value = "Coming Soon",
+                            isLabelOnly = true
+                        )
+                    }
+                }
+                
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
+                ) {
+                    Text("DONE", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SupportItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    title: String,
+    value: String,
+    isLabelOnly: Boolean = false,
+    onCopy: () -> Unit = {}
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFE2E8F0)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = title,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = value,
+                        fontSize = 11.sp,
+                        color = if (value == "Coming Soon") Color.Gray else Color.DarkGray,
+                        fontWeight = if (value == "Coming Soon") FontWeight.Medium else FontWeight.Bold
+                    )
+                }
+            }
+            if (!isLabelOnly) {
+                IconButton(
+                    onClick = onCopy,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Copy",
+                        tint = Color(0xFF005AC1),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FormTextField(
+    label: String,
+    value: String,
+    singleLine: Boolean = true,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, fontSize = 11.sp) },
+        textStyle = TextStyle(fontSize = 13.sp),
+        singleLine = singleLine,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    )
+}
+
+@Composable
+fun FormDropdownField(
+    label: String,
+    value: String,
+    options: List<String>,
+    onValueChange: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label, fontSize = 11.sp) },
+            textStyle = TextStyle(fontSize = 13.sp),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            trailingIcon = {
+                IconButton(onClick = { expanded = true }) {
+                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
+                }
+            }
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option, fontSize = 12.sp) },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+fun showDatePicker(context: android.content.Context, initialDate: String, onDateSelected: (String) -> Unit) {
+    val calendar = java.util.Calendar.getInstance()
+    if (initialDate.contains("-")) {
+        try {
+            val parts = initialDate.split("-")
+            if (parts.size == 3) {
+                calendar.set(java.util.Calendar.YEAR, parts[0].toInt())
+                calendar.set(java.util.Calendar.MONTH, parts[1].toInt() - 1)
+                calendar.set(java.util.Calendar.DAY_OF_MONTH, parts[2].toInt())
+            }
+        } catch (e: Exception) {
+            // fallback
+        }
+    }
+    android.app.DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val formattedMonth = String.format("%02d", month + 1)
+            val formattedDay = String.format("%02d", dayOfMonth)
+            onDateSelected("$year-$formattedMonth-$formattedDay")
+        },
+        calendar.get(java.util.Calendar.YEAR),
+        calendar.get(java.util.Calendar.MONTH),
+        calendar.get(java.util.Calendar.DAY_OF_MONTH)
+    ).show()
+}
+
+@Composable
+fun FormDatePickerField(
+    label: String,
+    value: String,
+    onDateSelected: (String) -> Unit
+) {
+    val context = LocalContext.current
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                showDatePicker(context, value, onDateSelected)
+            }
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            label = { Text(label, fontSize = 11.sp) },
+            textStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium),
+            readOnly = true,
+            enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledContainerColor = Color.Transparent,
+                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Pick Date",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
+}
+
+@Composable
+fun TemplateChoiceRow(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
+            .clickable { onClick() }
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = isSelected, onClick = onClick)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(label, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium)
+    }
+}
+
+@Composable
+fun ColorSwatch(hex: String, name: String, onClick: (String) -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(Color(android.graphics.Color.parseColor(hex)))
+            .clickable { onClick(hex) }
+    )
+}
+
+
+// ============================================
+// 3. AI COVER LETTER GENERATOR SCREEN
+// ============================================
+@Composable
+fun ParsedMarkdownText(text: String, modifier: Modifier = Modifier) {
+    val annotatedString = androidx.compose.ui.text.buildAnnotatedString {
+        val parts = text.split("**")
+        for (i in parts.indices) {
+            if (i % 2 == 1) {
+                withStyle(style = androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF002F6C))) {
+                    append(parts[i])
+                }
+            } else {
+                append(parts[i])
+            }
+        }
+    }
+    Text(
+        text = annotatedString,
+        fontSize = 12.sp,
+        lineHeight = 18.sp,
+        color = Color.Black,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun CoverLetterGeneratorScreen(
+    viewModel: ResumeViewModel,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val workList by viewModel.workExperiencesState.collectAsStateWithLifecycle()
+    val skillList by viewModel.skillsState.collectAsStateWithLifecycle()
+    val personalInfo by viewModel.personalInfoState.collectAsStateWithLifecycle()
+
+    val defaultJob = workList.firstOrNull()?.jobPosition ?: "Senior Software Architect"
+    val defaultSkills = skillList.take(5).joinToString(", ") { it.name }.ifEmpty { "Jetpack Compose, Kotlin, Coroutines, Room DB" }
+
+    val todayStr = remember {
+        val sdf = java.text.SimpleDateFormat("MMMM dd, yyyy", java.util.Locale.ENGLISH)
+        try {
+            sdf.format(java.util.Date())
+        } catch(e: Exception) { "Today's Date" }
+    }
+
+    var inputApplicantName by remember(personalInfo.fullName) { mutableStateOf(personalInfo.fullName) }
+    var inputApplicantEmail by remember(personalInfo.email) { mutableStateOf(personalInfo.email) }
+    var inputApplicantPhone by remember(personalInfo.phone) { mutableStateOf(personalInfo.phone) }
+    var inputApplicantAddress by remember(personalInfo.currentAddress) { mutableStateOf(personalInfo.currentAddress) }
+
+    var inputCompanyName by remember { mutableStateOf("Target Venture Corp") }
+    var inputCompanyCountry by remember { mutableStateOf("USA") }
+    var inputCompanyCity by remember { mutableStateOf("New York") }
+    var inputCompanyAddress by remember { mutableStateOf("100 Broadway St") }
+    var inputCompanyEmail by remember { mutableStateOf("hr@targetventure.com") }
+
+    var inputHiringManagerName by remember { mutableStateOf("John Doe") }
+    var inputHiringManagerPosition by remember { mutableStateOf("Director of Talent") }
+
+    var inputJobPosition by remember(defaultJob) { mutableStateOf(defaultJob) }
+    var inputJobRefNumber by remember { mutableStateOf("REF-90812") }
+    var inputJobType by remember { mutableStateOf("Full-Time") }
+    var inputSubjectLine by remember(defaultJob) { mutableStateOf("Application for position of $defaultJob") }
+    var inputDate by remember { mutableStateOf(todayStr) }
+
+    var inputLetterTone by remember { mutableStateOf("Professional") } // Professional, Friendly, Formal, Modern
+    var inputSkills by remember(defaultSkills) { mutableStateOf(defaultSkills) }
+
+    val coverLetterTemplates = remember {
+        listOf(
+            Triple("classic_blue", "Corporate Classic 🏢", "#002F6C"),
+            Triple("minimalist_ash", "Minimalist Ash 🖤", "#1F2937"),
+            Triple("executive_gold_emerald", "Executive Emerald 🌳", "#064E3B")
+        )
+    }
+    var selectedLetterTemplate by remember { mutableStateOf(coverLetterTemplates[0]) }
+
+    val aiLoading by viewModel.aiLoading.collectAsStateWithLifecycle()
+    val aiError by viewModel.aiError.collectAsStateWithLifecycle()
+    val letterState by viewModel.coverLetterState.collectAsStateWithLifecycle()
+
+    // Persistent state for draft post-generation editing
+    var editedText by remember(letterState.bodyText) { 
+        val cleaned = letterState.bodyText.replace(" * ", " • ").replace("* ", "• ").replace("##", "")
+        mutableStateOf(cleaned) 
+    }
+
+    // Expandable group states
+    var expandedApplicantInfo by remember { mutableStateOf(false) }
+    var expandedRecipientInfo by remember { mutableStateOf(false) }
+    var expandedJobDetails by remember { mutableStateOf(true) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Elegant back and title bar
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Text(
+                    "Advanced Letter Space", 
+                    fontSize = 18.sp, 
+                    fontWeight = FontWeight.Bold, 
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            // Clean Auto Format All Inputs Button
+            Button(
+                onClick = {
+                    inputApplicantName = com.example.data.SmartFormatEngine.formatTitle(inputApplicantName)
+                    inputApplicantEmail = inputApplicantEmail.trim().lowercase()
+                    inputApplicantPhone = inputApplicantPhone.trim()
+                    inputApplicantAddress = com.example.data.SmartFormatEngine.formatTitle(inputApplicantAddress)
+                    
+                    inputCompanyName = com.example.data.SmartFormatEngine.formatTitle(inputCompanyName)
+                    inputCompanyCountry = inputCompanyCountry.trim().uppercase()
+                    inputCompanyCity = com.example.data.SmartFormatEngine.formatTitle(inputCompanyCity)
+                    inputCompanyAddress = com.example.data.SmartFormatEngine.formatTitle(inputCompanyAddress)
+                    inputCompanyEmail = inputCompanyEmail.trim().lowercase()
+                    
+                    inputHiringManagerName = com.example.data.SmartFormatEngine.formatTitle(inputHiringManagerName)
+                    inputHiringManagerPosition = com.example.data.SmartFormatEngine.formatTitle(inputHiringManagerPosition)
+                    
+                    inputJobPosition = com.example.data.SmartFormatEngine.formatTitle(inputJobPosition)
+                    inputJobRefNumber = inputJobRefNumber.trim().uppercase()
+                    inputJobType = com.example.data.SmartFormatEngine.formatTitle(inputJobType)
+                    inputSubjectLine = com.example.data.SmartFormatEngine.fixPunctuationSpacing(inputSubjectLine)
+                    
+                    inputSkills = com.example.data.SmartFormatEngine.fixPunctuationSpacing(inputSkills)
+                    
+                    Toast.makeText(context, "✨ Inputs Auto-Formatted & Capitalized Successfully!", Toast.LENGTH_SHORT).show()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                modifier = Modifier.height(34.dp)
+            ) {
+                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(12.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Auto-Format ✨", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                .padding(14.dp)
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text("AI Cover Letter Architect", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Supply target role criteria and automatically generate custom, ATS-friendly business correspondence aligned with your credentials.",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // Section 1: Applicant (Sender) Information
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expandedApplicantInfo = !expandedApplicantInfo },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Text("1. Applicant (Sender) Information", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                    Icon(
+                        imageVector = if (expandedApplicantInfo) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
+                }
+                androidx.compose.animation.AnimatedVisibility(visible = expandedApplicantInfo) {
+                    Column(
+                        modifier = Modifier.padding(top = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        FormTextField(label = "Sender Full Name", value = inputApplicantName) { inputApplicantName = it }
+                        FormTextField(label = "Sender Contact Email", value = inputApplicantEmail) { inputApplicantEmail = it }
+                        FormTextField(label = "Sender Phone Number", value = inputApplicantPhone) { inputApplicantPhone = it }
+                        FormTextField(label = "Sender Residence Address", value = inputApplicantAddress) { inputApplicantAddress = it }
+                    }
+                }
+            }
+        }
+
+        // Section 2: Hiring Agency (Recipient) Information
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expandedRecipientInfo = !expandedRecipientInfo },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(imageVector = Icons.Default.Business, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Text("2. Hiring Venture & Manager Details", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                    Icon(
+                        imageVector = if (expandedRecipientInfo) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
+                }
+                androidx.compose.animation.AnimatedVisibility(visible = expandedRecipientInfo) {
+                    Column(
+                        modifier = Modifier.padding(top = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        FormTextField(label = "Hiring Company Name", value = inputCompanyName) { inputCompanyName = it }
+                        FormTextField(label = "Company Contact Email", value = inputCompanyEmail) { inputCompanyEmail = it }
+                        FormTextField(label = "Company Country", value = inputCompanyCountry) { inputCompanyCountry = it }
+                        FormTextField(label = "Company City", value = inputCompanyCity) { inputCompanyCity = it }
+                        FormTextField(label = "Company Street Address", value = inputCompanyAddress) { inputCompanyAddress = it }
+                        FormTextField(label = "Hiring Manager Name", value = inputHiringManagerName) { inputHiringManagerName = it }
+                        FormTextField(label = "Hiring Manager Designation/Position", value = inputHiringManagerPosition) { inputHiringManagerPosition = it }
+                    }
+                }
+            }
+        }
+
+        // Section 3: Job Field & Subject Info
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expandedJobDetails = !expandedJobDetails },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(imageVector = Icons.Default.Work, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Text("3. Job Desig & Reference Details", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                    Icon(
+                        imageVector = if (expandedJobDetails) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
+                }
+                androidx.compose.animation.AnimatedVisibility(visible = expandedJobDetails) {
+                    Column(
+                        modifier = Modifier.padding(top = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        FormTextField(label = "Designation Title Applying For", value = inputJobPosition) { inputJobPosition = it }
+                        FormTextField(label = "Job Type (e.g. Full-Time, Part-Time, Contract, Internship)", value = inputJobType) { inputJobType = it }
+                        FormTextField(label = "Job Vacancy Reference Number", value = inputJobRefNumber) { inputJobRefNumber = it }
+                        FormTextField(label = "Custom Letter Subject Line", value = inputSubjectLine) { inputSubjectLine = it }
+                        FormTextField(label = "Letter Issuing Date", value = inputDate) { inputDate = it }
+                    }
+                }
+            }
+        }
+
+        // Section 4: Tone & Skills Focus (Always Visible)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f))
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("4. Tone & Highlights Setup", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                
+                // Tone Selector Segment
+                Column {
+                    Text("Selected Tone of Writing", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf("Professional", "Friendly", "Formal", "Modern").forEach { tone ->
+                            val isSelected = inputLetterTone == tone
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primary 
+                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                    )
+                                    .clickable { inputLetterTone = tone }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = tone,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+
+                FormTextField(label = "Credentials & Key Achievements to Emphasize", value = inputSkills) { inputSkills = it }
+            }
+        }
+
+        Button(
+            onClick = {
+                viewModel.generateCoverLetterAI(
+                    companyName = inputCompanyName,
+                    companyCountry = inputCompanyCountry,
+                    companyCity = inputCompanyCity,
+                    companyAddress = inputCompanyAddress,
+                    companyEmail = inputCompanyEmail,
+                    hiringManagerName = inputHiringManagerName,
+                    hiringManagerPosition = inputHiringManagerPosition,
+                    jobPosition = inputJobPosition,
+                    jobRefNumber = inputJobRefNumber,
+                    jobType = inputJobType,
+                    applicantName = inputApplicantName,
+                    applicantAddress = inputApplicantAddress,
+                    applicantPhone = inputApplicantPhone,
+                    applicantEmail = inputApplicantEmail,
+                    date = inputDate,
+                    subjectLine = inputSubjectLine,
+                    letterTone = inputLetterTone,
+                    keySkills = inputSkills
+                )
+            },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            enabled = !aiLoading,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            if (aiLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Text("COMPILE SMART AI COVER LETTER", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        if (aiError != null) {
+            Text("Error matching criteria: $aiError", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+        }
+
+        if (editedText.isNotEmpty()) {
+            HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "EDITABLE DRAFT & REALTIME PREVIEW", 
+                    fontWeight = FontWeight.Bold, 
+                    fontSize = 12.sp, 
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Smart Format Body Button
+                    Button(
+                        onClick = {
+                            editedText = com.example.data.SmartFormatEngine.formatSentenceParagraphs(editedText)
+                            Toast.makeText(context, "✨ Body typography & word spacing auto-corrected!", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("Clean Text ✨", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    // Copy button
+                    IconButton(onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val clip = android.content.ClipData.newPlainText("Cover Letter", editedText)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Cover Letter Copied!", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "Copy")
+                    }
+                }
+            }
+
+            // Rich interactive Text Editor
+            OutlinedTextField(
+                value = editedText,
+                onValueChange = { editedText = it },
+                label = { Text("Interactive Draft Editor (Markdown raw)", fontSize = 11.sp) },
+                singleLine = false,
+                textStyle = TextStyle(fontSize = 12.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
+                placeholder = { Text("Type cover letter text. Wrap **important words** in double asterisks to bold them in preview and exports.", fontSize = 11.sp) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 180.dp, max = 350.dp)
+            )
+            
+            Text(
+                text = "Use simple markdown: wrap any key phrase under **bold theme** to highlight essential achievements.",
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text("CHOOSE COVER LETTER TEMPLATE STYLE", fontWeight = FontWeight.Black, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, letterSpacing = 0.5.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                coverLetterTemplates.forEach { tpl ->
+                    val isTplSelected = selectedLetterTemplate.first == tpl.first
+                    val tplColor = Color(android.graphics.Color.parseColor(tpl.third))
+                    
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { selectedLetterTemplate = tpl }
+                            .border(
+                                width = if (isTplSelected) 2.dp else 1.dp,
+                                color = if (isTplSelected) tplColor else Color.LightGray.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isTplSelected) tplColor.copy(alpha = 0.08f) else Color.White
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape)
+                                    .background(tplColor)
+                            )
+                            Text(
+                                text = tpl.second,
+                                fontSize = 9.sp,
+                                fontWeight = if (isTplSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isTplSelected) Color.Black else Color.Gray,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+
+            val tplPrimaryColorHex = selectedLetterTemplate.third
+            val previewThemePrimaryColor = Color(android.graphics.Color.parseColor(tplPrimaryColorHex))
+
+            Text("LIVE VISUAL LAYOUT CARD PREVIEW", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.Gray)
+
+            // High-fidelity corporate styled sheet preview
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    // Corporate Letterhead Header Preview
+                    Text(
+                        text = inputApplicantName.uppercase().ifEmpty { "APPLICANT NAME" }, 
+                        fontWeight = FontWeight.Bold, 
+                        fontSize = 14.sp, 
+                        color = previewThemePrimaryColor
+                    )
+                    
+                    val parsedContacts = listOfNotNull(
+                        inputApplicantEmail.takeIf { it.isNotBlank() },
+                        inputApplicantPhone.takeIf { it.isNotBlank() },
+                        inputApplicantAddress.takeIf { it.isNotBlank() }
+                    ).joinToString("  |  ")
+                    
+                    Text(
+                        text = parsedContacts.ifEmpty { "applicant@example.com  |  Contact Phone  |  Place of Residence" }, 
+                        fontSize = 9.sp, 
+                        color = Color.DarkGray
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    HorizontalDivider(thickness = 1.dp, color = previewThemePrimaryColor)
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text("Date: $inputDate", fontSize = 10.sp, color = Color.DarkGray)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    val computedTo = when {
+                        inputHiringManagerName.isNotBlank() && inputHiringManagerPosition.isNotBlank() -> "${inputHiringManagerName}\n${inputHiringManagerPosition}"
+                        inputHiringManagerName.isNotBlank() -> inputHiringManagerName
+                        inputHiringManagerPosition.isNotBlank() -> inputHiringManagerPosition
+                        else -> "The Hiring Manager / Recruiting Committee"
+                    }
+                    val companyDetails = listOfNotNull(
+                        inputCompanyAddress.takeIf { it.isNotBlank() },
+                        listOfNotNull(inputCompanyCity.takeIf { it.isNotBlank() }, inputCompanyCountry.takeIf { it.isNotBlank() }).joinToString(", ").takeIf { it.isNotBlank() },
+                        inputCompanyEmail.takeIf { it.isNotBlank() }
+                    ).joinToString("\n")
+                    Text(
+                        text = "To,\n$computedTo\n$inputCompanyName\n$companyDetails", 
+                        fontSize = 10.sp, 
+                        color = Color.Gray, 
+                        lineHeight = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    val computedSubject = inputSubjectLine.ifBlank {
+                        if (inputJobPosition.isNotBlank()) {
+                            val refSuffix = if (inputJobRefNumber.isNotBlank()) " (Ref No: $inputJobRefNumber)" else ""
+                            "Subject: Application for the position of $inputJobPosition$refSuffix"
+                        } else "Subject: Application for Professional Employment"
+                    }
+                    Text(text = computedSubject, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = previewThemePrimaryColor)
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Live Formatted Text Area
+                    ParsedMarkdownText(text = editedText)
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Sincerely,\n\n___________________\n${inputApplicantName.ifEmpty { "Applicant Signature" }}", fontSize = 10.sp, color = Color.Black)
+                }
+            }
+
+            // Export Actions Row
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = {
+                        PdfExporter.exportCoverLetterToPdfAndShare(
+                            context = context,
+                            fullName = inputApplicantName,
+                            email = inputApplicantEmail,
+                            phone = inputApplicantPhone,
+                            address = inputApplicantAddress,
+                            companyName = inputCompanyName,
+                            companyCountry = inputCompanyCountry,
+                            companyCity = inputCompanyCity,
+                            companyAddress = inputCompanyAddress,
+                            companyEmail = inputCompanyEmail,
+                            hiringManagerName = inputHiringManagerName,
+                            hiringManagerPosition = inputHiringManagerPosition,
+                            jobPosition = inputJobPosition,
+                            jobRefNumber = inputJobRefNumber,
+                            jobType = inputJobType,
+                            date = inputDate,
+                            subjectLine = inputSubjectLine,
+                            bodyText = editedText,
+                            primaryColorHex = tplPrimaryColorHex,
+                            secondaryColorHex = tplPrimaryColorHex,
+                            headerFontHex = tplPrimaryColorHex
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = previewThemePrimaryColor)
+                ) {
+                    Icon(imageVector = Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("EXPORT OFFICIAL PDF 📄", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+// ==========================================================
+// ADVANCED OFFLINE DICTIONARIES & SEARCHABLE COMPILATION HELPERS
+// ==========================================================
+
+object GlobalDataPackage {
+    val countries = listOf("Nepal", "India", "United States", "United Kingdom", "Canada", "Australia", "Germany", "United Arab Emirates", "Qatar")
+    
+    val countryDetails = mapOf(
+        "Nepal" to CountryInfo("+977", "Nepalese", listOf("Kathmandu", "Pokhara", "Lalitpur", "Biratnagar", "Chitwan")),
+        "India" to CountryInfo("+91", "Indian", listOf("Delhi", "Mumbai", "Bangalore", "Hyderabad", "Kolkata", "Chennai")),
+        "United States" to CountryInfo("+1", "American", listOf("New York", "San Francisco", "Los Angeles", "Chicago", "Seattle", "Austin")),
+        "United Kingdom" to CountryInfo("+44", "British", listOf("London", "Manchester", "Birmingham", "Edinburgh", "Leeds")),
+        "Canada" to CountryInfo("+1", "Canadian", listOf("Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa")),
+        "Australia" to CountryInfo("+61", "Australian", listOf("Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide")),
+        "Germany" to CountryInfo("+49", "German", listOf("Berlin", "Munich", "Frankfurt", "Hamburg", "Stuttgart")),
+        "United Arab Emirates" to CountryInfo("+971", "Emirati", listOf("Dubai", "Abu Dhabi", "Sharjah", "Ajman")),
+        "Qatar" to CountryInfo("+974", "Qatari", listOf("Doha", "Al Wakrah", "Al Rayyan", "Al Khor"))
+    )
+
+    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+
+    val commonLanguages = listOf("English", "Nepali", "Hindi", "Arabic", "French", "German", "Japanese", "Korean", "Chinese", "Spanish", "Russian", "Italian", "Portuguese", "Urdu", "Bengali")
+
+    val commonSkills = listOf("Kotlin", "Jetpack Compose", "Android SDK", "Room Database", "UI/UX Design", "Project Management", "Data Structures", "Technical Writing", "Creative Coding", "Agile Methodologies", "Python", "React Native", "Machine Learning")
+
+    val commonJobPositions = listOf("Executive Director", "Software Architect", "Product Manager", "Academic Program Manager", "Senior Developer", "Graphic Designer", "Human Resources Generalist", "Systems Engineer", "Mobile Developer")
+    
+    val educationLevels = listOf("Primary School", "Secondary School", "High School", "Diploma", "Bachelor Degree", "Master Degree", "PhD", "Vocational Training", "Certification Course")
+
+    data class CountryInfo(val code: String, val nationality: String, val cities: List<String>)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchableDropdown(
+    label: String,
+    selectedValue: String,
+    options: List<String>,
+    onValueSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    
+    val filteredOptions = remember(searchQuery, options) {
+        options.filter { it.contains(searchQuery, ignoreCase = true) }
+    }
+    
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedValue,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label, fontSize = 11.sp) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = OutlinedTextFieldDefaults.colors(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            textStyle = MaterialTheme.typography.bodyMedium
+        )
+        
+        if (expanded) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                // Search box inside the menu for fast searching!
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Search...", fontSize = 11.sp) },
+                    singleLine = true,
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    textStyle = MaterialTheme.typography.bodySmall
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                if (filteredOptions.isEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text("No matches found", fontSize = 12.sp, color = Color.Gray) },
+                        onClick = {}
+                    )
+                } else {
+                    filteredOptions.forEach { selection ->
+                        DropdownMenuItem(
+                            text = { Text(selection, fontSize = 12.sp) },
+                            onClick = {
+                                onValueSelected(selection)
+                                expanded = false
+                                searchQuery = ""
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun YourDocSplashScreen(onAnimationFinished: () -> Unit) {
+    // 3 seconds animation timer
+    val progress = remember { androidx.compose.animation.core.Animatable(0f) }
+    
+    LaunchedEffect(Unit) {
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.tween(
+                durationMillis = 3000,
+                easing = androidx.compose.animation.core.FastOutSlowInEasing
+            )
+        )
+        onAnimationFinished()
+    }
+    
+    val p = progress.value
+    
+    val bgGradient = Brush.verticalGradient(
+        colors = listOf(Color(0xFF030712), Color(0xFF0B1528), Color(0xFF010409))
+    )
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bgGradient),
+        contentAlignment = Alignment.Center
+    ) {
+        // Floating ambient dust particles (moving upwards / expanding)
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val count = 25
+            for (i in 0 until count) {
+                val seedX = (i * 37) % 1000 / 1000f
+                val seedY = (i * 59) % 1000 / 1000f
+                val sizeSeed = (i * 13) % 10 + 2
+                
+                val x = seedX * this.size.width
+                var y = (seedY * this.size.height - (p * 150f)) % this.size.height
+                if (y < 0) y += this.size.height
+                
+                val alpha = if (p < 0.2f) {
+                    (p / 0.2f) * 0.4f
+                } else {
+                    0.4f * (1f - p * 0.4f)
+                }
+                
+                drawCircle(
+                    color = Color(0xFF00FFCC).copy(alpha = alpha),
+                    radius = sizeSeed * this.density * (1f + p * 0.5f),
+                    center = androidx.compose.ui.geometry.Offset(x, y)
+                )
+            }
+        }
+        
+        // 3D Glass Layer & Logo Monogram Container
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(24.dp)
+        ) {
+            val scale = if (p < 0.2f) {
+                0.3f
+            } else if (p < 0.5f) {
+                0.3f + (p - 0.2f) / 0.3f * 0.7f
+            } else {
+                1.0f + kotlin.math.sin((p - 0.5f) * Math.PI * 4).toFloat() * 0.04f
+            }
+            
+            val glowIntensity = if (p < 0.4f) 0f else {
+                kotlin.math.sin((p - 0.4f) * Math.PI * 2.5).toFloat().coerceIn(0f, 1f)
+            }
+            
+            Box(
+                modifier = Modifier
+                    .scale(scale)
+                    .size(200.dp)
+                    .graphicsLayer {
+                        rotationX = (1f - p) * 15f
+                        rotationY = kotlin.math.sin(p * Math.PI).toFloat() * 10f
+                        cameraDistance = 12f
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                // Glass Backing Card with glow
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.07f),
+                                    Color.White.copy(alpha = 0.02f)
+                                )
+                            )
+                        )
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF005AC1).copy(alpha = 0.3f + 0.5f * glowIntensity),
+                                    Color(0xFF00FFCC).copy(alpha = 0.1f + 0.6f * glowIntensity)
+                                )
+                            ),
+                            shape = RoundedCornerShape(32.dp)
+                        )
+                )
+                
+                // Beautiful dynamic loading of our generated YourDoc logo inside the 3D card layout
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.yourdoc_logo),
+                    contentDescription = "YourDoc Logo Asset",
+                    modifier = Modifier
+                        .size(130.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                )
+                
+                if (p > 0.3f && p < 0.9f) {
+                    val angle = 45f
+                    val sweepProgress = (p - 0.3f) / 0.6f
+                    val translationX = -150f + sweepProgress * 300f
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                rotationZ = angle
+                                this.translationX = translationX.dp.toPx()
+                            }
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.White.copy(alpha = 0.15f),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(30.dp))
+            
+            val titleAlpha = if (p < 0.3f) 0f else {
+                ((p - 0.3f) / 0.4f).coerceIn(0f, 1f)
+            }
+            if (titleAlpha > 0.01f) {
+                Text(
+                    text = "YOURDOC YOURJOB",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 28.sp,
+                    color = Color.White,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.alpha(titleAlpha)
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                val sloganAlpha = if (p < 0.7f) 0f else {
+                    ((p - 0.7f) / 0.3f).coerceIn(0f, 1f)
+                }
+                if (sloganAlpha > 0.01f) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.alpha(sloganAlpha)) {
+                        Text(
+                            text = "Smart Resume & Premium Career Portal",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.5.sp,
+                            color = Color(0xFF00FFCC),
+                            letterSpacing = 1.sp
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "सजिलो सिभी, राम्रो जागिर",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            color = Color(0xFF10B981)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TemplatesScreen(
+    viewModel: ResumeViewModel,
+    onSelect: (CvTemplate) -> Unit,
+    onBack: () -> Unit
+) {
+    val isDark = false
+    val configuration = LocalConfiguration.current
+    val isTablet = configuration.screenWidthDp > 600
+    
+    // Smooth responsive columns calculation
+    val columnsCount = if (isTablet) 3 else 2
+    
+    // Categories for tab filter selection
+    val categories = listOf("All", "Professional", "ATS Friendly", "Corporate", "Creative", "Modern")
+    var selectedCategory by remember { mutableStateOf("All") }
+    
+    val filteredTemplates = remember(selectedCategory) {
+        if (selectedCategory == "All") {
+            CvTemplate.PREDEFINED_TEMPLATES
+        } else {
+            CvTemplate.PREDEFINED_TEMPLATES.filter { it.category == selectedCategory }
+        }
+    }
+
+    val mainBgGradient = if (isDark) {
+        Brush.verticalGradient(
+            colors = listOf(Color(0xFF0F172A), Color(0xFF090D16), Color(0xFF020408))
+        )
+    } else {
+        Brush.verticalGradient(
+            colors = listOf(Color(0xFFF1F5F9), Color(0xFFEDF2F7), Color(0xFFE2E8F0))
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(mainBgGradient)
+    ) {
+        // Subtle ambient light spheres matching modern design guidelines
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            drawCircle(
+                color = if (isDark) Color(0xFF005AC1).copy(alpha = 0.15f) else Color(0xFFD3E4FF).copy(alpha = 0.5f),
+                radius = w * 0.4f,
+                center = androidx.compose.ui.geometry.Offset(w * 0.2f, h * 0.2f)
+            )
+            drawCircle(
+                color = if (isDark) Color(0xFF00FFCC).copy(alpha = 0.12f) else Color(0xFFCCFBF1).copy(alpha = 0.4f),
+                radius = w * 0.3f,
+                center = androidx.compose.ui.geometry.Offset(w * 0.8f, h * 0.7f)
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Screen Header Title & Subtitle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f))
+                        .testTag("templates_back_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back Home",
+                        tint = if (isDark) Color.White else Color(0xFF0F172A)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "CV Templates Gallery",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black,
+                        color = if (isDark) Color.White else Color(0xFF001D3D)
+                    )
+                    Text(
+                        text = "Select an expert formatting structure to begin",
+                        fontSize = 11.sp,
+                        color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Professional Filter Tabs representing creative aesthetics
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(categories) { cat ->
+                    val isSelected = cat == selectedCategory
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                if (isSelected) {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFF005AC1), Color(0xFF00FFCC))
+                                    )
+                                } else {
+                                    Brush.horizontalGradient(
+                                        colors = if (isDark) listOf(Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.03f))
+                                        else listOf(Color.White, Color.White.copy(alpha = 0.7f))
+                                    )
+                                }
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = if (isSelected) Color.Transparent
+                                else if (isDark) Color.White.copy(alpha = 0.1f)
+                                else Color(0xFFDDE2F0),
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                            .clickable { selectedCategory = cat }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .testTag("filter_tab_${cat.lowercase().replace(" ", "_")}")
+                    ) {
+                        Text(
+                            text = cat,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) Color.White
+                            else if (isDark) Color(0xFFCBD5E1)
+                            else Color(0xFF475569)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Templates GridView Layout with Responsive Glassmorphism Cards
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columnsCount),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                items(filteredTemplates) { template ->
+                    TemplateGridCard(
+                        template = template,
+                        isDarkSystem = isDark,
+                        onSelect = { onSelect(template) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TemplateGridCard(
+    template: CvTemplate,
+    isDarkSystem: Boolean,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("template_card_${template.id}")
+            .clip(RoundedCornerShape(18.dp))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = if (isDarkSystem) listOf(
+                        Color.White.copy(alpha = 0.12f),
+                        Color(0xFF00FFCC).copy(alpha = 0.15f)
+                    ) else listOf(
+                        Color.White.copy(alpha = 0.7f),
+                        Color(0xFF005AC1).copy(alpha = 0.12f)
+                    )
+                ),
+                shape = RoundedCornerShape(18.dp)
+            )
+            .clickable { onSelect() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDarkSystem) Color(0xFF1E293B).copy(alpha = 0.5f)
+            else Color.White.copy(alpha = 0.85f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Dynamic graphical mini preview / thumbnail of layout
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(115.dp)
+                    .background(
+                        if (template.isDarkBg) Color(0xFF0F172A) else Color(0xFFF1F5F9)
+                    )
+                    .padding(8.dp)
+            ) {
+                val accentColor = Color(android.graphics.Color.parseColor(template.primaryColorHex))
+                
+                // Draw template representation inside miniature page container
+                when (template.id) {
+                    "ats_white" -> {
+                        // Standard classic center heading & flat list
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(modifier = Modifier.fillMaxWidth(0.5f).height(6.dp).align(Alignment.CenterHorizontally).background(Color.DarkGray))
+                            Box(modifier = Modifier.fillMaxWidth(0.8f).height(3.dp).align(Alignment.CenterHorizontally).background(Color.LightGray))
+                            Spacer(modifier = Modifier.height(4.dp))
+                            // Line segments representing items
+                            repeat(5) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(modifier = Modifier.size(4.dp).background(Color.DarkGray))
+                                    Box(modifier = Modifier.fillMaxWidth(0.9f).height(3.dp).background(Color.LightGray))
+                                }
+                            }
+                        }
+                    }
+                    "europass_blue", "europass_modern", "europass_dark" -> {
+                        // Europass Layout has deep top header bar, left thin sidebar
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            // Top Banner bar
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(20.dp)
+                                    .background(accentColor)
+                                    .padding(horizontal = 4.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Box(modifier = Modifier.width(40.dp).height(4.dp).background(Color.White))
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                // Left contact sidebar representation
+                                Column(modifier = Modifier.width(30.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                    repeat(4) {
+                                        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(accentColor.copy(alpha = 0.3f)))
+                                    }
+                                }
+                                // Right main timeline
+                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                    repeat(3) {
+                                        Box(modifier = Modifier.fillMaxWidth(0.9f).height(3.dp).background(Color.Gray.copy(alpha = 0.3f)))
+                                        Box(modifier = Modifier.fillMaxWidth(0.6f).height(2.dp).background(Color.LightGray.copy(alpha = 0.4f)))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        // Sided partition templates / Corporate Blue / Elegant Noir
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            // Sided Accent Sidebar
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .width(26.dp)
+                                    .background(accentColor.copy(alpha = 0.15f))
+                                    .padding(4.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(accentColor))
+                                repeat(3) {
+                                    Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(accentColor.copy(alpha = 0.5f)))
+                                }
+                            }
+                            // Sided main column
+                            Column(
+                                modifier = Modifier.weight(1f).padding(top = 4.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(modifier = Modifier.fillMaxWidth(0.7f).height(5.dp).background(accentColor))
+                                Box(modifier = Modifier.fillMaxWidth(0.9f).height(3.dp).background(Color.LightGray))
+                                Spacer(modifier = Modifier.height(2.dp))
+                                repeat(3) {
+                                    Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(Color.Gray.copy(alpha = 0.2f)))
+                                    Box(modifier = Modifier.fillMaxWidth(0.8f).height(2.dp).background(Color.LightGray.copy(alpha = 0.2f)))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Info details below
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                // Category badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(
+                            when (template.category) {
+                                "Professional" -> Color(0xFF005AC1).copy(alpha = 0.1f)
+                                "ATS Friendly" -> Color(0xFF10B981).copy(alpha = 0.1f)
+                                "Corporate" -> Color(0xFF6366F1).copy(alpha = 0.1f)
+                                "Creative" -> Color(0xFFEC4899).copy(alpha = 0.1f)
+                                else -> Color(0xFF64748B).copy(alpha = 0.1f)
+                            }
+                        )
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = template.category,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = when (template.category) {
+                            "Professional" -> Color(0xFF005AC1)
+                            "ATS Friendly" -> Color(0xFF10B981)
+                            "Corporate" -> Color(0xFF6366F1)
+                            "Creative" -> Color(0xFFEC4899)
+                            else -> Color(0xFF64748B)
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = template.name,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isDarkSystem) Color.White else Color(0xFF0F172A),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = template.description,
+                    fontSize = 10.sp,
+                    color = if (isDarkSystem) Color(0xFF94A3B8) else Color(0xFF64748B),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 13.sp
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Action Call Button
+                Button(
+                    onClick = onSelect,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(android.graphics.Color.parseColor(template.primaryColorHex))
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(30.dp)
+                        .testTag("select_template_button_${template.id}"),
+                    contentPadding = PaddingValues(top = 0.dp, bottom = 0.dp)
+                ) {
+                    Text(
+                        "SELECT",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ============================================
+// DOCUMENT VAULT & MERGER SCREEN
+// ============================================
+@Composable
+fun DocumentMergerScreen(
+    viewModel: ResumeViewModel,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val resumes by viewModel.resumes.collectAsState(initial = emptyList())
+    val vaultDocs by viewModel.vaultDocumentsState.collectAsState(initial = emptyList())
+    val cvVersions by viewModel.cvVersionsState.collectAsState(initial = emptyList())
+    
+    var portfolioTitle by remember { mutableStateOf("My Combined Credentials Portfolio") }
+    var activeEditDoc by remember { mutableStateOf<VaultDocument?>(null) }
+    var compareSnapshot by remember { mutableStateOf<CvVersionSnapshot?>(null) }
+    var isDocTypeDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Dialog or Inline Sheet State to Add custom documents
+    var showAddDialog by remember { mutableStateOf(false) }
+    var selectedNewType by remember { mutableStateOf("cv") } // "cv", "passport", "experience", "certificate", "pcc", "custom"
+
+    val pdfPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val targetFile = java.io.File(context.filesDir, "vault_pdf_${System.currentTimeMillis()}.pdf")
+                    val outputStream = java.io.FileOutputStream(targetFile)
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                    outputStream.close()
+                    
+                    val fileName = "Uploaded Document ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())}"
+                    val newDoc = VaultDocument(
+                        id = "${System.currentTimeMillis()}",
+                        type = "pdf",
+                        title = fileName,
+                        pdfFilePath = targetFile.absolutePath
+                    )
+                    viewModel.addVaultDocument(newDoc)
+                    Toast.makeText(context, "PDF Uploaded successfully to Vault!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error uploading PDF: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFFF8FAFC), Color(0xFFEDF2F7), Color(0xFFE2E8F0))
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            // Elegant Header Area with Circular Logo
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Header brand logo always circular HD custom vector
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(Color(0xFF005AC1), Color(0xFF00FFCC))
+                                )
+                            )
+                            .padding(2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "YD",
+                                color = Color.White,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 18.sp,
+                                letterSpacing = (-1).sp
+                            )
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = "YOURDOC VAULT",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp,
+                            color = Color(0xFF005AC1),
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "Offline All-In-One Document Merger",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                }
+
+                // Back Button
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFE2E8F0), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Back",
+                        tint = Color(0xFF005AC1)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Portfolio booklet Title TextField
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
+                    .padding(16.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "PORTFOLIO BUNDLE SETTING",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF005AC1),
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = portfolioTitle,
+                        onValueChange = { portfolioTitle = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Color(0xFF005AC1))
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF005AC1),
+                            unfocusedBorderColor = Color(0xFFCBD5E1)
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Action Row: Add elements easily
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Add Documents to Secure Vault:",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF475569)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Horizontal scrolling quick additions bar
+            androidx.compose.foundation.lazy.LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 6.dp)
+            ) {
+                val documentTypes = listOf(
+                    Triple("pdf", "Upload PDF 📄", Color(0xFFEF4444)),
+                    Triple("cv", "Resume CV", Color(0xFF3B82F6)),
+                    Triple("passport", "Passport", Color(0xFF10B981)),
+                    Triple("experience", "Experience Certificate", Color(0xFFF59E0B)),
+                    Triple("certificate", "Certification", Color(0xFF8B5CF6)),
+                    Triple("pcc", "PCC Clearance", Color(0xFFEC4899)),
+                    Triple("custom", "Custom Doc", Color(0xFF64748B))
+                )
+
+                items(documentTypes.size) { idx ->
+                    val (type, label, color) = documentTypes[idx]
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(color.copy(alpha = 0.12f))
+                            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                            .clickable {
+                                if (type == "pdf") {
+                                    pdfPickerLauncher.launch("application/pdf")
+                                } else {
+                                    // Add default vault item and let them edit it!
+                                    val newDoc = when (type) {
+                                        "cv" -> VaultDocument(
+                                            id = "${System.currentTimeMillis()}",
+                                            type = "cv",
+                                            title = "Curriculum Vitae",
+                                            cvResumeId = resumes.firstOrNull()?.id
+                                        )
+                                        "passport" -> VaultDocument(
+                                            id = "${System.currentTimeMillis()}",
+                                            type = "passport",
+                                            title = "Passport Credential",
+                                            passportNo = "N1234567",
+                                            passportFullName = "Hari Bahadur"
+                                        )
+                                        "experience" -> VaultDocument(
+                                            id = "${System.currentTimeMillis()}",
+                                            type = "experience",
+                                            title = "Work Experience Letter",
+                                            expCompany = "TechMinds Global",
+                                            expRole = "Senior Product Architect"
+                                        )
+                                        "certificate" -> VaultDocument(
+                                            id = "${System.currentTimeMillis()}",
+                                            type = "certificate",
+                                            title = "Skill Specialization Cert",
+                                            certTitle = "Jetpack Compose Architect Course",
+                                            certIssuer = "Google Certification"
+                                        )
+                                        "pcc" -> VaultDocument(
+                                            id = "${System.currentTimeMillis()}",
+                                            type = "pcc",
+                                            title = "Police Clearance Certificate",
+                                            pccFullName = "Hari Bahadur",
+                                            pccAuthority = "District Police Headquarters, Kathmandu"
+                                        )
+                                        else -> VaultDocument(
+                                            id = "${System.currentTimeMillis()}",
+                                            type = "custom",
+                                            title = "Additional Credential Paper",
+                                            customBody = "This covers additional supporting records for recruitment."
+                                        )
+                                    }
+                                    viewModel.addVaultDocument(newDoc)
+                                    activeEditDoc = newDoc // Immediately open editor!
+                                }
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = "+ $label",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = color
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Main List scrollable area for vault documents
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(bottom = 120.dp)
+            ) {
+                if (vaultDocs.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(160.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.Layers,
+                                    contentDescription = null,
+                                    tint = Color.LightGray,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Your Secure Vault is Empty.",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = "Tap any addition badge above to create docs.",
+                                    fontSize = 10.sp,
+                                    color = Color.LightGray
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(vaultDocs.size) { index ->
+                        val doc = vaultDocs[index]
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(
+                                    width = 1.dp,
+                                    color = if (doc.isEnabled) Color(0xFF005AC1).copy(alpha = 0.15f) else Color(0xFFE2E8F0),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // 1. Toggle Include Switch/Checkbox
+                                androidx.compose.material3.Checkbox(
+                                    checked = doc.isEnabled,
+                                    onCheckedChange = { isChecked ->
+                                        viewModel.updateVaultDocument(doc.copy(isEnabled = isChecked))
+                                    }
+                                )
+
+                                // 2. Document Icon and Details
+                                val docColor = when (doc.type) {
+                                    "pdf" -> Color(0xFFEF4444)
+                                    "cv" -> Color(0xFF3B82F6)
+                                    "passport" -> Color(0xFF10B981)
+                                    "experience" -> Color(0xFFF59E0B)
+                                    "certificate" -> Color(0xFF8B5CF6)
+                                    "pcc" -> Color(0xFFEC4899)
+                                    else -> Color(0xFF64748B)
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = doc.type.uppercase(),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = docColor,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(docColor.copy(alpha = 0.12f))
+                                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                        )
+                                        if (doc.type == "cv" && doc.cvResumeId != null) {
+                                            Text(
+                                                text = "LINKED",
+                                                fontSize = 8.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF10B981)
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = doc.title,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (doc.isEnabled) Color(0xFF0F172A) else Color.Gray,
+                                        maxLines = 1
+                                    )
+                                    // Custom short dynamic detail line
+                                    val detailSummary = when (doc.type) {
+                                        "pdf" -> "Local PDF file for page blending"
+                                        "cv" -> "Saved Resume"
+                                        "passport" -> "No: ${doc.passportNo} | Country: ${doc.passportCountry}"
+                                        "experience" -> "Company: ${doc.expCompany} | Role: ${doc.expRole}"
+                                        "certificate" -> "By: ${doc.certIssuer} | ID: ${doc.certCode}"
+                                        "pcc" -> "Auth: ${doc.pccAuthority}"
+                                        else -> "Custom content layout"
+                                    }
+                                    Text(
+                                        text = detailSummary,
+                                        fontSize = 10.sp,
+                                        color = Color.LightGray,
+                                        maxLines = 1
+                                    )
+                                }
+
+                                // 3. Reordering arrows and Actions
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = { viewModel.moveVaultDocumentUp(index) },
+                                        modifier = Modifier.size(28.dp),
+                                        enabled = index > 0
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowUpward,
+                                            contentDescription = "Move Up",
+                                            tint = if (index > 0) Color(0xFF005AC1) else Color.LightGray,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = { viewModel.moveVaultDocumentDown(index) },
+                                        modifier = Modifier.size(28.dp),
+                                        enabled = index < vaultDocs.size - 1
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDownward,
+                                            contentDescription = "Move Down",
+                                            tint = if (index < vaultDocs.size - 1) Color(0xFF005AC1) else Color.LightGray,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = { activeEditDoc = doc },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit Custom Doc",
+                                            tint = Color(0xFF3B82F6),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = { viewModel.deleteVaultDocument(doc.id) },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete Doc",
+                                            tint = Color(0xFFEF4444),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // FLOATING ACTION GENERATE PDF BOTTOM BAR
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.95f), Color.White)
+                    )
+                )
+                .padding(vertical = 20.dp, horizontal = 24.dp)
+        ) {
+            Button(
+                onClick = {
+                    if (vaultDocs.none { it.isEnabled }) {
+                        Toast.makeText(context, "Please include/check at least 1 document to merge!", Toast.LENGTH_LONG).show()
+                    } else {
+                        PdfExporter.exportMergedPortfolioToPdfAndShare(
+                            context = context,
+                            title = portfolioTitle,
+                            documents = vaultDocs,
+                            savedResumes = resumes
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF005AC1)
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "MERGE & SHARE BUNDLED PDF (" + vaultDocs.count { it.isEnabled } + " DOCS)",
+                        color = Color.White,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 12.sp,
+                        letterSpacing = 1.sp
+                    )
+                }
+            }
+        }
+
+        // ===================================
+        // EDITING DIALOG / SHEET PANEL
+        // ===================================
+        activeEditDoc?.let { editing ->
+            var tempDoc by remember(editing.id) { mutableStateOf(editing) }
+
+            Dialog(
+                onDismissRequest = { activeEditDoc = null }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(24.dp))
+                        .padding(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Text(
+                            text = "EDIT SECURED DOCUMENT DETAILS",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF005AC1),
+                            letterSpacing = 1.sp
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Common Title Input
+                        OutlinedTextField(
+                            value = tempDoc.title,
+                            onValueChange = { tempDoc = tempDoc.copy(title = it) },
+                            label = { Text("Display Document Title") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Conditional content inputs
+                        when (tempDoc.type) {
+                            "cv" -> {
+                                Text(
+                                    text = "Select From Your YourDoc Resumes:",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                if (resumes.isEmpty()) {
+                                    Text(
+                                        text = "⚠️ No Saved CV drafts found! Please build a resume CV first.",
+                                        color = Color(0xFFEF4444),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                } else {
+                                    // Custom visual selector list inside Dialog for reliability
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        resumes.forEach { r ->
+                                            val isSelected = tempDoc.cvResumeId == r.id
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(if (isSelected) Color(0xFF005AC1).copy(alpha = 0.12f) else Color(0xFFF1F5F9))
+                                                    .border(1.dp, if (isSelected) Color(0xFF005AC1) else Color.Transparent, RoundedCornerShape(10.dp))
+                                                    .clickable {
+                                                        tempDoc = tempDoc.copy(cvResumeId = r.id, cvTitle = r.title)
+                                                    }
+                                                    .padding(10.dp)
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Text(
+                                                        text = r.title,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = if (isSelected) Color(0xFF005AC1) else Color.Black
+                                                    )
+                                                    if (isSelected) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.CheckCircle,
+                                                            contentDescription = null,
+                                                            tint = Color(0xFF005AC1),
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // VERSIONING SYSTEM FOR SELECTED CV DRAFT
+                                    if (tempDoc.cvResumeId != null) {
+                                        val selectedResumeObj = resumes.find { it.id == tempDoc.cvResumeId }
+                                        if (selectedResumeObj != null) {
+                                            Spacer(modifier = Modifier.height(14.dp))
+                                            Divider(color = Color(0xFFE2E8F0))
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Text(
+                                                text = "CV DRAFT LOGS & VERSIONS (संस्करण व्यवस्थापन)",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF0F172A)
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "Create restore points before making major modifications or finalizing PDF compilation.",
+                                                fontSize = 9.5.sp,
+                                                color = Color.Gray,
+                                                lineHeight = 12.sp
+                                            )
+                                            
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            
+                                            // Save New Version Box
+                                            var newVersionName by remember(tempDoc.cvResumeId) { mutableStateOf("") }
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                OutlinedTextField(
+                                                    value = newVersionName,
+                                                    onValueChange = { newVersionName = it },
+                                                    placeholder = { Text("e.g. Draft v1 (Before changing Experience)", fontSize = 11.sp) },
+                                                    modifier = Modifier.weight(1f),
+                                                    textStyle = TextStyle(fontSize = 11.sp),
+                                                    singleLine = true,
+                                                    colors = OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = Color(0xFF005AC1),
+                                                        unfocusedBorderColor = Color(0xFFCBD5E1)
+                                                    )
+                                                )
+                                                Button(
+                                                    onClick = {
+                                                        if (newVersionName.isNotBlank()) {
+                                                            viewModel.addCvVersion(selectedResumeObj, newVersionName.trim())
+                                                            newVersionName = ""
+                                                            Toast.makeText(context, "Version snapshot saved successfully!", Toast.LENGTH_SHORT).show()
+                                                        } else {
+                                                            Toast.makeText(context, "Please enter a version name first!", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    },
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFCC00)),
+                                                    modifier = Modifier.height(42.dp),
+                                                    contentPadding = PaddingValues(horizontal = 8.dp)
+                                                ) {
+                                                    Text("Save 💾", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                                }
+                                            }
+                                            
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            
+                                            // Saved Versions Log List
+                                            val activeVersions = cvVersions.filter { it.resumeId == tempDoc.cvResumeId }
+                                            if (activeVersions.isEmpty()) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
+                                                        .padding(12.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text("No earlier version checkpoints saved for this CV yet.", fontSize = 10.sp, color = Color.Gray)
+                                                }
+                                            } else {
+                                                Column(
+                                                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    activeVersions.forEach { version ->
+                                                        val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date(version.timestamp))
+                                                        Card(
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))
+                                                        ) {
+                                                            Row(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .padding(8.dp),
+                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                horizontalArrangement = Arrangement.SpaceBetween
+                                                            ) {
+                                                                Column(modifier = Modifier.weight(1f)) {
+                                                                    Text(text = version.versionName, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                                                                    Text(text = "Saved: $dateStr", fontSize = 9.sp, color = Color.Gray)
+                                                                }
+                                                                Row(
+                                                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                                    verticalAlignment = Alignment.CenterVertically
+                                                                ) {
+                                                                    // Compare button
+                                                                    IconButton(
+                                                                        onClick = { compareSnapshot = version },
+                                                                        modifier = Modifier.size(28.dp)
+                                                                    ) {
+                                                                        Icon(
+                                                                            imageVector = Icons.Default.Search,
+                                                                            contentDescription = "Compare",
+                                                                            tint = Color(0xFF005AC1),
+                                                                            modifier = Modifier.size(16.dp)
+                                                                        )
+                                                                    }
+                                                                    // Rollback button
+                                                                    Button(
+                                                                        onClick = {
+                                                                            viewModel.rollbackToVersion(version) {
+                                                                                Toast.makeText(context, "CV draft successfully rolled back to selected state!", Toast.LENGTH_SHORT).show()
+                                                                            }
+                                                                        },
+                                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                                        shape = RoundedCornerShape(4.dp),
+                                                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                                                        modifier = Modifier.height(24.dp)
+                                                                    ) {
+                                                                        Text("Restore ↩️", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                                                    }
+                                                                    
+                                                                    // Delete version snapshot
+                                                                    IconButton(
+                                                                        onClick = { viewModel.deleteCvVersion(version.id) },
+                                                                        modifier = Modifier.size(24.dp)
+                                                                    ) {
+                                                                        Icon(
+                                                                            imageVector = Icons.Default.Delete,
+                                                                            contentDescription = "Delete snapshot",
+                                                                            tint = Color.Red,
+                                                                            modifier = Modifier.size(14.dp)
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            "passport" -> {
+                                OutlinedTextField(
+                                    value = tempDoc.passportNo,
+                                    onValueChange = { tempDoc = tempDoc.copy(passportNo = it) },
+                                    label = { Text("Passport Number") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.passportFullName,
+                                    onValueChange = { tempDoc = tempDoc.copy(passportFullName = it) },
+                                    label = { Text("Full Name on Passport") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.passportCountry,
+                                    onValueChange = { tempDoc = tempDoc.copy(passportCountry = it) },
+                                    label = { Text("Issuing Country / Nationality") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FormDatePickerField(
+                                    label = "Date of Birth (YYYY-MM-DD)",
+                                    value = tempDoc.passportDob,
+                                    onDateSelected = { tempDoc = tempDoc.copy(passportDob = it) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FormDatePickerField(
+                                    label = "Date of Issue (YYYY-MM-DD)",
+                                    value = tempDoc.passportIssueDate,
+                                    onDateSelected = { tempDoc = tempDoc.copy(passportIssueDate = it) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FormDatePickerField(
+                                    label = "Date of Expiry (YYYY-MM-DD)",
+                                    value = tempDoc.passportExpiryDate,
+                                    onDateSelected = { tempDoc = tempDoc.copy(passportExpiryDate = it) }
+                                )
+                            }
+                            "experience" -> {
+                                OutlinedTextField(
+                                    value = tempDoc.expCompany,
+                                    onValueChange = { tempDoc = tempDoc.copy(expCompany = it) },
+                                    label = { Text("Employer Company") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.expRole,
+                                    onValueChange = { tempDoc = tempDoc.copy(expRole = it) },
+                                    label = { Text("Position Role Title") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FormDatePickerField(
+                                    label = "Start Date (YYYY-MM-DD)",
+                                    value = tempDoc.expStartDate,
+                                    onDateSelected = { tempDoc = tempDoc.copy(expStartDate = it) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FormDatePickerField(
+                                    label = "End Date (YYYY-MM-DD)",
+                                    value = tempDoc.expEndDate,
+                                    onDateSelected = { tempDoc = tempDoc.copy(expEndDate = it) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.expDetails,
+                                    onValueChange = { tempDoc = tempDoc.copy(expDetails = it) },
+                                    label = { Text("Core Responsibilities & Success Achievements") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 4
+                                )
+                            }
+                            "certificate" -> {
+                                OutlinedTextField(
+                                    value = tempDoc.certTitle,
+                                    onValueChange = { tempDoc = tempDoc.copy(certTitle = it) },
+                                    label = { Text("Certification Course Title") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.certIssuer,
+                                    onValueChange = { tempDoc = tempDoc.copy(certIssuer = it) },
+                                    label = { Text("Certifying Organization") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FormDatePickerField(
+                                    label = "Date of Completion (YYYY-MM-DD)",
+                                    value = tempDoc.certDate,
+                                    onDateSelected = { tempDoc = tempDoc.copy(certDate = it) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.certCode,
+                                    onValueChange = { tempDoc = tempDoc.copy(certCode = it) },
+                                    label = { Text("Verification Credential ID") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            "pcc" -> {
+                                OutlinedTextField(
+                                    value = tempDoc.pccFullName,
+                                    onValueChange = { tempDoc = tempDoc.copy(pccFullName = it) },
+                                    label = { Text("Candidate Full Name") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.pccAuthority,
+                                    onValueChange = { tempDoc = tempDoc.copy(pccAuthority = it) },
+                                    label = { Text("Issuing Police Authority Station") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FormDatePickerField(
+                                    label = "Verification Issue Date (YYYY-MM-DD)",
+                                    value = tempDoc.pccIssueDate,
+                                    onDateSelected = { tempDoc = tempDoc.copy(pccIssueDate = it) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = tempDoc.pccStatus,
+                                    onValueChange = { tempDoc = tempDoc.copy(pccStatus = it) },
+                                    label = { Text("Database Record Status") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            "custom" -> {
+                                OutlinedTextField(
+                                    value = tempDoc.customBody,
+                                    onValueChange = { tempDoc = tempDoc.copy(customBody = it) },
+                                    label = { Text("Supporting Content Text") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 6
+                                )
+                            }
+                            "pdf" -> {
+                                Text(
+                                    text = "This is a real local PDF file. PDF pages will be integrated directly page-by-page when compiling the folder. You may change its Display Title above.",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF64748B),
+                                    lineHeight = 16.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { activeEditDoc = null },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("CANCEL", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = {
+                                    viewModel.updateVaultDocument(tempDoc)
+                                    activeEditDoc = null
+                                    Toast.makeText(context, "Credentials Updated Successfully!", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF005AC1))
+                            ) {
+                                Text("SAVE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        compareSnapshot?.let { snap ->
+            val oldResume = com.example.data.JsonParser.fromJson<com.example.data.Resume>(snap.resumeDataJson)
+            val curResume = resumes.find { it.id == snap.resumeId }
+            if (oldResume != null && curResume != null) {
+                val oldPInfo = com.example.data.JsonParser.fromJson<com.example.data.PersonalInfo>(oldResume.personalInfo) ?: com.example.data.PersonalInfo()
+                val curPInfo = com.example.data.JsonParser.fromJson<com.example.data.PersonalInfo>(curResume.personalInfo) ?: com.example.data.PersonalInfo()
+                
+                val oldAbout = com.example.data.JsonParser.fromJson<com.example.data.AboutMe>(oldResume.aboutMe) ?: com.example.data.AboutMe()
+                val curAbout = com.example.data.JsonParser.fromJson<com.example.data.AboutMe>(curResume.aboutMe) ?: com.example.data.AboutMe()
+
+                val oldWorkList = com.example.data.JsonParser.fromJsonList<com.example.data.WorkExperience>(oldResume.workExperiences)
+                val curWorkList = com.example.data.JsonParser.fromJsonList<com.example.data.WorkExperience>(curResume.workExperiences)
+
+                val oldSkillList = com.example.data.JsonParser.fromJsonList<com.example.data.Skill>(oldResume.skills)
+                val curSkillList = com.example.data.JsonParser.fromJsonList<com.example.data.Skill>(curResume.skills)
+
+                Dialog(
+                    onDismissRequest = { compareSnapshot = null }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(24.dp))
+                            .padding(20.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "SIDE-BY-SIDE CV COMPARISON",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF005AC1),
+                                    letterSpacing = 0.5.sp
+                                )
+                                IconButton(onClick = { compareSnapshot = null }, modifier = Modifier.size(24.dp)) {
+                                    Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.Gray, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Comparing current live draft against snapshot: '${snap.versionName}'",
+                                fontSize = 10.sp,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            val fieldComparerList = listOf(
+                                Triple("CV Title", curResume.title, oldResume.title),
+                                Triple("Full Name", curPInfo.fullName, oldPInfo.fullName),
+                                Triple("Email Contact", curPInfo.email, oldPInfo.email),
+                                Triple("Phone Number", curPInfo.phone, oldPInfo.phone),
+                                Triple("Professional Summary", curAbout.summary.ifEmpty { "(None/Empty)" }, oldAbout.summary.ifEmpty { "(None/Empty)" }),
+                                Triple("Work Experiences", "${curWorkList.size} Experience Items listed", "${oldWorkList.size} Experience Items listed"),
+                                Triple("Key Skills", "${curSkillList.size} Skills standard metrics", "${oldSkillList.size} Skills standard metrics")
+                            )
+
+                            fieldComparerList.forEach { (fieldName, activeVal, snapVal) ->
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = fieldName.uppercase(),
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF64748B),
+                                        letterSpacing = 0.5.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        // Active / Live draft
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .background(Color(0xFFEFF6FF), RoundedCornerShape(8.dp))
+                                                .border(1.dp, Color(0xFFDBEAFE), RoundedCornerShape(8.dp))
+                                                .padding(8.dp)
+                                        ) {
+                                            Column {
+                                                Text("Active Live Draft:", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color(0xFF1D4ED8))
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(text = activeVal, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                            }
+                                        }
+                                        // Saved Snapshot
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .background(Color(0xFFFEF3C7), RoundedCornerShape(8.dp))
+                                                .border(1.dp, Color(0xFFFEF3C7), RoundedCornerShape(8.dp))
+                                                .padding(8.dp)
+                                        ) {
+                                            Column {
+                                                Text("Backup Snapshot:", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color(0xFFB45309))
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(text = snapVal, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        viewModel.rollbackToVersion(snap) {
+                                            compareSnapshot = null
+                                            Toast.makeText(context, "CV Draft successfully restored!", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1.5f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                                ) {
+                                    Text("RESTORE BACKUP", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                                OutlinedButton(
+                                    onClick = { compareSnapshot = null },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("CLOSE", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun RenderActiveToolPlayground(
+    toolId: String,
+    resumes: List<com.example.data.Resume>,
+    onBack: () -> Unit,
+    context: android.content.Context
+) {
+    val rolesList = listOf("Senior Software Architect", "Principal Infrastructure Inspector", "Executive Hospitality Manager", "Corporate Audit Professional", "Senior Financial Analyst")
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .animateContentSize(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF8B5CF6))
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF8B5CF6).copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("⚡", fontSize = 16.sp)
+                    }
+                    Column {
+                        Text(
+                            text = when (toolId) {
+                                "resume_tailer" -> "AI RESUME TAILOR & OPTIMIZER"
+                                "linkedin" -> "LINKEDIN PROFILE IMPROVER"
+                                "roadmap" -> "EXECUTIVE CAREER ROADMAPS"
+                                "portfolio_publish" -> "AUTOMATED PORTFOLIO BUILDER"
+                                "salary" -> "SALARY & EQUITY ESTIMATOR"
+                                "interview_mock" -> "SMART INTERVIEW MOCKING"
+                                else -> "AI TOOL ENGINE"
+                            },
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF1E293B)
+                        )
+                        Text(
+                            text = "SMART EXECUTIVE CAROUSEL UTILITY",
+                            fontSize = 8.5.sp,
+                            color = Color(0xFF8B5CF6),
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                }
+                
+                OutlinedButton(
+                    onClick = onBack,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.height(28.dp)
+                ) {
+                    Text("✕ Close Tool", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(14.dp))
+            
+            when (toolId) {
+                "resume_tailer" -> {
+                    var selectedResumeName by remember { mutableStateOf(resumes.firstOrNull()?.title ?: "Udaya Raj Khanal - Lead Android Architect") }
+                    var isResumeDropdownExpanded by remember { mutableStateOf(false) }
+                    var selectedTargetRole by remember { mutableStateOf(rolesList[0]) }
+                    var isRoleDropdownExpanded by remember { mutableStateOf(false) }
+                    var selectedVibe by remember { mutableStateOf("Silicon Valley High Tech") }
+                    var isVibeDropdownExpanded by remember { mutableStateOf(false) }
+                    
+                    var isProcessing by remember { mutableStateOf(false) }
+                    var showOutput by remember { mutableStateOf(false) }
+                    
+                    val scope = rememberCoroutineScope()
+                    
+                    Text("Select source CV from dropbox/list:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isResumeDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedResumeName, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isResumeDropdownExpanded, onDismissRequest = { isResumeDropdownExpanded = false }) {
+                            if (resumes.isEmpty()) {
+                                DropdownMenuItem(text = { Text("Udaya Raj Khanal - Lead Android Architect", fontSize = 11.sp) }, onClick = { selectedResumeName = "Udaya Raj Khanal - Lead Android Architect"; isResumeDropdownExpanded = false })
+                            } else {
+                                resumes.forEach { res ->
+                                    DropdownMenuItem(text = { Text(res.title, fontSize = 11.sp) }, onClick = { selectedResumeName = res.title; isResumeDropdownExpanded = false })
+                                }
+                            }
+                        }
+                    }
+                    
+                    Text("Select Target Job from drop down:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isRoleDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedTargetRole, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isRoleDropdownExpanded, onDismissRequest = { isRoleDropdownExpanded = false }) {
+                            rolesList.forEach { role ->
+                                DropdownMenuItem(text = { Text(role, fontSize = 11.sp) }, onClick = { selectedTargetRole = role; isRoleDropdownExpanded = false })
+                            }
+                        }
+                    }
+                    
+                    Text("Apply Layout Tone/Vibe:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        val vibes = listOf("Silicon Valley High Tech", "Formal European Executive", "Aggressive Sales Pitch", "Detailed Public Service Co.")
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isVibeDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedVibe, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isVibeDropdownExpanded, onDismissRequest = { isVibeDropdownExpanded = false }) {
+                            vibes.forEach { v ->
+                                DropdownMenuItem(text = { Text(v, fontSize = 11.sp) }, onClick = { selectedVibe = v; isVibeDropdownExpanded = false })
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    Button(
+                        onClick = {
+                            isProcessing = true
+                            showOutput = false
+                            scope.launch {
+                                kotlinx.coroutines.delay(1200)
+                                isProcessing = false
+                                showOutput = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B5CF6)),
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        enabled = !isProcessing,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("RUN OPTIMIZATION ENGINE 🚀", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                    
+                    if (showOutput) {
+                        val optimizedBullet = when(selectedTargetRole) {
+                            "Senior Software Architect" -> "Formulated resilient structural asynchronous core frameworks for high-scale payment modules, driving 99.99% crash-free benchmarks across 4M+ regional mobile subscribers."
+                            "Principal Infrastructure Inspector" -> "Engineered earthquake-resilient concrete layout specifications for 45+ telecom base centers, realizing 100% geotechnical structural code compliance ratings."
+                            "Executive Hospitality Manager" -> "Standardized luxury dining layouts and multi-tiered kitchen workflows, achieving a 98% positive auditor score under international health benchmarks."
+                            "Corporate Audit Professional" -> "Spearheaded complex NFRS forensic ledger audits, identifying 4% vendor payment leakages and safeguarding private equity balances."
+                            else -> "Projected risk ratios and designed complex financial spreadsheets, boosting investment yields by 14% on bagmati capital holdings."
+                        }
+                        
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF5FF)), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD8B4FE))) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("ATS Score Boost", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF7C3AED))
+                                    Text("94% Matches ⚡ +18% Gain", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF047857))
+                                }
+                                Text("Suggested Optimized Experience Bullet Point:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("❌", fontSize = 12.sp)
+                                    Text("Original: Was responsible for designing structures in central bases.", fontSize = 10.sp, color = Color.Gray, style = androidx.compose.ui.text.TextStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough))
+                                }
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("✅", fontSize = 12.sp)
+                                    Text("Optimized: $optimizedBullet", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                                }
+                                
+                                Button(
+                                    onClick = {
+                                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                        val clip = android.content.ClipData.newPlainText("Optimized Bullet", optimizedBullet)
+                                        clipboard.setPrimaryClip(clip)
+                                        Toast.makeText(context, "Optimized bullet point copied to Clipboard! 📋", Toast.LENGTH_SHORT).show()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("COPY BULLET TO CV 📋", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                "linkedin" -> {
+                    var selectedIndustry by remember { mutableStateOf("Tech & Mobile Engineering") }
+                    var isIndDropdownExpanded by remember { mutableStateOf(false) }
+                    var selectedLkVibe by remember { mutableStateOf("Classy Executive Boardroom") }
+                    var isLkVibeExpanded by remember { mutableStateOf(false) }
+                    
+                    var isProcessing by remember { mutableStateOf(false) }
+                    var hasResult by remember { mutableStateOf(false) }
+                    val scope = rememberCoroutineScope()
+                    
+                    Text("Select Target Profession:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        val industries = listOf("Tech & Mobile Engineering", "Geotechnical & Site Engineering", "Luxury Resort Hospitality", "International Audit & Finance")
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isIndDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedIndustry, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isIndDropdownExpanded, onDismissRequest = { isIndDropdownExpanded = false }) {
+                            industries.forEach { ind ->
+                                DropdownMenuItem(text = { Text(ind, fontSize = 11.sp) }, onClick = { selectedIndustry = ind; isIndDropdownExpanded = false })
+                            }
+                        }
+                    }
+
+                    Text("Select Networking tone:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        val vibes = listOf("Classy Executive Boardroom", "Aggressive Silicon Valley Disruptor", "Detailed Scientific Academic")
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isLkVibeExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedLkVibe, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isLkVibeExpanded, onDismissRequest = { isLkVibeExpanded = false }) {
+                            vibes.forEach { vib ->
+                                DropdownMenuItem(text = { Text(vib, fontSize = 11.sp) }, onClick = { selectedLkVibe = vib; isLkVibeExpanded = false })
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Button(
+                        onClick = {
+                            isProcessing = true
+                            hasResult = false
+                            scope.launch {
+                                kotlinx.coroutines.delay(1000)
+                                isProcessing = false
+                                hasResult = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0A66C2)),
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        enabled = !isProcessing,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("BUILD LINKEDIN BLUEPRINT ✨", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                    
+                    if (hasResult) {
+                        val suggestedHeadline = when(selectedIndustry) {
+                            "Tech & Mobile Engineering" -> {
+                                if (selectedLkVibe.contains("Disruptor")) "Lead Android Engineer ⚡ Jetpack Compose Pioneer & KMP Generalist | Building 4K UI Framerates for 10M+ Users"
+                                else "Lead Android Architect | Secure Mobile banking frameworks | Chartered Speaker & engineering Mentor"
+                            }
+                            "Geotechnical & Site Engineering" -> "Managing Project Engineer | Seismic foundation Supervisor | National structural safety codes expert"
+                            "Luxury Resort Hospitality" -> "Executive culinary operations specialist | Michelin-tiered resort manager | Guest experience consultant"
+                            else -> "Chartered Forensic Auditor | NFRS compliance consultant | Capital ledger risk supervisor"
+                        }
+
+                        val suggestedBio = "Experienced and results-oriented professional with a verified background spearheading project lifecycle metrics. Highly skilled in collaborating across multidisciplinary departments and delivering structural, financial, or architectural transformations under tight compliance codes. Actively expanding networks with global pioneers."
+                        
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FF)), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0A66C2).copy(alpha = 0.3f))) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Suggested Headline:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0A66C2))
+                                    IconButton(
+                                        onClick = {
+                                            val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                            val clip = android.content.ClipData.newPlainText("LinkedIn Headline", suggestedHeadline)
+                                            clipboard.setPrimaryClip(clip)
+                                            Toast.makeText(context, "Headline copied! 📋", Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(12.dp), tint = Color(0xFF0A66C2))
+                                    }
+                                }
+                                Text(
+                                    text = suggestedHeadline,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Suggested Search Summary (About Section):", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0A66C2))
+                                    IconButton(
+                                        onClick = {
+                                            val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                            val clip = android.content.ClipData.newPlainText("LinkedIn Bio", suggestedBio)
+                                            clipboard.setPrimaryClip(clip)
+                                            Toast.makeText(context, "Biography copied! 📋", Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(12.dp), tint = Color(0xFF0A66C2))
+                                    }
+                                }
+                                Text(
+                                    text = suggestedBio,
+                                    fontSize = 11.sp,
+                                    color = Color.DarkGray
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                "roadmap" -> {
+                    var selectedGoal by remember { mutableStateOf("Global Chief Technology Officer (CTO)") }
+                    var isGoalDropdownExpanded by remember { mutableStateOf(false) }
+                    var isProcessing by remember { mutableStateOf(false) }
+                    var showRoadmap by remember { mutableStateOf(false) }
+                    
+                    // Checklist states for Roadmaps
+                    var level1Done by remember { mutableStateOf(false) }
+                    var level2Done by remember { mutableStateOf(false) }
+                    var level3Done by remember { mutableStateOf(false) }
+                    var level4Done by remember { mutableStateOf(false) }
+
+                    val scope = rememberCoroutineScope()
+                    
+                    Text("Select Ultimate Career Destination:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        val goals = listOf("Global Chief Technology Officer (CTO)", "Director of Structural Engineering Portfolio", "General Manager of Luxury International Resorts", "Chief Financial Officer (CFO)")
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isGoalDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedGoal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isGoalDropdownExpanded, onDismissRequest = { isGoalDropdownExpanded = false }) {
+                            goals.forEach { g ->
+                                DropdownMenuItem(text = { Text(g, fontSize = 11.sp) }, onClick = { 
+                                    selectedGoal = g 
+                                    isGoalDropdownExpanded = false
+                                    // Reset checkboxes on goal change
+                                    level1Done = false
+                                    level2Done = false
+                                    level3Done = false
+                                    level4Done = false
+                                    showRoadmap = false
+                                })
+                            }
+                        }
+                    }
+                    
+                    Button(
+                        onClick = {
+                            isProcessing = true
+                            showRoadmap = false
+                            scope.launch {
+                                kotlinx.coroutines.delay(1100)
+                                isProcessing = false
+                                showRoadmap = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        enabled = !isProcessing,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("CONSTRUCT SYSTEM ROADMAP 🛤️", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                    
+                    if (showRoadmap) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            
+                            val milestones = when (selectedGoal) {
+                                "Global Chief Technology Officer (CTO)" -> listOf(
+                                    "Level 1: Senior Native Mobile Lead (Master async structures, localized caching, and state architectures)",
+                                    "Level 2: Systems Architect (Integrate high-security layers, API design, DevOps Pipelines)",
+                                    "Level 3: Director of Mobile Engineering (Lead cross-functional squads, budgeting, metric engineering)",
+                                    "Level 4: Chief Technology Officer (Manage global tech strategy, executive Board leadership, R&D)"
+                                )
+                                "Director of Structural Engineering Portfolio" -> listOf(
+                                    "Level 1: Geotechnical Field Inspector (Ground stability analysis, topography mapping)",
+                                    "Level 2: Principal Seismic Designer (Draft safety protocols and complex base fabrications)",
+                                    "Level 3: Infrastructure supervisor (Coordinate national telecom bases and government clearances)",
+                                    "Level 4: Structural Engineering Director (Control major land networks, state-wide engineering audits)"
+                                )
+                                "Chief Financial Officer (CFO)" -> listOf(
+                                    "Level 1: Chartered forensic specialist (Ledger audits, tax filings)",
+                                    "Level 2: Senior Controller (NFRS bookkeeping, cash flow statements)",
+                                    "Level 3: VP of Bagmati Regional Finance (National infrastructure budgeting)",
+                                    "Level 4: CFO (Board planning, equity operations, investor pipelines)"
+                                )
+                                else -> listOf(
+                                    "Level 1: Hospitality Supervisor (Coordinate active dining layouts and client reservations)",
+                                    "Level 2: Assistant General Resort Lead (Supervise global cuisines, budget ratios)",
+                                    "Level 3: Service Controller (Design modern lounge workflows, staff certification programs)",
+                                    "Level 4: Vice President / GM of Luxury Resorts (Guide multi-national properties, brand pipelines)"
+                                )
+                            }
+                            
+                            val doneCount = (if(level1Done) 1 else 0) + (if(level2Done) 1 else 0) + (if(level3Done) 1 else 0) + (if(level4Done) 1 else 0)
+                            val percent = doneCount * 25
+
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFEDFDF6)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Roadmap Completion Progress", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                        Text("$percent% Unlocked", fontSize = 10.5.sp, fontWeight = FontWeight.Black, color = Color(0xFF047857))
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    LinearProgressIndicator(
+                                        progress = { percent / 100f },
+                                        color = Color(0xFF10B981),
+                                        trackColor = Color.White,
+                                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape)
+                                    )
+                                }
+                            }
+
+                            Text("Interactive Project Milestones (Tap to toggle completion):", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+
+                            milestones.forEachIndexed { i, ms ->
+                                val isChecked = when(i) {
+                                    0 -> level1Done
+                                    1 -> level2Done
+                                    2 -> level3Done
+                                    else -> level4Done
+                                }
+                                
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if(isChecked) Color(0xFFF0FDF4) else Color.White
+                                    ),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        width = 1.dp,
+                                        color = if(isChecked) Color(0xFF10B981) else Color(0xFFE2E8F0)
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.clickable {
+                                        when(i) {
+                                            0 -> level1Done = !level1Done
+                                            1 -> level2Done = !level2Done
+                                            2 -> level3Done = !level3Done
+                                            else -> level4Done = !level4Done
+                                        }
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(10.dp).fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked = isChecked,
+                                            onCheckedChange = { _ ->
+                                                when(i) {
+                                                    0 -> level1Done = !level1Done
+                                                    1 -> level2Done = !level2Done
+                                                    2 -> level3Done = !level3Done
+                                                    else -> level4Done = !level4Done
+                                                }
+                                            },
+                                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF10B981))
+                                        )
+                                        Text(ms, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = if(isChecked) Color(0xFF065F46) else Color.DarkGray)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                "portfolio_publish" -> {
+                    var selectedTheme by remember { mutableStateOf("Midnight Hacker Dark Canvas") }
+                    var isThDropdownExpanded by remember { mutableStateOf(false) }
+                    var isProcessing by remember { mutableStateOf(false) }
+                    var showPortfolio by remember { mutableStateOf(false) }
+                    
+                    // Custom User inputs inside Portfolio Layout Simulator
+                    var userWebHeadline by remember { mutableStateOf("Lead Architect at Bagmati Telecom Systems") }
+                    var viewerMessageInput by remember { mutableStateOf("") }
+                    var isMessageSubmitted by remember { mutableStateOf(false) }
+
+                    val scope = rememberCoroutineScope()
+                    
+                    Text("Select Theme Palette:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        val themes = listOf("Midnight Hacker Dark Canvas", "Radiant Violet Corporate Space", "Pastel Soft Minimalist Card", "Emerald Green Forest Layout")
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isThDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedTheme, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isThDropdownExpanded, onDismissRequest = { isThDropdownExpanded = false }) {
+                            themes.forEach { th ->
+                                DropdownMenuItem(text = { Text(th, fontSize = 11.sp) }, onClick = { selectedTheme = th; isThDropdownExpanded = false })
+                            }
+                        }
+                    }
+
+                    Text("Custom Subtitle / Headline:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    OutlinedTextField(
+                        value = userWebHeadline,
+                        onValueChange = { userWebHeadline = it },
+                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Button(
+                        onClick = {
+                            isProcessing = true
+                            showPortfolio = false
+                            isMessageSubmitted = false
+                            scope.launch {
+                                kotlinx.coroutines.delay(1200)
+                                isProcessing = false
+                                showPortfolio = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD946EF)),
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        enabled = !isProcessing,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("COMPILE & DEPLOY PORTFOLIO 🌐", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                    
+                    if (showPortfolio) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text("Live Server Simulation Viewport:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = when {
+                                    selectedTheme.contains("Midnight") -> Color(0xFF0F172A)
+                                    selectedTheme.contains("Violet") -> Color(0xFF1E1B4B)
+                                    selectedTheme.contains("Pastel") -> Color(0xFFFAFAF9)
+                                    else -> Color(0xFF022C22)
+                                }
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFD946EF))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.1f)).padding(6.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Box(Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFEF4444)))
+                                        Box(Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFFBBF24)))
+                                        Box(Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF10B981)))
+                                    }
+                                    Text("gocv.yourdoc.ai/user_portfolio", fontSize = 8.5.sp, color = Color.LightGray.copy(alpha = 0.8f))
+                                    Icon(Icons.Default.Refresh, null, tint = Color.LightGray, modifier = Modifier.size(10.dp))
+                                }
+                                Text(
+                                    text = "Udaya Raj Khanal - Digital Portfolio", 
+                                    fontSize = 12.sp, 
+                                    fontWeight = FontWeight.Black, 
+                                    color = if(selectedTheme.contains("Pastel")) Color.Black else Color.White
+                                )
+                                Text(
+                                    text = userWebHeadline, 
+                                    fontSize = 9.5.sp, 
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFD946EF)
+                                )
+                                Text(
+                                    text = "Resilient specialist with verified history constructing core telecom interfaces and automated ledger audit protocols.", 
+                                    fontSize = 9.sp, 
+                                    color = if(selectedTheme.contains("Pastel")) Color.DarkGray else Color.LightGray
+                                )
+                                
+                                Divider(color = Color.LightGray.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 4.dp))
+                                
+                                // Interactive web contact container!
+                                Text("Contact Me (Live Form Simulator):", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFFD946EF))
+                                if (isMessageSubmitted) {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color(0xFF10B981).copy(alpha = 0.15f)).padding(8.dp)
+                                    ) {
+                                        Text("Message routed successfully! Web response verified. ✓", fontSize = 9.sp, color = Color(0xFF10B981), fontWeight = FontWeight.Bold)
+                                    }
+                                } else {
+                                    OutlinedTextField(
+                                        value = viewerMessageInput,
+                                        onValueChange = { viewerMessageInput = it },
+                                        placeholder = { Text("Write simulated message...", fontSize = 9.sp, color = Color.Gray) },
+                                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 9.sp),
+                                        modifier = Modifier.fillMaxWidth().height(42.dp),
+                                        shape = RoundedCornerShape(6.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color(0xFFD946EF),
+                                            unfocusedBorderColor = Color.LightGray.copy(alpha = 0.4f)
+                                        )
+                                    )
+                                    Button(
+                                        onClick = { 
+                                            isMessageSubmitted = true 
+                                            android.widget.Toast.makeText(context, "Network published. Client message dispatched!", android.widget.Toast.LENGTH_SHORT).show()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD946EF)),
+                                        modifier = Modifier.fillMaxWidth().height(26.dp),
+                                        enabled = viewerMessageInput.isNotBlank(),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("SEND SIMULATED MESSAGE", fontSize = 8.5.sp, fontWeight = FontWeight.ExtraBold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                "salary" -> {
+                    var selectedJob by remember { mutableStateOf("Senior Software Architect") }
+                    var isJbDropdownExpanded by remember { mutableStateOf(false) }
+                    var selectedLoc by remember { mutableStateOf("Nepal (Kathmandu)") }
+                    var isLocDropdownExpanded by remember { mutableStateOf(false) }
+                    
+                    // Dynamic calculation checkboxes for Salary Estimators
+                    var includeAllowance by remember { mutableStateOf(true) }
+                    var includeEquity by remember { mutableStateOf(false) }
+                    var includeMedical by remember { mutableStateOf(true) }
+
+                    var isProcessing by remember { mutableStateOf(false) }
+                    var showEstimations by remember { mutableStateOf(false) }
+                    val scope = rememberCoroutineScope()
+                    
+                    Text("Select Target Job Role:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isJbDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedJob, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isJbDropdownExpanded, onDismissRequest = { isJbDropdownExpanded = false }) {
+                            rolesList.forEach { role ->
+                                DropdownMenuItem(text = { Text(role, fontSize = 11.sp) }, onClick = { selectedJob = role; isJbDropdownExpanded = false })
+                            }
+                        }
+                    }
+                    
+                    Text("Select Target Location:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        val locations = listOf("Nepal (Kathmandu)", "United States (California)", "United Kingdom (London)", "United Arab Emirates (Dubai)", "India (Bangalore)")
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isLocDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedLoc, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isLocDropdownExpanded, onDismissRequest = { isLocDropdownExpanded = false }) {
+                            locations.forEach { loc ->
+                                DropdownMenuItem(text = { Text(loc, fontSize = 11.sp) }, onClick = { selectedLoc = loc; isLocDropdownExpanded = false })
+                            }
+                        }
+                    }
+
+                    Text("Configure Compensation Variables (गणना थप्नुहोस्):", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { includeAllowance = !includeAllowance }) {
+                            Checkbox(checked = includeAllowance, onCheckedChange = { includeAllowance = it })
+                            Text("Include Regional Tech/Travel Allowance (+10%)", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { includeEquity = !includeEquity }) {
+                            Checkbox(checked = includeEquity, onCheckedChange = { includeEquity = it })
+                            Text("Include Multi-tier Stock & Equity Grants (+15%)", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { includeMedical = !includeMedical }) {
+                            Checkbox(checked = includeMedical, onCheckedChange = { includeMedical = it })
+                            Text("Include Executive Medical Care & Coverage", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Button(
+                        onClick = {
+                            isProcessing = true
+                            showEstimations = false
+                            scope.launch {
+                                kotlinx.coroutines.delay(1000)
+                                isProcessing = false
+                                showEstimations = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                        enabled = !isProcessing,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("RUN COMPENSATION ALGORITHM 📊", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                    
+                    if (showEstimations) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF59E0B))) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Compensation Breakdown", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                                    Text("95% Confidence Level", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                }
+                                
+                                val baseVal = when (selectedLoc) {
+                                    "Nepal (Kathmandu)" -> {
+                                        var rate = 220000
+                                        if (includeAllowance) rate = (rate * 1.1).toInt()
+                                        if (includeEquity) rate = (rate * 1.15).toInt()
+                                        "NPR $rate / Month"
+                                    }
+                                    "United States (California)" -> {
+                                        var rate = 160000
+                                        if (includeAllowance) rate = (rate * 1.1).toInt()
+                                        if (includeEquity) rate = (rate * 1.15).toInt()
+                                        "$$rate,000 / Year"
+                                    }
+                                    "United Kingdom (London)" -> {
+                                        var rate = 95000
+                                        if (includeAllowance) rate = (rate * 1.1).toInt()
+                                        if (includeEquity) rate = (rate * 1.15).toInt()
+                                        "£$rate,000 / Year"
+                                    }
+                                    "United Arab Emirates (Dubai)" -> {
+                                        var rate = 24000
+                                        if (includeAllowance) rate = (rate * 1.1).toInt()
+                                        if (includeEquity) rate = (rate * 1.15).toInt()
+                                        "AED $rate / Month (Tax-Free)"
+                                    }
+                                    else -> {
+                                        var rate = 2400000
+                                        if (includeAllowance) rate = (rate * 1.1).toInt()
+                                        if (includeEquity) rate = (rate * 1.15).toInt()
+                                        "INR $rate / Year"
+                                    }
+                                }
+
+                                Text("Calculated Target Range: $baseVal", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                                Text(
+                                    text = "Includes: " + 
+                                           (if(includeAllowance) "Regional Travel stipend (+10% applied), " else "") + 
+                                           (if(includeEquity) "Tier-1 Equity Share distribution, " else "") + 
+                                           (if(includeMedical) "Executive Dental/Health packages." else "Standard medical benefits."),
+                                    fontSize = 10.sp,
+                                    color = Color.DarkGray
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                "interview_mock" -> {
+                    var selectedDifficulty by remember { mutableStateOf("Strict Executive Board Panel") }
+                    var isDiffDropdownExpanded by remember { mutableStateOf(false) }
+                    
+                    // Question index: 0 = not started, 1 = Q1, 2 = Q2, 3 = Q3, 4 = complete!
+                    var questionsFlowState by remember { mutableStateOf(0) }
+                    var selectedMockAnswer by remember { mutableStateOf("") }
+                    var isProcessing by remember { mutableStateOf(false) }
+                    
+                    // Cumulative score keeper
+                    var totalScore by remember { mutableStateOf(0) }
+
+                    val scope = rememberCoroutineScope()
+                    
+                    Text("Select Panel Rigor:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        val difficulties = listOf("Friendly Recruiter Screen", "Strict Executive Board Panel", "Deep Technical Architect Review", "System Architecture Stress Test")
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().height(46.dp).clickable { isDiffDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(selectedDifficulty, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.ArrowDropDown, null)
+                            }
+                        }
+                        DropdownMenu(expanded = isDiffDropdownExpanded, onDismissRequest = { isDiffDropdownExpanded = false }) {
+                            difficulties.forEach { diff ->
+                                DropdownMenuItem(text = { Text(diff, fontSize = 11.sp) }, onClick = { selectedDifficulty = diff; isDiffDropdownExpanded = false })
+                            }
+                        }
+                    }
+                    
+                    if (questionsFlowState == 0) {
+                        Button(
+                            onClick = {
+                                isProcessing = true
+                                totalScore = 0
+                                scope.launch {
+                                    kotlinx.coroutines.delay(800)
+                                    isProcessing = false
+                                    questionsFlowState = 1
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6D28D9)),
+                            modifier = Modifier.fillMaxWidth().height(44.dp),
+                            enabled = !isProcessing,
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            if (isProcessing) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                            } else {
+                                Text("INITIALIZE MULTI-ROUND INTERVIEW MOCK 🎙️", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                            }
+                        }
+                    }
+                    
+                    // --- ROUND 1 ---
+                    if (questionsFlowState == 1) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B)), border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF818CF8))) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color.Red))
+                                    Text("ROUND 1 OF 3: CONCURRENCY ARCHITECTURE", fontSize = 8.5.sp, color = Color(0xFF818CF8), fontWeight = FontWeight.Bold)
+                                }
+                                Text("Coach AI: \"We saw that you integrated F1Soft architectures with low crashes. How do you handle concurrency dispatcher allocation in Kotlin to keep UI loops responsive?\"", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 14.sp)
+                                
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Select your model response:", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.LightGray)
+                                
+                                val answersQ1 = listOf(
+                                    "I allocate disk operations exclusively in Dispatchers.IO and switch to Dispatchers.Main only for UI-bound rendering frames.",
+                                    "I launch all operations inside arbitrary GlobalScope configurations to bypass standard dispatch sequencing.",
+                                    "I utilize main thread blocking locks via Thread.sleep inside the composable rendering context."
+                                )
+                                
+                                answersQ1.forEach { ma ->
+                                    OutlinedCard(
+                                        onClick = { selectedMockAnswer = ma },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(containerColor = if (selectedMockAnswer == ma) Color(0xFF312E81) else Color.Transparent),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedMockAnswer == ma) Color(0xFF818CF8) else Color(0xFF374151)),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                                    ) {
+                                        Text(ma, fontSize = 9.5.sp, modifier = Modifier.padding(8.dp), color = if (selectedMockAnswer == ma) Color.White else Color.LightGray)
+                                    }
+                                }
+                                
+                                Button(
+                                    onClick = { 
+                                        if (selectedMockAnswer.contains("Dispatchers.IO")) totalScore += 33
+                                        selectedMockAnswer = ""
+                                        questionsFlowState = 2 
+                                    },
+                                    enabled = selectedMockAnswer.isNotBlank(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF818CF8)),
+                                    modifier = Modifier.align(Alignment.End).height(32.dp),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text("ROUND 1 SUBMIT ➔", fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    // --- ROUND 2 ---
+                    if (questionsFlowState == 2) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)), border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF34D399))) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF34D399)))
+                                    Text("ROUND 2 OF 3: DATA LAYERS & CACHING", fontSize = 8.5.sp, color = Color(0xFF34D399), fontWeight = FontWeight.Bold)
+                                }
+                                Text("Coach AI: \"To avoid database locking and maintain single sources of truth, what SQLite Room patterns are recommended for local state caching?\"", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 14.sp)
+                                
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Select your model response:", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.LightGray)
+                                
+                                val answersQ2 = listOf(
+                                    "I query SQLite synchronously inside every Composable function directly during re-composition triggers.",
+                                    "I build offline models returning read-only reactive Flows or LiveData from the cache, utilizing Coroutines for asynchronous insertions.",
+                                    "I store raw JSON documents inside shared preferences arrays to simplify parsing keys."
+                                )
+                                
+                                answersQ2.forEach { ma ->
+                                    OutlinedCard(
+                                        onClick = { selectedMockAnswer = ma },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(containerColor = if (selectedMockAnswer == ma) Color(0xFF065F46) else Color.Transparent),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedMockAnswer == ma) Color(0xFF34D399) else Color(0xFF374151)),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                                    ) {
+                                        Text(ma, fontSize = 9.5.sp, modifier = Modifier.padding(8.dp), color = if (selectedMockAnswer == ma) Color.White else Color.LightGray)
+                                    }
+                                }
+                                
+                                Button(
+                                    onClick = { 
+                                        if (selectedMockAnswer.contains("reactive Flows")) totalScore += 33
+                                        selectedMockAnswer = ""
+                                        questionsFlowState = 3 
+                                    },
+                                    enabled = selectedMockAnswer.isNotBlank(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399)),
+                                    modifier = Modifier.align(Alignment.End).height(32.dp),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text("ROUND 2 SUBMIT ➔", fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    // --- ROUND 3 ---
+                    if (questionsFlowState == 3) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF311042)), border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFF472B6))) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFF472B6)))
+                                    Text("ROUND 3 OF 3: SECURITY & COMPLIANCE", fontSize = 8.5.sp, color = Color(0xFFF472B6), fontWeight = FontWeight.Bold)
+                                }
+                                Text("Coach AI: \"Finally, when distributing corporate digital reports, what method ensures absolute verification of document source identities?\"", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 14.sp)
+                                
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Select your model response:", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.LightGray)
+                                
+                                val answersQ3 = listOf(
+                                    "We can include an encrypted vector QR code containing SHA-256 digital signature markers verified by our central authentication gateway.",
+                                    "We just write the user's name in bold display typography to prevent copying actions.",
+                                    "We store files in public generic download directories without access passwords."
+                                )
+                                
+                                answersQ3.forEach { ma ->
+                                    OutlinedCard(
+                                        onClick = { selectedMockAnswer = ma },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(containerColor = if (selectedMockAnswer == ma) Color(0xFF701A75) else Color.Transparent),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, if (selectedMockAnswer == ma) Color(0xFFF472B6) else Color(0xFF374151)),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                                    ) {
+                                        Text(ma, fontSize = 9.5.sp, modifier = Modifier.padding(8.dp), color = if (selectedMockAnswer == ma) Color.White else Color.LightGray)
+                                    }
+                                }
+                                
+                                Button(
+                                    onClick = { 
+                                        if (selectedMockAnswer.contains("encrypted vector QR")) totalScore += 34
+                                        selectedMockAnswer = ""
+                                        questionsFlowState = 4 
+                                    },
+                                    enabled = selectedMockAnswer.isNotBlank(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF472B6)),
+                                    modifier = Modifier.align(Alignment.End).height(32.dp),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text("FINISH MOCK ➔", fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                    
+                    // --- CERTIFICATE / RESULTS SCREEN ---
+                    if (questionsFlowState == 4) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F3FF)), border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF7C3AED))) {
+                            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("🎓 INTERVIEW ACADEMY COMPLETED 🎓", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color(0xFF7C3AED))
+                                
+                                Box(
+                                    modifier = Modifier.size(64.dp).clip(CircleShape).background(Color(0xFF7C3AED).copy(alpha = 0.1f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(if (totalScore >= 70) "🏆" else "⚠️", fontSize = 32.sp)
+                                }
+                                
+                                Text(
+                                    text = "Your Cumulative Score: $totalScore / 100", 
+                                    fontSize = 14.sp, 
+                                    fontWeight = FontWeight.Black, 
+                                    color = if (totalScore >= 70) Color(0xFF047857) else Color.Red
+                                )
+                                
+                                Text(
+                                    text = if(totalScore >= 70) {
+                                        "Congratulations! You scored within the executive bracket. Your responses are highly congruent with real-world mobile architectural standards and secure data caching practices."
+                                    } else {
+                                        "Audit advice: Focus more on reactive Flows with Room DB, offloading computations with Dispatchers.IO, and securing metadata using verified digital signatures."
+                                    },
+                                    fontSize = 11.sp,
+                                    color = Color.DarkGray,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    lineHeight = 15.sp
+                                )
+                                
+                                Button(
+                                    onClick = { 
+                                        totalScore = 0 
+                                        selectedMockAnswer = ""
+                                        questionsFlowState = 0 
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                                    modifier = Modifier.fillMaxWidth().height(40.dp),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text("RESTART ASSESSMENT", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+data class LocalManualJobApplication(
+    val company: String,
+    val role: String,
+    val status: String,
+    val salary: String,
+    val notes: String
+)
+
+
+

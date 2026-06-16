@@ -1,0 +1,6 @@
+{
+  "name": "YOURDOC YOURJOB",
+  "description": "Executive AI Resume Builder, Global Job Portal & Career Matching Ecosystem",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
