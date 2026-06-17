@@ -114,7 +114,23 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
     fun loadUserProfile() {
         try {
             val box = Hive.box<UserProfile>("user_profile")
-            val profile = box.get("default_user_profile")
+            var profile = box.get("default_user_profile")
+            if (profile == null) {
+                profile = UserProfile(
+                    fullName = "Saru Sharma",
+                    email = "sarusharma@gmail.com",
+                    phone = "+977-9851088888",
+                    professionalSummary = "Motivated and analytical Senior Software Engineer with over 5 years of certified expertise designing high-performance mobile architectures, cross-document synchronization servers, and adaptive UI layouts in Kotlin and Jetpack Compose. Proven track record of elevating client conversion metrics by 40%.",
+                    preferredJobTitle = "Senior Software Engineer",
+                    country = "Nepal",
+                    city = "Kathmandu",
+                    education = "Bachelor of Science in Computer Science & Information Technology, Tribhuvan University, GPA 3.9/4.0",
+                    experience = "Orchestrated the architectural migration of high-concurrency client-facing portals at Apex Global Enterprises. Managed cross-functional development cycles, integrated modern local caching services, and designed pristine reusable components.",
+                    skills = "Kotlin, Jetpack Compose, Clean Architecture, REST APIs, Swift, CI/CD, Agile Leadership",
+                    languages = "Nepali (Native), English (Fluent), Hindi (Conversational)"
+                )
+                box.put("default_user_profile", profile)
+            }
             userProfileState.value = profile
         } catch (e: Exception) {
             e.printStackTrace()
@@ -650,6 +666,9 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
     private val _currentResumeId = MutableStateFlow<Int?>(null)
     val currentResumeId: StateFlow<Int?> = _currentResumeId.asStateFlow()
 
+    private val _saveStatus = MutableStateFlow("All changes saved")
+    val saveStatus: StateFlow<String> = _saveStatus.asStateFlow()
+
     // Live variables representing the current CV draft
     val titleState = MutableStateFlow("New Professional Resume")
     val personalInfoState = MutableStateFlow(PersonalInfo())
@@ -717,6 +736,54 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
         loadUserProfile()
         loadJobApplications()
         loadNotifications()
+
+        // Start auto-saving whenever user makes changes to their resume sections/data
+        viewModelScope.launch {
+            // Wait for initial load or VM initialization to complete safely
+            kotlinx.coroutines.delay(1500)
+            
+            val flows = listOf(
+                titleState,
+                personalInfoState,
+                passportInfoState,
+                workExperiencesState,
+                educationsState,
+                skillsState,
+                languagesState,
+                aboutMeState,
+                declarationState,
+                customizationState,
+                certificationsState,
+                projectsState,
+                referencesState,
+                awardsState,
+                hobbiesState,
+                socialLinksState,
+                customSectionDataState
+            )
+            
+            flows.forEach { flow ->
+                launch {
+                    flow.collect {
+                        triggerAutosave()
+                    }
+                }
+            }
+        }
+    }
+
+    private var autosaveJob: kotlinx.coroutines.Job? = null
+    var isAutosaveEnabled = true
+
+    fun triggerAutosave() {
+        if (!isAutosaveEnabled) return
+        _saveStatus.value = "Saving..."
+        autosaveJob?.cancel()
+        autosaveJob = viewModelScope.launch {
+            kotlinx.coroutines.delay(1200) // 1.2 second debounce
+            saveResume()
+            _saveStatus.value = "All changes saved"
+        }
     }
 
     // Extended section state flows
@@ -748,6 +815,17 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
         if (index != -1 && index < list.size - 1) {
             val element = list.removeAt(index)
             list.add(index + 1, element)
+            val updated = list.mapIndexed { idx, section -> section.copy(order = idx) }
+            customizationState.value = currentCust.copy(sections = updated)
+        }
+    }
+
+    fun moveSection(fromIndex: Int, toIndex: Int) {
+        val currentCust = customizationState.value
+        val list = currentCust.sections.sortedBy { it.order }.toMutableList()
+        if (fromIndex in list.indices && toIndex in list.indices && fromIndex != toIndex) {
+            val element = list.removeAt(fromIndex)
+            list.add(toIndex, element)
             val updated = list.mapIndexed { idx, section -> section.copy(order = idx) }
             customizationState.value = currentCust.copy(sections = updated)
         }
@@ -827,47 +905,61 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
 
     // Create a blank/new resume draft
     fun createNewResumeDraft(defaultTitle: String = "My Resume") {
+        isAutosaveEnabled = false
         _currentResumeId.value = null
         titleState.value = defaultTitle
-        personalInfoState.value = PersonalInfo(fullName = "John Doe", email = "johndoe@example.com")
-        passportInfoState.value = PassportInfo()
-        workExperiencesState.value = listOf(
-            WorkExperience(
-                companyName = "Global Tech Corp",
-                jobPosition = "Senior Software Engineer",
-                country = "United Kingdom",
-                city = "London",
-                startDate = "2023-01",
-                endDate = "Present",
-                isCurrentlyWorking = true,
-                responsibilities = "Lead a team of 4 engineers to build robust software systems.",
-                achievements = "Reduced page load speeds by 40% globally."
+        
+        val profile = userProfileState.value
+        if (profile != null && profile.fullName.isNotBlank()) {
+            autoFillFromUserProfile(profile)
+        } else {
+            personalInfoState.value = PersonalInfo(
+                fullName = "Saru Sharma",
+                email = "sarusharma@gmail.com",
+                phone = "+977-9851088888",
+                currentCountry = "Nepal",
+                city = "Kathmandu"
             )
-        )
-        educationsState.value = listOf(
-            Education(
-                schoolName = "University of London",
-                degree = "Bachelor of Science in Computer Science",
-                country = "United Kingdom",
-                city = "London",
-                gpa = "First-Class",
-                startDate = "2019",
-                endDate = "2022"
+            passportInfoState.value = PassportInfo()
+            workExperiencesState.value = listOf(
+                WorkExperience(
+                    companyName = "Apex Global Enterprises",
+                    jobPosition = "Senior Software Engineer",
+                    country = "Nepal",
+                    city = "Kathmandu",
+                    startDate = "2023-01",
+                    endDate = "Present",
+                    isCurrentlyWorking = true,
+                    responsibilities = "Lead professional production software engineering teams using Kotlin and advanced Material layout metrics.",
+                    achievements = "Boosted transaction indexing speeds by 40% and standardized code structures."
+                )
             )
-        )
-        skillsState.value = listOf(
-            Skill("Project Management", 90, "Technical"),
-            Skill("Kotlin / Jetpack Compose", 95, "Technical"),
-            Skill("Clean Architecture", 85, "Technical"),
-            Skill("Communication", 90, "Soft")
-        )
-        languagesState.value = listOf(
-            Language("English", "Native", "Native", "Native", "Native")
-        )
-        aboutMeState.value = AboutMe(
-            summary = "Passionate and seasoned engineer with strong credentials in modern application patterns.",
-            careerObjective = "To secure a challenging role where I can apply enterprise architectural practices."
-        )
+            educationsState.value = listOf(
+                Education(
+                    schoolName = "Tribhuvan University",
+                    degree = "Bachelor of Science in Computer Science & Information Technology",
+                    country = "Nepal",
+                    city = "Kathmandu",
+                    gpa = "3.9/4.0",
+                    startDate = "2019",
+                    endDate = "2023"
+                )
+            )
+            skillsState.value = listOf(
+                Skill("Project Management", 90, "Technical"),
+                Skill("Kotlin / Jetpack Compose", 95, "Technical"),
+                Skill("Clean Architecture", 85, "Technical"),
+                Skill("Communication", 90, "Soft")
+            )
+            languagesState.value = listOf(
+                Language("Nepali", "Native", "Native", "Native", "Native"),
+                Language("English", "Fluent", "Fluent", "Fluent", "Fluent")
+            )
+            aboutMeState.value = AboutMe(
+                summary = "Passionate and seasoned engineer with strong credentials in modern application patterns.",
+                careerObjective = "To secure a challenging role where I can apply enterprise architectural practices."
+            )
+        }
         declarationState.value = Declaration(
             text = "I hereby declare that all information provided above is true and correct to the best of my knowledge."
         )
@@ -900,6 +992,11 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
         customizationState.value = Customization(sections = INITIAL_SECTIONS)
         _aiResult.value = null
         _aiError.value = null
+
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(800)
+            isAutosaveEnabled = true
+        }
     }
 
     fun createNewResumeDraftWithTemplate(
@@ -918,6 +1015,7 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun createPresetDraft(cvType: String, jobPosition: String, country: String, city: String, bloodGroup: String) {
+        isAutosaveEnabled = false
         _currentResumeId.value = null
         titleState.value = when (cvType) {
             "europass_cv" -> "Europass Standard CV"
@@ -927,14 +1025,17 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
             else -> "Quick Preset CV"
         }
         
+        val profile = userProfileState.value
+        val hasMasterProfile = profile != null && profile.fullName.isNotBlank()
+        
         personalInfoState.value = PersonalInfo(
-            fullName = "Ananta Prasad Rijal",
-            email = "ananta.rijal@example.com",
-            phone = if (country == "Nepal") "+977-9851012345" else "+1-555-019-2834",
-            currentCountry = country,
+            fullName = if (hasMasterProfile) profile!!.fullName else "Saru Sharma",
+            email = if (hasMasterProfile) profile!!.email else "sarusharma@gmail.com",
+            phone = if (hasMasterProfile) profile!!.phone else (if (country == "Nepal") "+977-9851088888" else "+1-555-019-2834"),
+            currentCountry = if (hasMasterProfile) profile!!.country else country,
             homeCountry = "Nepal",
-            currentAddress = "$city, $country",
-            city = city,
+            currentAddress = if (hasMasterProfile) "${profile!!.city}, ${profile!!.country}" else "$city, $country",
+            city = if (hasMasterProfile) profile!!.city else city,
             bloodGroup = bloodGroup
         )
         passportInfoState.value = PassportInfo(
@@ -1022,8 +1123,11 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
             text = "I solemnly declare that the facts stated in this resume are true, complete and correct to the best of my knowledge."
         )
         
+        val signatureName = if (hasMasterProfile) profile!!.fullName else "Saru Sharma"
+        val lowercaseUsername = signatureName.lowercase().replace(" ", "-")
+
         coverLetterState.value = CoverLetter(
-            bodyText = "Dear Hiring Committee,\n\nI am presenting my candidature for the position of $jobPosition. With extensive practical exposure in designing robust solutions, I am confident in my capacity to add value to your progressive organization.\n\nDuring my tenure as a $jobPosition at Apex Global Enterprises in $city, $country, I successfully orchestrated standard operational activities. Specifically, I $genericAchievements This was guided by high standards of delivery.\n\nMy biological blood group is $bloodGroup, which I proudly specify as part of my holistic health records. I look forward to discussing how my experience fits your requirements.\n\nYours sincerely,\nAnanta Prasad Rijal"
+            bodyText = "Dear Hiring Committee,\n\nI am presenting my candidature for the position of $jobPosition. With extensive practical exposure in designing robust solutions, I am confident in my capacity to add value to your progressive organization.\n\nDuring my tenure as a $jobPosition at Apex Global Enterprises in $city, $country, I successfully orchestrated standard operational activities. Specifically, I $genericAchievements This was guided by high standards of delivery.\n\nMy biological blood group is $bloodGroup, which I proudly specify as part of my holistic health records. I look forward to discussing how my experience fits your requirements.\n\nYours sincerely,\n$signatureName"
         )
         
         certificationsState.value = listOf(
@@ -1043,8 +1147,8 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
             HobbyItem("Community Volunteering")
         )
         socialLinksState.value = listOf(
-            SocialLinkItem("LinkedIn", "linkedin.com/in/ananta-rijal"),
-            SocialLinkItem("GitHub", "github.com/ananta-rijal")
+            SocialLinkItem("LinkedIn", "linkedin.com/in/$lowercaseUsername"),
+            SocialLinkItem("GitHub", "github.com/$lowercaseUsername")
         )
         customSectionDataState.value = emptyMap()
 
@@ -1066,12 +1170,18 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
         
         _aiResult.value = null
         _aiError.value = null
+
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(800)
+            isAutosaveEnabled = true
+        }
     }
 
     // Load resume from Room database
     fun loadResume(resumeId: Int) {
         viewModelScope.launch {
             val resume = repository.getResumeByIdSingle(resumeId) ?: return@launch
+            isAutosaveEnabled = false
             _currentResumeId.value = resume.id
             titleState.value = resume.title
 
@@ -1106,6 +1216,9 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
 
             _aiResult.value = null
             _aiError.value = null
+            
+            kotlinx.coroutines.delay(800)
+            isAutosaveEnabled = true
         }
     }
 
@@ -1195,6 +1308,7 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
 
     // Save/Update current resume into Room DB
     fun saveResume(onComplete: (Resume) -> Unit = {}) {
+        _saveStatus.value = "Saving..."
         viewModelScope.launch {
             val mapType = com.squareup.moshi.Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
             val mapAdapter = JsonParser.moshi.adapter<Map<String, String>>(mapType)
@@ -1233,6 +1347,7 @@ class ResumeViewModel(application: Application) : AndroidViewModel(application) 
                 _currentResumeId.value = newId.toInt()
             }
             onComplete(resume.copy(id = _currentResumeId.value!!))
+            _saveStatus.value = "All changes saved"
         }
     }
 

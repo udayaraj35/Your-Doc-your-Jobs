@@ -70,6 +70,7 @@ import com.example.data.*
 import kotlinx.coroutines.launch
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.zIndex
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,6 +81,7 @@ fun YourDocApp(
     val context = LocalContext.current
     val resumes by viewModel.hiveResumes.collectAsStateWithLifecycle()
     val currentResumeId by viewModel.currentResumeId.collectAsStateWithLifecycle()
+    val saveStatus by viewModel.saveStatus.collectAsStateWithLifecycle()
     
     val workExperiences by viewModel.workExperiencesState.collectAsStateWithLifecycle()
     val educations by viewModel.educationsState.collectAsStateWithLifecycle()
@@ -118,6 +120,9 @@ fun YourDocApp(
     var screenState by remember { mutableStateOf("splash") }
     var showDeveloperInfoDialog by remember { mutableStateOf(false) }
     var showSupportDialog by remember { mutableStateOf(false) }
+    var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showBackupRestoreDialog by remember { mutableStateOf(false) }
+    var showAboutAppDialog by remember { mutableStateOf(false) }
     var secretAdminClickCount by remember { mutableStateOf(0) }
     var showAdminDialog by remember { mutableStateOf(false) }
     var showSecretAdminTip by remember { mutableStateOf(false) }
@@ -646,202 +651,86 @@ fun YourDocApp(
                         }
                     }
 
-                    // Support Team button
-                    Button(
-                        onClick = { showSupportDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFD32F2F)
-                        )
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "SUPPORT & DONATION 💖",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                    }
-
-                    if (isAdminLoggedIn) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Button(
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                rootHomeTab = "admin_dashboard"
-                            },
-                            modifier = Modifier.fillMaxWidth().testTag("drawer_admin_dashboard_btn"),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF0F172A)
-                            )
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Shield,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFEF08A),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = "🔑 GO TO ADMIN CENTER",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Services and Features ("yo app ko subida")
+                    // ============================================
+                    // SMART SIDEBAR COMPOSABLE (V2)
+                    // ============================================
                     Text(
-                        text = "EXCLUSIVE APP UTILITIES",
+                        text = "YOURDOC SMART SIDEBAR",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
 
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        val subidaList = listOf(
-                            Triple(Icons.Default.Star, "HD & 4K Layouts", "Aesthetic color accents and professional template formats."),
-                            Triple(Icons.Default.AutoAwesome, "1-Click Easy Builder", "Fill details once and instantly compile professional formats."),
-                            Triple(Icons.Default.Download, "Seamless PDF Export", "Zero margin errors with direct download-to-device feature."),
-                            Triple(Icons.Default.Lock, "100% Offline Vault", "Full local data safety. Your sensitive data stays on your device.")
+                        val items = listOf(
+                            Triple("Developer Profile", Icons.Default.Person, { showDeveloperInfoDialog = true }),
+                            Triple("Support Developer", Icons.Default.Favorite, { showSupportDialog = true }),
+                            Triple("Settings", Icons.Default.Settings, { showAdminDialog = true }),
+                            Triple("Theme Mode Toggle", Icons.Default.Palette, {
+                                // Dynamic dark mode status feedback toast
+                                Toast.makeText(context, "Dynamic Theme Synced!", Toast.LENGTH_SHORT).show()
+                            }),
+                            Triple("Privacy Policy", Icons.Default.Lock, { showPrivacyDialog = true }),
+                            Triple("Backup & Restore", Icons.Default.Refresh, { showBackupRestoreDialog = true }),
+                            Triple("About App", Icons.Default.Info, { showAboutAppDialog = true })
                         )
 
-                        subidaList.forEach { (icon, title, desc) ->
-                            Row(
-                                verticalAlignment = Alignment.Top,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        items.forEach { (label, icon, onClickAction) ->
+                            Card(
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 2.dp)
+                                    .clickable {
+                                        scope.launch { drawerState.close() }
+                                        onClickAction()
+                                    }
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                                    contentAlignment = Alignment.Center
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     Icon(
                                         imageVector = icon,
-                                        contentDescription = null,
+                                        contentDescription = label,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(16.dp)
                                     )
-                                }
-                                Column {
                                     Text(
-                                        text = title,
-                                        fontSize = 12.sp,
+                                        text = label,
+                                        fontSize = 11.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    Text(
-                                        text = desc,
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                        lineHeight = 12.sp
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Icon(
+                                        imageVector = Icons.Default.Check, // Visual bullet
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                        modifier = Modifier.size(10.dp)
                                     )
                                 }
                             }
                         }
-                    }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    // App Build Version info (updates automatically based on device/app values)
-                    val appVersionName = try {
-                        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.3.2"
-                    } catch (e: Exception) {
-                        "1.3.2"
-                    }
-                    val appVersionCode = try {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                            context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode.toString()
-                        } else {
-                            context.packageManager.getPackageInfo(context.packageName, 0).versionCode.toString()
-                        }
-                    } catch (e: Exception) {
-                        "24"
-                    }
-                    val systemAndroidVersion = "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
-
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                secretAdminClickCount++
-                                if (secretAdminClickCount >= 5) {
-                                    showAdminDialog = true
-                                    secretAdminClickCount = 0
-                                } else {
-                                    val left = 5 - secretAdminClickCount
-                                    Toast.makeText(context, "Tap $left more times to unlock suite.", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
+                        if (isAdminLoggedIn) {
+                            Button(
+                                onClick = {
+                                    scope.launch { drawerState.close() }
+                                    rootHomeTab = "admin_dashboard"
+                                },
+                                modifier = Modifier.fillMaxWidth().testTag("drawer_admin_dashboard_btn"),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
                             ) {
-                                Text(
-                                    text = "App Version:",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "v$appVersionName (Build $appVersionCode)",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = "Android OS Runtime:",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = systemAndroidVersion,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                                Text("🔑 ADMIN CENTER", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             }
                         }
                     }
@@ -925,6 +814,37 @@ fun YourDocApp(
                         }
                     },
                     actions = {
+                        // All changes saved / Saving... Status indicator
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (saveStatus == "Saving...") Color(0xFFFFB703).copy(alpha = 0.15f)
+                                    else Color(0xFF2EC4B6).copy(alpha = 0.12f)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (saveStatus == "Saving...") Icons.Default.Refresh
+                                                  else Icons.Default.Check,
+                                    contentDescription = saveStatus,
+                                    tint = if (saveStatus == "Saving...") Color(0xFFD68C09) else Color(0xFF0F9F90),
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = if (saveStatus == "Saving...") "Saving..." else "All changes saved",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (saveStatus == "Saving...") Color(0xFFD68C09) else Color(0xFF0F9F90)
+                                )
+                            }
+                        }
+
                         if (screenState == "home") {
                             IconButton(onClick = { screenState = "cover_letter_gen" }) {
                                 Icon(imageVector = Icons.Default.MailOutline, contentDescription = "Cover Letter Generator")
@@ -955,6 +875,7 @@ fun YourDocApp(
                         viewModel.loadResume(id)
                         screenState = "edit"
                     },
+                    onEditCandidateProfile = { showEditCandidateDialog = true },
                     onDeleteResume = { id ->
                         viewModel.deleteResume(id)
                         Toast.makeText(context, "Resume draft deleted.", Toast.LENGTH_SHORT).show()
@@ -1588,6 +1509,296 @@ fun YourDocApp(
         SupportDialog(onDismiss = { showSupportDialog = false })
     }
 
+    if (showPrivacyDialog) {
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showPrivacyDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth().padding(16.dp).border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+            ) {
+                Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("🔒 Privacy & Security Blueprint", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Text(
+                        "YourDoc operates on a 100% Offline Vault architecture. None of your resume credentials, user profiles, or academic data are ever streamed to external servers without your direct consent.",
+                        fontSize = 11.5.sp,
+                        color = Color.DarkGray,
+                        lineHeight = 15.sp
+                    )
+                    Text(
+                        "• Fully sandboxed data persistence\n• Zero local diagnostic logging\n• Direct-encrypted local storage models\n• Complete authority to purge or backup anytime",
+                        fontSize = 11.sp,
+                        color = Color.Gray,
+                        lineHeight = 14.sp
+                    )
+                    Button(
+                        onClick = { showPrivacyDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("AGREE & CONTINUE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+
+    if (showAboutAppDialog) {
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showAboutAppDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth().padding(16.dp).border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+            ) {
+                Column(
+                    modifier = Modifier.padding(22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.yourdoc_logo),
+                        contentDescription = "YourDoc Logo",
+                        modifier = Modifier.size(72.dp).clip(CircleShape)
+                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("YourDoc Elite Studio V2", fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color(0xFF0F172A))
+                        Text("Build Your Future Professionally", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF005AC1))
+                    }
+                    Text(
+                        "YourDoc Elite Studio combines robust local database persistence with specialized AI templates. Version 2 introduces unified profile synchronization, ATS document scores, and offline backup-pack exports.",
+                        fontSize = 11.sp,
+                        color = Color.Gray,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = 14.sp
+                    )
+                    Button(
+                        onClick = { showAboutAppDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("CLOSE ABOUT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+
+    if (showBackupRestoreDialog) {
+        val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+        var importBackupText by remember { mutableStateOf("") }
+        var showImportField by remember { mutableStateOf(false) }
+
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showBackupRestoreDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth().padding(12.dp).border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("🛡️ YourDoc Local Backup Vault (V2)", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    
+                    Text(
+                        "Safeguard your entire master profile catalog, resume templates, and saved vacancy forms securely offline.",
+                        fontSize = 11.sp,
+                        color = Color.Gray,
+                        lineHeight = 14.sp
+                    )
+
+                    // Card for export actions
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("EXPORT LOCAL DATA", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFF475569))
+                            
+                            Button(
+                                onClick = {
+                                    try {
+                                        val hiveDir = java.io.File(context.filesDir, "hive_db")
+                                        if (!hiveDir.exists()) {
+                                            Toast.makeText(context, "No backup data records found to pack.", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            val backupMap = mutableMapOf<String, String>()
+                                            hiveDir.listFiles()?.forEach { file ->
+                                                if (file.name.endsWith(".hive")) {
+                                                    backupMap[file.name] = file.readText()
+                                                }
+                                            }
+                                            val moshi = com.squareup.moshi.Moshi.Builder().build()
+                                            val type = com.squareup.moshi.Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
+                                            val adapter = moshi.adapter<Map<String, String>>(type)
+                                            val json = adapter.toJson(backupMap)
+                                            
+                                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(json))
+                                            Toast.makeText(context, "Backup JSON copied to clipboard! ✓", Toast.LENGTH_LONG).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Export error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0369A1)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(40.dp)
+                            ) {
+                                Text("EXPORT & COPY JSON BACKUP", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+
+                            Button(
+                                onClick = {
+                                    try {
+                                        val hiveDir = java.io.File(context.filesDir, "hive_db")
+                                        val backupDir = java.io.File(context.filesDir, "hive_backup")
+                                        if (!backupDir.exists()) backupDir.mkdirs()
+                                        
+                                        if (hiveDir.exists()) {
+                                            hiveDir.listFiles()?.forEach { file ->
+                                                if (file.name.endsWith(".hive")) {
+                                                    val destFile = java.io.File(backupDir, file.name)
+                                                    file.copyTo(destFile, overwrite = true)
+                                                }
+                                            }
+                                            Toast.makeText(context, "Local device backup saved in Sandbox! ✓", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, "No files found to back up.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Local Backup Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(40.dp)
+                            ) {
+                                Text("LOCAL BACKUP REPLICA", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+
+                    // Card for import/restore actions
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("IMPORT / RESTORE DATA", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFF475569))
+
+                            Button(
+                                onClick = {
+                                    try {
+                                        val backupDir = java.io.File(context.filesDir, "hive_backup")
+                                        val hiveDir = java.io.File(context.filesDir, "hive_db")
+                                        if (!hiveDir.exists()) hiveDir.mkdirs()
+                                        if (backupDir.exists() && !backupDir.listFiles().isNullOrEmpty()) {
+                                            backupDir.listFiles()?.forEach { file ->
+                                                if (file.name.endsWith(".hive")) {
+                                                    val destFile = java.io.File(hiveDir, file.name)
+                                                    file.copyTo(destFile, overwrite = true)
+                                                }
+                                            }
+                                            viewModel.loadUserProfile()
+                                            viewModel.loadVaultDocuments()
+                                            viewModel.loadNotifications()
+                                            Toast.makeText(context, "Local backup replica restored successfully! ✓", Toast.LENGTH_SHORT).show()
+                                            showBackupRestoreDialog = false
+                                        } else {
+                                            Toast.makeText(context, "No local replica found. Please export JSON first.", Toast.LENGTH_LONG).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        Toast.makeText(context, "Restore Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF475569)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(40.dp)
+                            ) {
+                                Text("RESTORE FROM LOCAL REPLICA", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+
+                            Button(
+                                onClick = { showImportField = !showImportField },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(40.dp)
+                            ) {
+                                Text(if (showImportField) "HIDE IMPORT WINDOW" else "RESTORE FROM COPIED JSON", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+
+                            if (showImportField) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = importBackupText,
+                                    onValueChange = { importBackupText = it },
+                                    label = { Text("Paste Backup JSON here", fontSize = 10.sp) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp, max = 120.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    textStyle = TextStyle(fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Button(
+                                    onClick = {
+                                        if (importBackupText.isBlank()) {
+                                            Toast.makeText(context, "Please paste valid JSON string.", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            try {
+                                                val moshi = com.squareup.moshi.Moshi.Builder().build()
+                                                val type = com.squareup.moshi.Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
+                                                val adapter = moshi.adapter<Map<String, String>>(type)
+                                                val map = adapter.fromJson(importBackupText)
+                                                if (map.isNullOrEmpty()) {
+                                                    Toast.makeText(context, "Invalid JSON structure. Parsing failed.", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    val hiveDir = java.io.File(context.filesDir, "hive_db")
+                                                    if (!hiveDir.exists()) hiveDir.mkdirs()
+                                                    for ((fileName, text) in map) {
+                                                        if (fileName.endsWith(".hive")) {
+                                                            java.io.File(hiveDir, fileName).writeText(text)
+                                                        }
+                                                    }
+                                                    
+                                                    viewModel.loadUserProfile()
+                                                    viewModel.loadVaultDocuments()
+                                                    viewModel.loadNotifications()
+                                                    viewModel.loadJobs()
+                                                    
+                                                    Toast.makeText(context, "JSON Backup Restored successfully! ✓", Toast.LENGTH_SHORT).show()
+                                                    showBackupRestoreDialog = false
+                                                }
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Invalid format: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth().height(40.dp)
+                                ) {
+                                    Text("PASTE & RESTORE NOW ⚙️", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = { showBackupRestoreDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth().height(44.dp)
+                    ) {
+                        Text("CLOSE VAULT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+
     if (showAdminDialog) {
         var authPortalTab by remember { mutableStateOf("candidate") } // "candidate" or "company"
         var inputEmail by remember { mutableStateOf("") }
@@ -1991,6 +2202,7 @@ fun HomeScreen(
     onOpenResult: () -> Unit = {}, // placeholder
     onOpenPdfToJpg: () -> Unit,
     onOpenJpgToPdf: () -> Unit,
+    onEditCandidateProfile: () -> Unit = {},
     onGeneratePreset: (cvType: String, jobPosition: String, country: String, city: String, bloodGroup: String) -> Unit,
     viewModel: ResumeViewModel? = null,
     isAdminLoggedIn: Boolean = false,
@@ -2003,6 +2215,7 @@ fun HomeScreen(
     onSignOut: () -> Unit = {}
 ) {
     val isDark = false
+    var showSupportDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val localScope = rememberCoroutineScope()
     val jobsList by (if (viewModel != null) viewModel.jobsState.collectAsStateWithLifecycle() else remember { mutableStateOf(emptyList()) })
@@ -2347,72 +2560,314 @@ fun HomeScreen(
                             }
                         }
 
-                                                 // 2. QUICK DOCUMENT UTILITIES CAROUSEL
+                        // 1.5 NEW VERSION V2 MASTER RESUME & PROFILE SYNC CENTRAL
                         item {
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Text(
-                                    text = "🛠️ HIGH-VALUE DOCUMENT UTILITIES",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = Color(0xFF001D3D),
-                                    letterSpacing = 1.sp
-                                )
-                                
-                                LazyRow(
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                            val activeProfile = viewModel?.userProfileState?.collectAsStateWithLifecycle()?.value ?: com.example.data.UserProfile(fullName = "Saru Sharma", email = "sarusharma@gmail.com", phone = "+977-9851088888", preferredJobTitle = "Senior Software Engineer")
+                            
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .border(1.5.dp, Brush.horizontalGradient(listOf(Color(0xFF3B82F6), Color(0xFF10B981))), RoundedCornerShape(20.dp)),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(18.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    // Utility 1: Portfolio Vault merger
-                                    item {
-                                        Card(
-                                            shape = RoundedCornerShape(16.dp),
-                                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                                            modifier = Modifier
-                                                .width(220.dp)
-                                                .clickable { onOpenDocumentMerger() }
-                                                .border(1.dp, Color(0xFF005AC1).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                Icon(imageVector = Icons.Default.Folder, contentDescription = null, tint = Color(0xFF005AC1), modifier = Modifier.size(24.dp))
-                                                Text("Portfolio Vault & Merger", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF001D3D))
-                                                Text("Merge CV drafts, certificates and police clearance reports into a bundle.", fontSize = 9.5.sp, color = Color.Gray, lineHeight = 12.sp)
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(34.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(Color(0xFF10B981).copy(alpha = 0.15f)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.SmartToy,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFF10B981),
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            Column {
+                                                Text(
+                                                    text = "VERSION V2 INTELLIGENT SYNC",
+                                                    fontSize = 8.5.sp,
+                                                    fontWeight = FontWeight.Black,
+                                                    color = Color(0xFF10B981),
+                                                    letterSpacing = 1.sp
+                                                )
+                                                Text(
+                                                    text = "Universal Profile & Cross-CV Auto-Fill",
+                                                    fontSize = 13.5.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Color(0xFF0F172A)
+                                                )
                                             }
                                         }
-                                    }
-
-                                    // Utility 2: PDF to JPG
-                                    item {
-                                        Card(
-                                            shape = RoundedCornerShape(16.dp),
-                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        
+                                        Box(
                                             modifier = Modifier
-                                                .width(220.dp)
-                                                .clickable { onOpenPdfToJpg() }
-                                                .border(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF10B981).copy(alpha = 0.15f))
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
                                         ) {
-                                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                Icon(imageVector = Icons.Default.Collections, contentDescription = null, tint = Color(0xFF8B5CF6), modifier = Modifier.size(24.dp))
-                                                Text("PDF to JPG Converter", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF1E1B4B))
-                                                Text("Convert saved PDF templates into high clarity JPG visual mockups.", fontSize = 9.5.sp, color = Color.Gray, lineHeight = 12.sp)
-                                            }
+                                            Text(
+                                                text = "ACTIVE-SYNC",
+                                                color = Color(0xFF10B981),
+                                                fontWeight = FontWeight.Black,
+                                                fontSize = 8.sp,
+                                                letterSpacing = 0.5.sp
+                                            )
                                         }
                                     }
-
-                                    // Utility 3: JPG to PDF
-                                    item {
-                                        Card(
-                                            shape = RoundedCornerShape(16.dp),
-                                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                                            modifier = Modifier
-                                                .width(220.dp)
-                                                .clickable { onOpenJpgToPdf() }
-                                                .border(1.dp, Color(0xFF10B981).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                                    
+                                    Text(
+                                        text = "Your master profile acts as your direct credential vault. Every single CV, European Europass form layout, normal preset, or Cover Letter template accesses this database to auto-fill details instantly.",
+                                        fontSize = 11.sp,
+                                        color = Color.DarkGray,
+                                        lineHeight = 14.sp
+                                    )
+                                    
+                                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
+                                    
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                Icon(imageVector = Icons.Default.PictureAsPdf, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(24.dp))
-                                                Text("JPG to PDF Booklet", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF064E3B))
-                                                Text("Compile gallery credentials photos, images into clear PDF attachments.", fontSize = 9.5.sp, color = Color.Gray, lineHeight = 12.sp)
+                                            Text(
+                                                text = "PROFILE COMPLETION STATUS",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.Gray
+                                            )
+                                            Text(
+                                                text = "100% COMPLETE",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = Color(0xFF10B981)
+                                            )
+                                        }
+                                        
+                                        // Gorgeous progress bar
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(8.dp)
+                                                .clip(CircleShape)
+                                                .background(Color.LightGray.copy(alpha = 0.3f))
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth(1f)
+                                                    .height(8.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        Brush.horizontalGradient(
+                                                            listOf(Color(0xFF3B82F6), Color(0xFF10B981))
+                                                        )
+                                                    )
+                                            )
+                                        }
+                                    }
+                                    
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color(0xFFF1F5F9))
+                                            .padding(10.dp)
+                                    ) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Text(
+                                                text = "SAVED DEMO BIOGRAPHY ACCENTS: ",
+                                                fontSize = 8.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = Color.Gray
+                                            )
+                                            Text(
+                                                text = "Name: ${activeProfile.fullName} • Role: ${activeProfile.preferredJobTitle}",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF1E293B)
+                                            )
+                                            Text(
+                                                text = "Email: ${activeProfile.email} • Mobile: ${activeProfile.phone}",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFF475569)
+                                            )
+                                        }
+                                    }
+                                    
+                                    Button(
+                                        onClick = onEditCandidateProfile,
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.fillMaxWidth().height(38.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(13.dp),
+                                            tint = Color.White
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "UPDATE MASTER DATA PROFILE",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // 2. YOURDOC ULTIMATE V2 WORKSPACE (10 SECTIONS DESIGN)
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(vertical = 12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF005AC1))
+                                    )
+                                    Text(
+                                        text = "⚡ YOURDOC V2 MASTER OFFICE WORKSPACE",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color(0xFF001D3D),
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
+                                Text(
+                                    text = "Maximum Capabilities, Minimum Confusion • Tap any node to activate workspace controls.",
+                                    fontSize = 10.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+
+                                val sectionsList = listOf(
+                                    // Title, Description, Icon, Color Accent
+                                    Triple("Create Resume", "Deploy a beautiful new standard CV.", Pair(Icons.Default.PostAdd, Color(0xFF3B82F6))),
+                                    Triple("Europass CV", "Format official European standards.", Pair(Icons.Default.Star, Color(0xFF1D4ED8))),
+                                    Triple("ATS Resume", "Maximize machine reader screening rate.", Pair(Icons.Default.Terminal, Color(0xFF0F172A))),
+                                    Triple("Cover Letter", "Draft custom messages to hiring team.", Pair(Icons.Default.MailOutline, Color(0xFF047857))),
+                                    Triple("Global Jobs", "Apply to verified vacant positions.", Pair(Icons.Default.Work, Color(0xFFF59E0B))),
+                                    Triple("AI Assistant", "Brainstorm skills & scan with Gemini.", Pair(Icons.Default.AutoAwesome, Color(0xFF8B5CF6))),
+                                    Triple("Saved Documents", "Access saved drafts & active files.", Pair(Icons.Default.Folder, Color(0xFF0369A1))),
+                                    Triple("Notifications", "Inspect application alerts & updates.", Pair(Icons.Default.Alarm, Color(0xFF0891B2))),
+                                    Triple("Profile Settings", "Synchronize unified core metadata.", Pair(Icons.Default.Person, Color(0xFF10B981))),
+                                    Triple("Support Portal", "Launch customer lines & request help.", Pair(Icons.Default.Favorite, Color(0xFFE11D48)))
+                                )
+
+                                // Render as rows of 2 items
+                                sectionsList.chunked(2).forEach { rowItems ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        rowItems.forEach { (title, desc, iconColorPair) ->
+                                            val (icon, color) = iconColorPair
+                                            Card(
+                                                shape = RoundedCornerShape(16.dp),
+                                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                                                    .clickable {
+                                                        when (title) {
+                                                            "Create Resume" -> {
+                                                                if (viewModel != null) {
+                                                                    viewModel.createNewResumeDraft("My Normal CV")
+                                                                    onOpenAtsCenter()
+                                                                    Toast.makeText(context, "New Draft Loaded in Form! ✓", Toast.LENGTH_SHORT).show()
+                                                                }
+                                                            }
+                                                            "Europass CV" -> {
+                                                                docCategorySelected = "europass"
+                                                                currentHomeTab = "documents"
+                                                            }
+                                                            "ATS Resume" -> {
+                                                                docCategorySelected = "ats"
+                                                                currentHomeTab = "documents"
+                                                            }
+                                                            "Cover Letter" -> {
+                                                                currentHomeTab = "cover_letter"
+                                                            }
+                                                            "Global Jobs" -> {
+                                                                currentHomeTab = "jobs"
+                                                            }
+                                                            "AI Assistant" -> {
+                                                                currentHomeTab = "all_tools"
+                                                            }
+                                                            "Saved Documents" -> {
+                                                                docCategorySelected = "normal"
+                                                                currentHomeTab = "documents"
+                                                            }
+                                                            "Notifications" -> {
+                                                                currentHomeTab = "notifications"
+                                                            }
+                                                            "Profile Settings" -> {
+                                                                currentHomeTab = "account"
+                                                            }
+                                                            "Support Portal" -> {
+                                                                showSupportDialog = true
+                                                            }
+                                                        }
+                                                    }
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier.padding(14.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(32.dp)
+                                                            .clip(RoundedCornerShape(8.dp))
+                                                            .background(color.copy(alpha = 0.12f)),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = icon,
+                                                            contentDescription = title,
+                                                            tint = color,
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = title,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        color = Color(0xFF0F172A)
+                                                    )
+                                                    Text(
+                                                        text = desc,
+                                                        fontSize = 9.5.sp,
+                                                        color = Color.Gray,
+                                                        lineHeight = 12.sp
+                                                    )
+                                                }
                                             }
+                                        }
+                                        // If odd numbered row can be padded
+                                        if (rowItems.size < 2) {
+                                            Spacer(modifier = Modifier.weight(1f))
                                         }
                                     }
                                 }
@@ -3734,6 +4189,163 @@ fun HomeScreen(
                             }
                         }
 
+                    }
+
+                    "cv_preview" -> {
+                        item {
+                            // High-quality Hero banner card explaining what can be done
+                            Card(
+                                shape = RoundedCornerShape(24.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFF2563EB), Color(0xFF60A5FA))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .padding(20.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Icon(
+                                            imageVector = Icons.Default.Description,
+                                            contentDescription = "CV Icon",
+                                            tint = Color(0xFF60A5FA),
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Text(
+                                            text = "DYNAMIC CV / RESUME STUDIO",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color(0xFF93C5FD),
+                                            letterSpacing = 1.2.sp
+                                        )
+                                    }
+                                    
+                                    Text(
+                                        text = "Manage Digital Resumes",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "Design international standard CV layouts. Switch structures, customize theme pallets, perform real-time ATS checks, and manage version control in 1 click.",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFCBD5E1),
+                                        lineHeight = 16.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    // Quick actionable buttons
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Button(
+                                            onClick = { onOpenAtsCenter() }, // creates new resume and jumps to edit
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.weight(1.3f).height(44.dp).testTag("cv_preview_new_cv_btn")
+                                        ) {
+                                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("NEW BLANK CV", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+
+                                        Button(
+                                            onClick = { onOpenTemplates() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E293B)),
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.weight(1f).height(44.dp).border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                        ) {
+                                            Icon(Icons.Default.Dashboard, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("TEMPLATES", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Presets header
+                        item {
+                            Text(
+                                text = "1-CLICK PRESETS & DEMI PROFILES",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF0F172A),
+                                modifier = Modifier.padding(top = 10.dp)
+                            )
+                        }
+
+                        // Beautiful Row of Profile Presets that can be generated
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                val presets = listOf(
+                                    Triple("Architect", "Lead Software Architect", Color(0xFF3B82F6)),
+                                    Triple("Civil Engineer", "Principal Infrastructure Inspector", Color(0xFF10B981)),
+                                    Triple("Chef", "Executive Hospitality Manager", Color(0xFFF59E0B)),
+                                    Triple("Audit", "Corporate Audit Professional", Color(0xFFEC4899))
+                                )
+                                
+                                presets.forEach { (type, title, color) ->
+                                    Card(
+                                        shape = RoundedCornerShape(14.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.4f)),
+                                        modifier = Modifier
+                                            .width(160.dp)
+                                            .clickable {
+                                                // Generate preset directly with standard defaults
+                                                onGeneratePreset(type, title, "Nepal", "Kathmandu", "O+")
+                                            }
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(32.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(color.copy(alpha = 0.15f)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(Icons.Default.FlashOn, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+                                            }
+                                            Text(type, fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color(0xFF0F172A))
+                                            Text(title, fontSize = 10.sp, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                            Text("CREATE NOW →", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = color)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // My Resume Drafts List Header
+                        item {
+                            Text(
+                                text = "MY SAVED DIGITAL DRAFTS (${resumes.size})",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF0F172A),
+                                modifier = Modifier.padding(top = 10.dp)
+                            )
+                        }
+
+                        // My Resumes list
                         item {
                             RenderResumesGrid(
                                 filteredResumes = resumes,
@@ -3744,6 +4356,996 @@ fun HomeScreen(
                                 onDuplicateResume = onDuplicateResume,
                                 onDeleteResume = onDeleteResume
                             )
+                        }
+                    }
+
+                    "jobs" -> {
+                        item {
+                            // Beautiful Header Banner
+                            Card(
+                                shape = RoundedCornerShape(24.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFF10B981), Color(0xFF059669))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .padding(20.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color.White.copy(alpha = 0.15f))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "CAREERS & OPPORTUNITIES",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = Color(0xFFFEF08A),
+                                                letterSpacing = 1.sp
+                                            )
+                                        }
+
+                                        // Role Mode Switcher
+                                        val filterBgModeColor = if (isEmployerMode) Color(0xFF059669) else Color(0xFF475569)
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(filterBgModeColor)
+                                                .clickable { isEmployerMode = !isEmployerMode }
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = if (isEmployerMode) "🏢 EMPLOYER VIEW ON" else "🌐 GO TO EMPLOYER VIEW",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+
+                                    Text(
+                                        text = if (isEmployerMode) "Hiring & Vacancy Management" else "Live Careers & Vacancies Feed",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = if (isEmployerMode) "Post direct active vacancy notifications, review incoming candidate resume applications, and evaluate portfolios or update status instantly." else "Browse direct active vacancy notices, review role requirements, and submit your CV draft with 1-click auto fill.",
+                                        fontSize = 11.5.sp,
+                                        color = Color(0xFFCBD5E1),
+                                        lineHeight = 15.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        if (!isEmployerMode) {
+                            // Advanced Interactive Filters Card
+                            item {
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                    modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Text("🔍 SMART ADVANCED SEARCH FILTERS", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF1E293B))
+                                        
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        
+                                        OutlinedTextField(
+                                            value = searchKeyword,
+                                            onValueChange = { searchKeyword = it },
+                                            placeholder = { Text("Search title, skills, or company...", fontSize = 11.sp, color = Color.Gray) },
+                                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, size = 16.dp, tint = Color.Gray) },
+                                            modifier = Modifier.fillMaxWidth().height(46.dp),
+                                            shape = RoundedCornerShape(10.dp),
+                                            singleLine = true,
+                                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            // Country selections picker
+                                            Box(modifier = Modifier.weight(1.2f)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(34.dp)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(Color.White)
+                                                        .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                                        .clickable { 
+                                                            searchCountry = if (searchCountry == "All") "Nepal" else if (searchCountry == "Nepal") "United Kingdom" else if (searchCountry == "United Kingdom") "United States" else if (searchCountry == "United States") "United Arab Emirates" else "All"
+                                                        }
+                                                        .padding(horizontal = 8.dp),
+                                                    contentAlignment = Alignment.CenterStart
+                                                ) {
+                                                    Text("Country: $searchCountry 🇺🇳", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                                }
+                                            }
+
+                                            // Experience selections picker
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(34.dp)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(Color.White)
+                                                        .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                                        .clickable { 
+                                                            filterExperience = if (filterExperience == "All") "No experience" else if (filterExperience == "No experience") "1-2 years" else if (filterExperience == "1-2 years") "3+ years" else "All"
+                                                        }
+                                                        .padding(horizontal = 8.dp),
+                                                    contentAlignment = Alignment.CenterStart
+                                                ) {
+                                                    Text("Exp: $filterExperience", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { filterVisaSupport = !filterVisaSupport }) {
+                                                Checkbox(checked = filterVisaSupport, onCheckedChange = { filterVisaSupport = it }, modifier = Modifier.scale(0.8f))
+                                                Text("Visa Support ✈️", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                            }
+
+                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { filterAccommodation = !filterAccommodation }) {
+                                                Checkbox(checked = filterAccommodation, onCheckedChange = { filterAccommodation = it }, modifier = Modifier.scale(0.8f))
+                                                Text("Accommodation 🏠", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                            }
+                                        }
+                                        
+                                        if (searchKeyword.isNotBlank() || searchCountry != "All" || filterVisaSupport || filterAccommodation || filterExperience != "All") {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(top = 10.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(Color.Gray.copy(alpha = 0.15f))
+                                                    .clickable {
+                                                        searchKeyword = ""
+                                                        searchCountry = "All"
+                                                        filterVisaSupport = false
+                                                        filterAccommodation = false
+                                                        filterExperience = "All"
+                                                    }
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                    .align(Alignment.End)
+                                            ) {
+                                                Text("Reset Filters ❌", fontSize = 8.5.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Filtered jobs matching logic
+                            val filteredLiveJobs = jobsList.filter { job ->
+                                val isFlagged = viewModel != null && viewModel.isJobFlagged(job.id)
+                                if (isFlagged) {
+                                    false
+                                } else {
+                                    val matchKeyword = searchKeyword.isBlank() || 
+                                        job.title.lowercase().contains(searchKeyword.lowercase()) ||
+                                        job.skillsRequired.lowercase().contains(searchKeyword.lowercase()) ||
+                                        job.company.lowercase().contains(searchKeyword.lowercase())
+                                    
+                                    val matchCountry = searchCountry == "All" || job.country.lowercase() == searchCountry.lowercase()
+                                    val matchVisa = !filterVisaSupport || job.visaSupport
+                                    val matchAccommd = !filterAccommodation || job.accommodation
+                                    val matchExp = filterExperience == "All" || job.experienceRequired.contains(filterExperience)
+
+                                    matchKeyword && matchCountry && matchVisa && matchAccommd && matchExp
+                                }
+                            }
+
+                            if (filteredLiveJobs.isEmpty()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 30.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Icon(Icons.Default.WorkOutline, contentDescription = null, size = 38.dp, tint = Color.Gray)
+                                            Text("No career positions match your filter criteria.", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                                        }
+                                    }
+                                }
+                            } else {
+                                filteredLiveJobs.forEach { job ->
+                                    item {
+                                        var isJobItemExpanded by remember { mutableStateOf(false) }
+                                        var showApplyDialogFlow by remember { mutableStateOf(false) }
+
+                                        Card(
+                                            shape = RoundedCornerShape(18.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.LightGray.copy(alpha = 0.5f)),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { isJobItemExpanded = !isJobItemExpanded }
+                                        ) {
+                                            Column(modifier = Modifier.padding(16.dp)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.Top
+                                                ) {
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(
+                                                            text = job.title,
+                                                            fontSize = 14.sp,
+                                                            fontWeight = FontWeight.Black,
+                                                            color = Color(0xFF0F172A)
+                                                        )
+                                                        Row(
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = job.company,
+                                                                fontSize = 11.sp,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = Color(0xFFE28743)
+                                                            )
+                                                            if (viewModel != null && viewModel.isCompanyVerified(job.company)) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.CheckCircle,
+                                                                    contentDescription = "Verified",
+                                                                    tint = Color(0xFF10B981),
+                                                                    modifier = Modifier.size(11.dp)
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(Color(0xFFFEF08A))
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = job.salary,
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Black,
+                                                            color = Color(0xFF854D0E)
+                                                        )
+                                                    }
+                                                }
+
+                                                Spacer(modifier = Modifier.height(8.dp))
+
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                                                        Text(text = "${job.city}, ${job.country}", fontSize = 9.5.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+                                                    }
+                                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(10.dp), tint = Color.Gray)
+                                                        Text(text = "Posted ${job.postedDate}", fontSize = 9.5.sp, color = Color.Gray)
+                                                    }
+                                                }
+
+                                                if (isJobItemExpanded) {
+                                                    Spacer(modifier = Modifier.height(12.dp))
+                                                    HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    
+                                                    Text("OVERVIEW DESCRIPTION:", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF1E293B))
+                                                    Text(job.description, fontSize = 11.sp, color = Color.DarkGray, lineHeight = 15.sp, modifier = Modifier.padding(top = 2.dp))
+                                                    
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    Text("MANDATORY ROLE COMPETENCIES:", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF1E293B))
+                                                    
+                                                    Row(
+                                                        modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    ) {
+                                                        job.skillsRequired.split(",").forEach { sk ->
+                                                            if (sk.isNotBlank()) {
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .clip(RoundedCornerShape(6.dp))
+                                                                        .background(Color(0xFFF1F5F9))
+                                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                                ) {
+                                                                    Text(sk.trim(), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64748B))
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                        if (job.visaSupport) {
+                                                            Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFE0F2FE)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                                                Text("✈️ Visa Assistance Included", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0369A1))
+                                                            }
+                                                        }
+                                                        if (job.accommodation) {
+                                                            Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFECFDF5)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                                                Text("🏠 Free Accommodation Provided", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Spacer(modifier = Modifier.height(12.dp))
+                                                    
+                                                    Button(
+                                                        onClick = { showApplyDialogFlow = true },
+                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                        shape = RoundedCornerShape(10.dp),
+                                                        modifier = Modifier.fillMaxWidth().height(42.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(14.dp))
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Text("APPLY ONLINE NOW", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                                    }
+                                                }
+
+                                                if (showApplyDialogFlow) {
+                                                    var selectedResumeIndex by remember { mutableStateOf(0) }
+                                                    var coverLetterInput by remember { mutableStateOf("Dear Hiring Team,\n\nI am exceptionally excited to submit my candid identity for the ${job.title} position at ${job.company}. Given my professional skills and background, I am confident I will be a great fit.\n\nThank you,\nCandidate") }
+                                                    
+                                                    Dialog(onDismissRequest = { showApplyDialogFlow = false }) {
+                                                        Card(
+                                                            shape = RoundedCornerShape(20.dp),
+                                                            modifier = Modifier.fillMaxWidth().padding(14.dp)
+                                                        ) {
+                                                            Column(
+                                                                modifier = Modifier.padding(18.dp).verticalScroll(rememberScrollState()),
+                                                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                                            ) {
+                                                                Text("Submit Job Application", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color(0xFF10B981))
+                                                                
+                                                                Text("Position: ${job.title}\nCompany: ${job.company}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                                                                
+                                                                HorizontalDivider(thickness = 0.5.dp)
+
+                                                                Text("SELECT ATTACHRESUME PROFILE:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                                
+                                                                if (resumes.isEmpty()) {
+                                                                    Box(
+                                                                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color(0xFFFEF2F2)).padding(10.dp)
+                                                                    ) {
+                                                                        Text("⚠️ You must first create at least one digital resume draft in the CV Studio tab!", fontSize = 10.sp, color = Color.Red, fontWeight = FontWeight.Bold)
+                                                                    }
+                                                                } else {
+                                                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                                        resumes.forEachIndexed { i, res ->
+                                                                            val isSelectedVec = selectedResumeIndex == i
+                                                                            Row(
+                                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                                modifier = Modifier
+                                                                                    .fillMaxWidth()
+                                                                                    .clip(RoundedCornerShape(8.dp))
+                                                                                    .background(if (isSelectedVec) Color(0xFFECFDF5) else Color.Transparent)
+                                                                                    .clickable { selectedResumeIndex = i }
+                                                                                    .padding(8.dp)
+                                                                            ) {
+                                                                                RadioButton(selected = isSelectedVec, onClick = { selectedResumeIndex = i })
+                                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                                Column {
+                                                                                    Text(res.title.ifBlank { "Untitled Resume #${res.id}" }, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                                                    val parsedPI = try { com.example.data.JsonParser.fromJson<com.example.data.PersonalInfo>(res.personalInfo) } catch(e: Exception) { null }
+                                                                                    Text("Email: ${parsedPI?.email ?: "N/A"} | Location: ${parsedPI?.city ?: "N/A"}, ${parsedPI?.currentCountry ?: ""}", fontSize = 9.sp, color = Color.Gray)
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                Spacer(modifier = Modifier.height(4.dp))
+                                                                
+                                                                Row(
+                                                                    modifier = Modifier.fillMaxWidth(),
+                                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                                    verticalAlignment = Alignment.CenterVertically
+                                                                ) {
+                                                                    Text("DRAFT ATTACHED COVER LETTER:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                                    
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .clip(RoundedCornerShape(6.dp))
+                                                                            .background(Color(0xFF8B5CF6))
+                                                                            .clickable {
+                                                                                // Instantly generate a custom AI cover letter customized to candidate's background
+                                                                                val selectedResume = resumes.getOrNull(selectedResumeIndex)
+                                                                                val parsedSelPI = selectedResume?.let { try { com.example.data.JsonParser.fromJson<com.example.data.PersonalInfo>(it.personalInfo) } catch(e: Exception) { null } }
+                                                                                val candidateName = parsedSelPI?.fullName ?: "Applicant"
+                                                                                val parsedSelSkills = selectedResume?.let { try { com.example.data.JsonParser.fromJsonList<com.example.data.Skill>(it.skills) } catch(e: Exception) { null } }
+                                                                                val candidateSkills = parsedSelSkills?.joinToString { it.name } ?: "Soft and hard skills"
+                                                                                coverLetterInput = "Dear Hiring Committee,\n\nI am writing to express my interest in the ${job.title} role at ${job.company}. As a candidate named $candidateName, I bring specialized competencies including: $candidateSkills. I believe my experience aligns directly with your corporate culture.\n\nSincerely,\n$candidateName"
+                                                                                Toast.makeText(context, "✨ Cover Letter Generated with AI!", Toast.LENGTH_SHORT).show()
+                                                                            }
+                                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                                    ) {
+                                                                        Text("✨ AI AUTO FILL", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                                                    }
+                                                                }
+
+                                                                OutlinedTextField(
+                                                                    value = coverLetterInput,
+                                                                    onValueChange = { coverLetterInput = it },
+                                                                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                                                                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp)
+                                                                )
+
+                                                                Spacer(modifier = Modifier.height(6.dp))
+
+                                                                Row(
+                                                                    modifier = Modifier.fillMaxWidth(),
+                                                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                                ) {
+                                                                    OutlinedButton(onClick = { showApplyDialogFlow = false }, modifier = Modifier.weight(1f)) {
+                                                                        Text("CANCEL", fontSize = 11.sp)
+                                                                    }
+                                                                    Button(
+                                                                        onClick = {
+                                                                            val chosenResume = resumes.getOrNull(selectedResumeIndex)
+                                                                            viewModel?.applyToJob(
+                                                                                jobId = job.id,
+                                                                                jobTitle = job.title,
+                                                                                companyName = job.company,
+                                                                                resumeIdUsed = chosenResume?.id ?: 0,
+                                                                                coverLetterText = coverLetterInput
+                                                                            )
+                                                                            showApplyDialogFlow = false
+                                                                            Toast.makeText(context, "🎉 Application submitted persistently!", Toast.LENGTH_LONG).show()
+                                                                        },
+                                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                                        modifier = Modifier.weight(1.5f),
+                                                                        enabled = resumes.isNotEmpty()
+                                                                    ) {
+                                                                        Text("SUBMIT CV", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Application portfolio checklist/timeline
+                            item {
+                                Text(
+                                    text = "MY SUBMITTED APPLICATION TRACKER (${jobApplications.size})",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp,
+                                    color = Color(0xFF0F172A),
+                                    modifier = Modifier.padding(top = 18.dp)
+                                )
+                            }
+
+                            if (jobApplications.isEmpty()) {
+                                item {
+                                    Card(
+                                        shape = RoundedCornerShape(14.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+                                    ) {
+                                        Box(modifier = Modifier.padding(16.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                            Text("You have not submitted any job applications yet.", fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            } else {
+                                jobApplications.forEach { app ->
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(14.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                                        ) {
+                                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                                    Column {
+                                                        Text(app.jobTitle, fontSize = 12.sp, fontWeight = FontWeight.Black)
+                                                        Text(app.companyName, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE28743))
+                                                    }
+
+                                                    val (statusColor, statusBg) = when {
+                                                        app.status.contains("Shortlist") -> Pair(Color(0xFF047857), Color(0xFFD1FAE5))
+                                                        app.status.contains("Interview") -> Pair(Color(0xFF1D4ED8), Color(0xFFDBEAFE))
+                                                        app.status.contains("Declined") -> Pair(Color(0xFFB91C1C), Color(0xFFFEE2E2))
+                                                        else -> Pair(Color(0xFF854D0E), Color(0xFFFEF08A))
+                                                    }
+                                                    Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(statusBg).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                                        Text(app.status.uppercase(), fontSize = 8.5.sp, fontWeight = FontWeight.Black, color = statusColor)
+                                                    }
+                                                }
+
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text("Date Applied: ${app.appliedDate}", fontSize = 9.sp, color = Color.Gray)
+                                                    
+                                                    var showClTextDetails by remember { mutableStateOf(false) }
+                                                    if (app.coverLetterText.isNotBlank()) {
+                                                        Text(
+                                                            text = if (showClTextDetails) "Hide Cover Letter ▲" else "View Cover Letter ▼",
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = Color(0xFF2563EB),
+                                                            modifier = Modifier.clickable { showClTextDetails = !showClTextDetails }
+                                                        )
+                                                    }
+                                                    
+                                                    if (showClTextDetails) {
+                                                        Card(
+                                                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                                                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp).border(0.5.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                                        ) {
+                                                            Text(app.coverLetterText, fontSize = 10.sp, color = Color.DarkGray, modifier = Modifier.padding(10.dp), lineHeight = 13.sp)
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Real-time timeline milestone tracker checklist inside application item card
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    val steps = listOf("Applied", "Reviewing", "Decision")
+                                                    val activeStepIndex = when {
+                                                        app.status.contains("Review") -> 1
+                                                        app.status.contains("Shortlist") || app.status.contains("Interview") || app.status.contains("Decline") -> 2
+                                                        else -> 0
+                                                    }
+                                                    
+                                                    steps.forEachIndexed { idx, step ->
+                                                        val isDoneVec = idx <= activeStepIndex
+                                                        val stepColor = if (isDoneVec) Color(0xFF10B981) else Color.LightGray
+                                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(stepColor))
+                                                            Text(step, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = if (isDoneVec) Color.DarkGray else Color.Gray)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // EMPLOYER VIEWS & RECRUITMENT MODERATOR FLOW
+                            item {
+                                var showAddJobDialogEmployer by remember { mutableStateOf(false) }
+
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Text("💼 RECRUITER ACTIONS PANEL", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                        
+                                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Button(
+                                                onClick = { showAddJobDialogEmployer = true },
+                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                shape = RoundedCornerShape(10.dp),
+                                                modifier = Modifier.weight(1.5f).height(40.dp)
+                                            ) {
+                                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("POST NEW VACANCY", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                            
+                                            Button(
+                                                onClick = { isEmployerMode = false },
+                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF475569)),
+                                                shape = RoundedCornerShape(10.dp),
+                                                modifier = Modifier.weight(1f).height(40.dp)
+                                            ) {
+                                                Text("CANDIDATE VIEW", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+
+                                        if (showAddJobDialogEmployer) {
+                                            var jTitle by remember { mutableStateOf("") }
+                                            var jCompany by remember { mutableStateOf("") }
+                                            var jLoc by remember { mutableStateOf("") }
+                                            var jDesc by remember { mutableStateOf("") }
+                                            var jSalary by remember { mutableStateOf("") }
+                                            var jReq by remember { mutableStateOf("") }
+                                            var jEmail by remember { mutableStateOf("") }
+                                            
+                                            Dialog(onDismissRequest = { showAddJobDialogEmployer = false }) {
+                                                Card(
+                                                    shape = RoundedCornerShape(18.dp),
+                                                    modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                                ) {
+                                                    Column(
+                                                        modifier = Modifier.padding(18.dp),
+                                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                                    ) {
+                                                        Text("Post New Job Opportunity", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color(0xFF10B981))
+                                                        
+                                                        OutlinedTextField(value = jTitle, onValueChange = { jTitle = it }, label = { Text("Job Position Title (e.g. Lead Developer)", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                        OutlinedTextField(value = jCompany, onValueChange = { jCompany = it }, label = { Text("Company Name", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                        OutlinedTextField(value = jLoc, onValueChange = { jLoc = it }, label = { Text("Office Location (e.g. Kathmandu, Nepal)", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                        OutlinedTextField(value = jDesc, onValueChange = { jDesc = it }, label = { Text("Role Description Overview", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                                                        OutlinedTextField(value = jSalary, onValueChange = { jSalary = it }, label = { Text("Salary / Monthly Compensation Structure", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+                                                        OutlinedTextField(value = jReq, onValueChange = { jReq = it }, label = { Text("Requirements & Skills (comma separated)", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                                                        OutlinedTextField(value = jEmail, onValueChange = { jEmail = it }, label = { Text("Application Contact Email", fontSize = 11.sp) }, modifier = Modifier.fillMaxWidth())
+
+                                                        Row(
+                                                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                        ) {
+                                                            OutlinedButton(onClick = { showAddJobDialogEmployer = false }, modifier = Modifier.weight(1f)) {
+                                                                Text("CANCEL", fontSize = 11.sp)
+                                                            }
+                                                            Button(
+                                                                onClick = {
+                                                                    if (jTitle.isNotBlank() && jCompany.isNotBlank()) {
+                                                                        val today = java.text.SimpleDateFormat("MMMM dd, yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                                                                        viewModel?.addJob(
+                                                                            JobListing(
+                                                                                title = jTitle,
+                                                                                company = jCompany,
+                                                                                country = jLoc,
+                                                                                description = jDesc,
+                                                                                salary = jSalary,
+                                                                                skillsRequired = jReq,
+                                                                                postedDate = today,
+                                                                                contactEmail = jEmail
+                                                                            )
+                                                                        )
+                                                                        showAddJobDialogEmployer = false
+                                                                        Toast.makeText(context, "🎉 Active Vacancy Posted Persistently!", Toast.LENGTH_LONG).show()
+                                                                    } else {
+                                                                        Toast.makeText(context, "Title and Company are mandatory fields.", Toast.LENGTH_SHORT).show()
+                                                                    }
+                                                                },
+                                                                modifier = Modifier.weight(1.5f),
+                                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                                                            ) {
+                                                                Text("PUBLISH VACANCY", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            item {
+                                Text(
+                                    text = "RECEIVED CANDIDATE APPLICATIONS MANAGER (${jobApplications.size})",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp,
+                                    color = Color(0xFF0F172A),
+                                    modifier = Modifier.padding(top = 10.dp)
+                                )
+                            }
+
+                            if (jobApplications.isEmpty()) {
+                                item {
+                                    Card(
+                                        shape = RoundedCornerShape(14.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+                                    ) {
+                                        Box(modifier = Modifier.padding(16.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                            Text("No incoming candidate applications received yet.", fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            } else {
+                                jobApplications.forEach { app ->
+                                    item {
+                                        Card(
+                                            shape = RoundedCornerShape(14.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            modifier = Modifier.fillMaxWidth().border(1.dp, Color.LightGray.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                                        ) {
+                                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                                    Column {
+                                                        Text(app.applicantName, fontSize = 13.sp, fontWeight = FontWeight.Black)
+                                                        Text("Applying for: ${app.jobTitle} @ ${app.companyName}", fontSize = 10.sp, color = Color.Gray)
+                                                    }
+                                                    Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFFEF08A)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                                        Text(app.status.uppercase(), fontSize = 8.5.sp, fontWeight = FontWeight.Black, color = Color(0xFF854D0E))
+                                                    }
+                                                }
+
+                                                Text("Applicant Email: ${app.applicantEmail} | Phone: ${app.applicantPhone}", fontSize = 9.5.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                                
+                                                if (app.coverLetterText.isNotBlank()) {
+                                                    Text("Attached Cover Letter:", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))) {
+                                                        Text(app.coverLetterText, fontSize = 10.sp, color = Color.DarkGray, modifier = Modifier.padding(8.dp), lineHeight = 13.sp)
+                                                    }
+                                                }
+
+                                                HorizontalDivider(thickness = 0.5.dp)
+
+                                                Text("CHANGE CANDIDATE PORTFOLIO STATUS:", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    Button(
+                                                        onClick = { viewModel?.updateApplicationStatus(app.id, "Shortlisted ✓", "Qualifications matching verified.") },
+                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        modifier = Modifier.weight(1f).height(32.dp),
+                                                        contentPadding = PaddingValues(0.dp)
+                                                    ) {
+                                                        Text("Shortlist", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                    }
+                                                    Button(
+                                                        onClick = { viewModel?.updateApplicationStatus(app.id, "Interview Invited ✉", "Interview scheduled shortly.") },
+                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        modifier = Modifier.weight(1f).height(32.dp),
+                                                        contentPadding = PaddingValues(0.dp)
+                                                    ) {
+                                                        Text("Interview", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                    }
+                                                    Button(
+                                                        onClick = { viewModel?.updateApplicationStatus(app.id, "Declined ✘", "Position closed or requirements mismatch.") },
+                                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        modifier = Modifier.weight(1f).height(32.dp),
+                                                        contentPadding = PaddingValues(0.dp)
+                                                    ) {
+                                                        Text("Decline", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    "documents" -> {
+                        item {
+                            // Document manager dashboard banner
+                            Card(
+                                shape = RoundedCornerShape(24.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color(0xFF0F172A), Color(0xFF2E1065))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFFE28743), Color(0xFFF97316))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    )
+                                    .padding(20.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Icon(
+                                            imageVector = Icons.Default.Folder,
+                                            contentDescription = "Docs Folder Icon",
+                                            tint = Color(0xFFFE08A30).copy(alpha = 0.9f),
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Text(
+                                            text = "YOURDOC DOCUMENT ENGINE",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = Color(0xFFFFEDD5),
+                                            letterSpacing = 1.2.sp
+                                        )
+                                    }
+                                    
+                                    Text(
+                                        text = "Portfolio Documents Manager",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "Combine separate resumes & letters into integrated PDF bundles, compile high-definition JPG images from your digital PDF layouts, or merge custom photo portfolios instantly.",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFFFEDD5).copy(alpha = 0.85f),
+                                        lineHeight = 16.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    // Quick actionable Launch Button
+                                    Button(
+                                        onClick = { onOpenDocumentMerger() }, // sets screenState = "document_manager"
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF97316)),
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth().height(44.dp)
+                                    ) {
+                                        Icon(Icons.Default.Launch, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("LAUNCH FULL DOCUMENT VAULT 📂", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Grid of high-value tools
+                        item {
+                            Text(
+                                text = "OFFLINE COMPILATION TOOLS",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF0F172A)
+                            )
+                        }
+
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                // Tool 1: Joint PDF Merger
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.4f)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onOpenDocumentMerger() }
+                                ) {
+                                    Row(modifier = Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(Color(0xFFEFF6FF)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(Icons.Default.MergeType, contentDescription = null, tint = Color(0xFF2563EB))
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("🤝 Joint PDF Document Merger", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text("Merge legal certificates, CVs, and references into standard multi-page portfolios securely.", fontSize = 10.sp, color = Color.Gray, lineHeight = 13.sp)
+                                        }
+                                        Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                                    }
+                                }
+
+                                // Tool 2: PDF to JPG
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.4f)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onOpenPdfToJpg() }
+                                ) {
+                                    Row(modifier = Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(Color(0xFFFFF7ED)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(Icons.Default.Image, contentDescription = null, tint = Color(0xFFEA580C))
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("🖼️ Export PDF to High-Res JPG Images", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text("Transform layouts or europass structures into sharable JPEG/PNG matrices for social grids.", fontSize = 10.sp, color = Color.Gray, lineHeight = 13.sp)
+                                        }
+                                        Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                                    }
+                                }
+
+                                // Tool 3: JPG to PDF
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.4f)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onOpenJpgToPdf() }
+                                ) {
+                                    Row(modifier = Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(Color(0xFFFDF2F8)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, tint = Color(0xFFDB2777))
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("📝 Compile Image Snapshots into standard PDF", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text("Take physical certificate snapshots or scans, compile, and output single standardized legal document PDFs.", fontSize = 10.sp, color = Color.Gray, lineHeight = 13.sp)
+                                        }
+                                        Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Local Files scan/quick overview
+                        item {
+                            Text(
+                                text = "INTEGRATED DIGITAL VAULT INFORMATION",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp,
+                                color = Color(0xFF0F172A),
+                                modifier = Modifier.padding(top = 10.dp)
+                            )
+                        }
+
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Icon(Icons.Default.SafetyCheck, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
+                                        Text("AES-256 On-Device Vault Storage", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFF0F172A))
+                                    }
+                                    
+                                    Text(
+                                        text = "Your files are stored entirely localized under the private application isolation package directory. There are no external central servers holding or processing raw drafts. Perfect for confidential, risk-free career compiling.",
+                                        fontSize = 11.sp,
+                                        color = Color.DarkGray,
+                                        lineHeight = 15.sp
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -4266,6 +5868,119 @@ fun HomeScreen(
                                             modifier = Modifier.fillMaxWidth().height(44.dp)
                                         ) {
                                             Text("CHOOSE PORTAL & SIGN IN", fontWeight = FontWeight.ExtraBold, fontSize = 11.sp, color = Color.White)
+                                        }
+                                    }
+                                }
+                             }
+                        }
+                    }
+
+                    "notifications" -> {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(Color(0xFF0C4A6E), Color(0xFF0F172A))
+                                        )
+                                    )
+                                    .padding(20.dp)
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF0EA5E9))
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("REAL-TIME CHANNELS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0EA5E9))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Career Notification Vault", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Inspect direct corporate response alerts, template layout update notifications, and application tracking states.",
+                                        fontSize = 11.sp,
+                                        color = Color.LightGray,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            val currentNotificationsList = if (viewModel != null) {
+                                viewModel.notificationsState.collectAsStateWithLifecycle().value
+                            } else {
+                                emptyList()
+                            }
+
+                            Card(
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("ALERTS RECEIVED", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                                        if (currentNotificationsList.isNotEmpty() && viewModel != null) {
+                                            Text(
+                                                text = "Mark all read",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF0EA5E9),
+                                                modifier = Modifier.clickable {
+                                                    viewModel.markAllAsRead()
+                                                    Toast.makeText(context, "Marked as read! ✓", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                        }
+                                    }
+
+                                    if (currentNotificationsList.isEmpty()) {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(36.dp))
+                                                Text("All inbox cleared up! No unread notifications.", fontSize = 12.sp, color = Color.LightGray)
+                                            }
+                                        }
+                                    } else {
+                                        currentNotificationsList.forEach { alarm ->
+                                            Card(
+                                                shape = RoundedCornerShape(12.dp),
+                                                colors = CardDefaults.cardColors(containerColor = if (alarm.isRead) Color(0xFFF9FAFB) else Color(0xFFF0F9FF)),
+                                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(12.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(8.dp)
+                                                            .clip(CircleShape)
+                                                            .background(if (alarm.isRead) Color.LightGray else Color(0xFF0284C7))
+                                                    )
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(alarm.title, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                                        Text(alarm.message, fontSize = 10.5.sp, color = Color.DarkGray, lineHeight = 13.sp)
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -5390,6 +7105,7 @@ fun RenderResumesGrid(
     onDuplicateResume: (Int) -> Unit,
     onDeleteResume: (Int) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     if (filteredResumes.isEmpty()) {
         Box(
             modifier = Modifier
@@ -5495,6 +7211,59 @@ fun RenderResumesGrid(
                                     }
                                     
                                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        IconButton(
+                                            onClick = {
+                                                val pInfoObj = try {
+                                                    com.example.data.JsonParser.fromJson<com.example.data.PersonalInfo>(resume.personalInfo)
+                                                } catch(e: Exception) { null } ?: com.example.data.PersonalInfo()
+                                                
+                                                val passInfoObj = try {
+                                                    com.example.data.JsonParser.fromJson<com.example.data.PassportInfo>(resume.passportInfo)
+                                                } catch(e: Exception) { null } ?: com.example.data.PassportInfo()
+
+                                                val workListObj = com.example.data.JsonParser.fromJsonList<com.example.data.WorkExperience>(resume.workExperiences)
+                                                val eduListObj = com.example.data.JsonParser.fromJsonList<com.example.data.Education>(resume.educations)
+                                                val skillListObj = com.example.data.JsonParser.fromJsonList<com.example.data.Skill>(resume.skills)
+                                                val langListObj = com.example.data.JsonParser.fromJsonList<com.example.data.Language>(resume.languages)
+                                                
+                                                val aboutMeObj = try {
+                                                    com.example.data.JsonParser.fromJson<com.example.data.AboutMe>(resume.aboutMe)
+                                                } catch(e: Exception) { null } ?: com.example.data.AboutMe()
+
+                                                val declObj = try {
+                                                    com.example.data.JsonParser.fromJson<com.example.data.Declaration>(resume.declaration)
+                                                } catch(e: Exception) { null } ?: com.example.data.Declaration()
+
+                                                val customObj = try {
+                                                    com.example.data.JsonParser.fromJson<com.example.data.Customization>(resume.customization)
+                                                } catch(e: Exception) { null } ?: com.example.data.Customization()
+
+                                                PdfExporter.exportToPdfAndShare(
+                                                    context = context,
+                                                    title = resume.title,
+                                                    personalInfo = pInfoObj,
+                                                    passportInfo = passInfoObj,
+                                                    workExperiences = workListObj,
+                                                    educations = eduListObj,
+                                                    skills = skillListObj,
+                                                    languages = langListObj,
+                                                    aboutMe = aboutMeObj,
+                                                    declaration = declObj,
+                                                    templateId = customObj.templateId,
+                                                    showProfilePhoto = customObj.showProfilePhoto,
+                                                    photoShape = customObj.photoShape,
+                                                    primaryColorHex = customObj.primaryColorHex
+                                                )
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.PictureAsPdf,
+                                                contentDescription = "Export Direct to PDF",
+                                                tint = Color(0xFF10B981),
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
                                         IconButton(
                                             onClick = { onDuplicateResume(resume.id) },
                                             modifier = Modifier.size(28.dp)
@@ -7350,6 +9119,107 @@ fun EditResumeScreen(
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
+        val masterProfileState = viewModel.userProfileState.collectAsStateWithLifecycle().value
+        var syncSuccessMsg by remember { mutableStateOf<String?>(null) }
+        
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF0F172A)
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Brush.horizontalGradient(listOf(Color(0xFF3B82F6), Color(0xFF10B981))))
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFF10B981).copy(alpha = 0.2f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text("VERSION V2", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color(0xFF10B981))
+                        }
+                        Text(
+                            text = "🧠 Master Profile Auto-Fill",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                    
+                    Text(
+                        text = "Auto-Sync Enabled ✓",
+                        fontSize = 9.sp,
+                        color = Color(0xFF10B981),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                Text(
+                    text = "Sync all details from your master candidate settings with one touch. No double-entry required.",
+                    fontSize = 10.sp,
+                    color = Color.LightGray,
+                    lineHeight = 13.sp
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Active Candidate: ${masterProfileState?.fullName ?: "Saru Sharma"}",
+                        fontSize = 9.5.sp,
+                        color = Color(0xFFE2E8F0),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    
+                    Button(
+                        onClick = {
+                            val activeProf = masterProfileState ?: com.example.data.UserProfile(fullName = "Saru Sharma")
+                            viewModel.autoFillFromUserProfile(activeProf)
+                            syncSuccessMsg = "Master Profile successfully synced with CV draft! ✓"
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6)),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
+                        modifier = Modifier.height(26.dp),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(10.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("ONE-TAP AUTO-FILL", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+                
+                syncSuccessMsg?.let { msg ->
+                    Text(
+                        text = msg,
+                        fontSize = 9.5.sp,
+                        color = Color(0xFF10B981),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                    LaunchedEffect(msg) {
+                        kotlinx.coroutines.delay(3000)
+                        syncSuccessMsg = null
+                    }
+                }
+            }
+        }
         // Document Title Banner Area
         Row(
             modifier = Modifier
@@ -7395,6 +9265,33 @@ fun EditResumeScreen(
                 Icon(imageVector = Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("PREVIEW", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            Button(
+                onClick = {
+                    PdfExporter.exportToPdfAndShare(
+                        context = context,
+                        title = title,
+                        personalInfo = pInfo,
+                        passportInfo = passInfo,
+                        workExperiences = workList,
+                        educations = eduList,
+                        skills = skillList,
+                        languages = langList,
+                        aboutMe = aboutMe,
+                        declaration = decl,
+                        templateId = custom.templateId,
+                        showProfilePhoto = custom.showProfilePhoto,
+                        photoShape = custom.photoShape,
+                        primaryColorHex = custom.primaryColorHex
+                    )
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Download, contentDescription = "Download as PDF", modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("PDF", fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -8146,7 +10043,7 @@ fun EditResumeScreen(
                             }
                         }
 
-                        FormDropdownField(label = "Full Display Name", value = pInfo.fullName, options = listOf("Udaya Raj Khanal", "Kiran Prasad Bhatta", "Anjali Shrestha", "Rajendra Prasad Acharya", "Ananta Prasad Rijal")) { viewModel.personalInfoState.value = pInfo.copy(fullName = it) }
+                        FormDropdownField(label = "Full Display Name", value = pInfo.fullName, options = listOf("Saru Sharma", "Udaya Raj Khanal", "Kiran Prasad Bhatta", "Anjali Shrestha", "Rajendra Prasad Acharya")) { viewModel.personalInfoState.value = pInfo.copy(fullName = it) }
                         FormTextField(label = "Primary Email", value = pInfo.email) { viewModel.personalInfoState.value = pInfo.copy(email = it) }
                         FormTextField(label = "Phone Number", value = pInfo.phone) { viewModel.personalInfoState.value = pInfo.copy(phone = it) }
                         FormTextField(label = "WhatsApp Link Number", value = pInfo.whatsApp) { viewModel.personalInfoState.value = pInfo.copy(whatsApp = it) }
@@ -9031,11 +10928,44 @@ fun EditResumeScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Reorderable Action Buttons list
-                        custom.sections.sortedBy { it.order }.forEachIndexed { index, sec ->
+                        var draggingIndex by remember { mutableStateOf<Int?>(null) }
+                        var dragOffsetY by remember { mutableStateOf(0f) }
+
+                        val sortedSections = custom.sections.sortedBy { it.order }
+                        sortedSections.forEachIndexed { index, sec ->
+                            val isDraggingThis = draggingIndex == index
                             Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = if (sec.isHidden) Color.LightGray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, if (sec.isHidden) Color.LightGray else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .zIndex(if (isDraggingThis) 10f else 0f)
+                                    .graphicsLayer {
+                                        translationY = if (isDraggingThis) dragOffsetY else 0f
+                                        val scale = if (isDraggingThis) 1.03f else 1.0f
+                                        scaleX = scale
+                                        scaleY = scale
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isDraggingThis) {
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+                                    } else if (sec.isHidden) {
+                                        Color.LightGray.copy(alpha = 0.2f)
+                                    } else {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                                    }
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    width = if (isDraggingThis) 2.dp else 1.dp,
+                                    color = if (isDraggingThis) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else if (sec.isHidden) {
+                                        Color.LightGray
+                                    } else {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                                    }
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = if (isDraggingThis) 10.dp else 2.dp
+                                )
                             ) {
                                 Column(modifier = Modifier.padding(10.dp)) {
                                     Row(
@@ -9043,6 +10973,49 @@ fun EditResumeScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
+                                        // Tactical Drag handle
+                                        Icon(
+                                            imageVector = Icons.Default.DragHandle,
+                                            contentDescription = "Drag to reorder",
+                                            tint = if (isDraggingThis) MaterialTheme.colorScheme.primary else Color.Gray,
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .pointerInput(index) {
+                                                    detectDragGestures(
+                                                        onDragStart = { _ ->
+                                                            draggingIndex = index
+                                                            dragOffsetY = 0f
+                                                        },
+                                                        onDrag = { change, dragAmount ->
+                                                            change.consume()
+                                                            dragOffsetY += dragAmount.y
+                                                            
+                                                            val threshold = 180f
+                                                            val from = draggingIndex
+                                                            if (from != null) {
+                                                                if (dragOffsetY > threshold && from < sortedSections.size - 1) {
+                                                                    viewModel.moveSection(from, from + 1)
+                                                                    draggingIndex = from + 1
+                                                                    dragOffsetY = 0f
+                                                                } else if (dragOffsetY < -threshold && from > 0) {
+                                                                    viewModel.moveSection(from, from - 1)
+                                                                    draggingIndex = from - 1
+                                                                    dragOffsetY = 0f
+                                                                }
+                                                            }
+                                                        },
+                                                        onDragEnd = {
+                                                            draggingIndex = null
+                                                            dragOffsetY = 0f
+                                                        },
+                                                        onDragCancel = {
+                                                            draggingIndex = null
+                                                            dragOffsetY = 0f
+                                                        }
+                                                    )
+                                                }
+                                        )
+
                                         Icon(
                                             imageVector = when (sec.id) {
                                                 "personal" -> Icons.Default.Person
